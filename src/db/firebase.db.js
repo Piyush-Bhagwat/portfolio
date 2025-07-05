@@ -40,6 +40,8 @@ const deleteProject = async (id) => {
 
 const addProject = async (data) => {
     const tagStr = data.tags;
+    console.log(tagStr);
+    
     const tagArr = tagStr.split(",");
     data.tags = tagArr.map((tag)=>tag.trim());;
     console.log(data);

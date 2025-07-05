@@ -14,6 +14,9 @@ import { context } from "../context/context";
 import ProjectCard from "../components/ProjectCard";
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
+import Symbol from "../components/ui/Symbols";
+import SymbolLayer from "../components/ui/SymbolLayer";
+import SymbolLayers from "../components/ui/SymbolLayers";
 
 const HomePage = () => {
     const { projects } = useContext(context);
@@ -34,6 +37,7 @@ const HomePage = () => {
     return (
         <main>
             <section className="hero alternate">
+                <SymbolLayers />
                 <div className="left">
                     <Reveal>
                         <h1>
@@ -44,6 +48,7 @@ const HomePage = () => {
                             this :)
                         </h1>
                     </Reveal>
+
                     <Reveal>
                         <div className="socials">
                             <a
@@ -81,7 +86,7 @@ const HomePage = () => {
                         </btn>
 
                         <div className="btn">
-                            <Link to="/projects">Portfolio</Link>
+                            <Link to="/projects">Resume</Link>
                         </div>
                     </div>
                 </div>
@@ -89,6 +94,7 @@ const HomePage = () => {
                 <div className="right">
                     <img src={myIMG} alt="photo of Piyush" />
                 </div>
+
             </section>
 
             <section className="about" id="about">
@@ -132,6 +138,7 @@ const HomePage = () => {
             </section>
 
             <section className="projects alternate">
+                <SymbolLayers />
                 <Title text="My Projects" />
 
                 <div className="content">{renderProjects()}</div>
