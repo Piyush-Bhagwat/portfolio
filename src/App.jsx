@@ -14,6 +14,7 @@ import ModulePlaceholder from "./pages/admin/ModulePlaceholder";
 import ProfileCMS from "./pages/admin/ProfileCMS";
 import SkillsCMS from "./pages/admin/SkillsCMS";
 import ExperienceCMS from "./pages/admin/ExperienceCMS";
+import ProjectsCMS from "./pages/admin/ProjectsCMS";
 
 const MainContent = () => {
     const [navOpen, setNavOpen] = useState(false);
@@ -32,16 +33,7 @@ const MainContent = () => {
                         <Route index element={<Navigate to="/admin/overview" replace />} />
                         <Route path="overview" element={<Overview />} />
                         <Route path="profile" element={<ProfileCMS />} />
-                        <Route
-                            path="projects"
-                            element={
-                                <ModulePlaceholder
-                                    title="Projects & Case Studies CMS"
-                                    day="Day 4"
-                                    description="Manage dynamic projects, technical case studies, problem solving Q&A, and project media."
-                                />
-                            }
-                        />
+                        <Route path="projects" element={<ProjectsCMS />} />
                         <Route path="skills" element={<SkillsCMS />} />
                         <Route path="experience" element={<ExperienceCMS />} />
                         <Route
