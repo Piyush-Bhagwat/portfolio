@@ -1,0 +1,75 @@
+/* Neo-Brutalist & Bento Grid Utility Styles */
+
+/* Subtle Grid Backgrounds */
+.bg-grid-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bg-grid-dots-dense {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+.bg-grid-lines {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
+/* Tactile Brutalist Interactions */
+.brutal-card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.brutal-card-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.brutal-card-hover-white:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.9);
+}
+
+.brutal-press {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.brutal-press:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 1) !important;
+}
+
+/* Terminal Scanline & Glow Accents */
+.terminal-glow-green {
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.terminal-glow-cyan {
+  text-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+}
+
+/* Monospace Selection */
+::selection {
+  background-color: #10b981;
+  color: #09090b;
+}
+
+/* Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}

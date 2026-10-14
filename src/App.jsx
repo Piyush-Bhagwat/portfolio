@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import HomePage from "./pages/Home.page";
 import ProjectPage from "./pages/Project.page";
 import Dashboard from "./pages/Dashboard";
+import { BrutalistShowcase } from "./components/brutalist";
 
 const App = () => {
     const [navOpen, setNavOpen] = useState(false);
@@ -39,6 +40,11 @@ const App = () => {
                                     <Link to="/projects">Projects</Link>
                                 </li>
                                 <li>
+                                    <Link to="/v2-preview" style={{ color: "#10b981", fontWeight: "bold" }}>
+                                        ⚡ V2 Primitives
+                                    </Link>
+                                </li>
+                                <li>
                                     <a href="/#about">About</a>
                                 </li>
                             </ul>
@@ -54,6 +60,7 @@ const App = () => {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/projects" element={<ProjectPage />} />
                     <Route path="/manage" element={<Dashboard />} />
+                    <Route path="/v2-preview" element={<BrutalistShowcase />} />
                 </Routes>
 
                 <section className="action">
