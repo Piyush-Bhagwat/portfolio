@@ -15,6 +15,7 @@ import ProfileCMS from "./pages/admin/ProfileCMS";
 import SkillsCMS from "./pages/admin/SkillsCMS";
 import ExperienceCMS from "./pages/admin/ExperienceCMS";
 import ProjectsCMS from "./pages/admin/ProjectsCMS";
+import BlogEditor from "./pages/admin/BlogEditor";
 
 const MainContent = () => {
     const [navOpen, setNavOpen] = useState(false);
@@ -46,16 +47,8 @@ const MainContent = () => {
                                 />
                             }
                         />
-                        <Route
-                            path="blogs/new"
-                            element={
-                                <ModulePlaceholder
-                                    title="New Technical Blog"
-                                    day="Day 5"
-                                    description="Create a new technical article using the split Markdown editor."
-                                />
-                            }
-                        />
+                        <Route path="blogs/new" element={<BlogEditor />} />
+                        <Route path="blogs/edit/:id" element={<BlogEditor />} />
                     </Route>
                 </Route>
             </Routes>
@@ -64,6 +57,16 @@ const MainContent = () => {
 
     return (
         <div className="app">
+            {/* Live Deployment Notice Banner */}
+            <div
+                role="alert"
+                className="bg-amber-400 text-black px-4 py-2.5 border-b-2 border-black font-mono text-xs sm:text-sm font-bold flex items-center justify-center gap-2 tracking-tight z-50 text-center shadow-sm"
+            >
+                <span className="inline-block w-2 h-2 bg-black rounded-full animate-ping shrink-0" />
+                <span>
+                    ⚠️ Website refactoring under process, expect unusual behaviour.
+                </span>
+            </div>
             <header>
                 <div className="container">
                     <div className="logo">
@@ -160,4 +163,5 @@ const App = () => {
     );
 };
 
+export { MainContent };
 export default App;

@@ -23,6 +23,20 @@ export async function resolve(specifier, context, nextResolve) {
 }
 
 export async function load(url, context, nextLoad) {
+  if (url.endsWith(".css")) {
+    return {
+      format: "module",
+      shortCircuit: true,
+      source: "export default {};",
+    };
+  }
+  if (/\.(png|jpe?g|gif|svg|webp)$/i.test(url)) {
+    return {
+      format: "module",
+      shortCircuit: true,
+      source: "export default '';",
+    };
+  }
   if (url.endsWith(".jsx")) {
     const filePath = fileURLToPath(url);
     const raw = await readFile(filePath, "utf8");
