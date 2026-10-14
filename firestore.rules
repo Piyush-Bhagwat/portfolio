@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: Validates that the request is authenticated by the authorized site owner
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email == "piyushbhagwat5@gmail.com";
+    }
+
+    // Site Configuration (profile bio, hero statement, avatar, socials, resume)
+    match /site_config/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Skills & Stack (frontend, backend, tools, order, category)
+    match /skills/{skillId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Experience & Milestones (timeline items, roles, company, period)
+    match /experiences/{expId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Projects & Case Studies (title, slug, tech stack, case study Q&A, media)
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // Nested case study subcollections if applicable
+      match /{allSubcollections=**} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Technical Blogs:
+    // - Public visitors can read published posts
+    // - Admin can read drafts, create new posts, update, and delete
+    match /blogs/{blogId} {
+      allow read: if (resource != null && resource.data.published == true) || isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}
