@@ -154,11 +154,37 @@ This document serves as the persistent memory, architectural reference, and oper
   - Removed `{ label: "⚡ V2 Primitives", path: "/v2-preview", accent: "text-terminal-green" }` from `navLinks` in `src/components/layout/PublicNavbar.jsx`.
   - Updated `HeroTile.jsx` terminal badge from `sys.v2.active` to `sys.prod.active`.
 
+### 7. Netlify SPA Direct Route 404 Resolution
+- **Problem**: When navigating to the root URL `/`, the site rendered normally. However, navigating directly to client-side routes (e.g. `/projects`, `/blogs`, `/admin/login`) or reloading non-root pages resulted in a Netlify HTTP 404 error ("Page Not Found").
+- **Root Cause Discovered**:
+  - Netlify is a static hosting platform. By default, when a user requests `/projects`, Netlify attempts to look up a static file at `/projects/index.html` or `/projects`.
+  - In a Single Page Application (SPA) driven by React Router, all client-side routes exist dynamically inside the JavaScript bundle loaded by `/index.html`.
+  - Without an explicit rewrite rule, Netlify does not know to route unrecognized request paths back to `/index.html`, causing it to respond with a 404 status.
+- **Fixes Applied**:
+  1. **`public/_redirects`**:
+     - Created `public/_redirects` with rule: `/*    /index.html   200`.
+     - Vite's build pipeline automatically copies files from `public/` directly into the `dist/` root, ensuring `dist/_redirects` is deployed with every build.
+  2. **`netlify.toml`**:
+     - Created root `netlify.toml` with build commands and explicit SPA redirects table:
+       ```toml
+       [build]
+         command = "npm run build"
+         publish = "dist"
+
+       [[redirects]]
+         from = "/*"
+         to = "/index.html"
+         status = 200
+       ```
+     - Having both `public/_redirects` and `netlify.toml` ensures defense-in-depth across Netlify CLI, Git-triggered Netlify deployments, and manual drag-and-drop deployments.
+  3. **Automated Verification**:
+     - Added test in `test/slice-7.3.test.js` validating that `public/_redirects` and `netlify.toml` exist with the proper 200 rewrite rule.
+
 ---
 
 ## 5. Verification & Test Suite Status
 
-- **Automated Test Suite**: **108 tests passing** (0 failures, 0 skipped) across all vertical slices:
+- **Automated Test Suite**: **109 tests passing** (0 failures, 0 skipped) across all vertical slices:
   - `slice-1.1` to `slice-1.3`: Brutalist primitives & Cloudinary service.
   - `slice-2.1` to `slice-2.3`: AuthContext, ProtectedRoute, AdminLayout.
   - `slice-3.1` to `slice-3.4`: ProfileCMS, SkillsCMS, ExperienceCMS, Seeder.

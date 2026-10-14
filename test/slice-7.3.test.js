@@ -187,3 +187,25 @@ test("validateImageFile validates image formats and sizes flexibly", () => {
   );
 });
 
+test("Netlify SPA configuration provides 200 rewrite for client-side routing", () => {
+  const redirectsPath = path.resolve("public/_redirects");
+  assert.ok(fs.existsSync(redirectsPath), "public/_redirects must exist for Netlify routing");
+  const redirectsContent = fs.readFileSync(redirectsPath, "utf-8");
+  assert.match(
+    redirectsContent,
+    /\/\*\s+\/index\.html\s+200/,
+    "public/_redirects must rewrite all routes (/*) to /index.html with status 200"
+  );
+
+  const netlifyTomlPath = path.resolve("netlify.toml");
+  assert.ok(fs.existsSync(netlifyTomlPath), "netlify.toml must exist for build & redirect configuration");
+  const netlifyTomlContent = fs.readFileSync(netlifyTomlPath, "utf-8");
+  assert.ok(
+    netlifyTomlContent.includes('from = "/*"') &&
+    netlifyTomlContent.includes('to = "/index.html"') &&
+    netlifyTomlContent.includes("status = 200"),
+    "netlify.toml must specify SPA 200 redirect rule"
+  );
+});
+
+
