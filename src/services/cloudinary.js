@@ -15,10 +15,24 @@ const getEnvVar = (key, fallback = "") => {
 };
 
 export const CLOUDINARY_CONFIG = {
-  cloudName: getEnvVar("VITE_CLOUDINARY_CLOUD_NAME", ""),
-  uploadPreset: getEnvVar("VITE_CLOUDINARY_UPLOAD_PRESET", "portfolio_unsigned"),
+  cloudName:
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_CLOUDINARY_CLOUD_NAME) ||
+    getEnvVar("VITE_CLOUDINARY_CLOUD_NAME", "dsdqo228u") ||
+    "dsdqo228u",
+  uploadPreset:
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_CLOUDINARY_UPLOAD_PRESET) ||
+    getEnvVar("VITE_CLOUDINARY_UPLOAD_PRESET", "portfolio_unsigned") ||
+    "portfolio_unsigned",
   maxSizeBytes: 5 * 1024 * 1024, // 5MB
-  allowedTypes: ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"],
+  allowedTypes: [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "image/svg+xml",
+    "image/avif",
+  ],
   uploadTimeoutMs: 30000, // 30 seconds
   defaultPlaceholder: "/assets/placeholders/terminal-placeholder.png",
 };
@@ -33,10 +47,18 @@ export function validateImageFile(file) {
     return { valid: false, error: "No file provided for upload." };
   }
 
-  if (!CLOUDINARY_CONFIG.allowedTypes.includes(file.type)) {
+  const fileType = (file.type || "").toLowerCase();
+  const fileExt = file.name ? file.name.split(".").pop().toLowerCase() : "";
+  const validExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg", "avif"];
+
+  const isValidType =
+    CLOUDINARY_CONFIG.allowedTypes.includes(fileType) ||
+    validExtensions.includes(fileExt);
+
+  if (!isValidType) {
     return {
       valid: false,
-      error: `Invalid file type: ${file.type || "unknown"}. Only JPG, PNG, WEBP, GIF, and SVG are supported.`,
+      error: `Invalid file type: ${file.type || fileExt || "unknown"}. Only JPG, PNG, WEBP, GIF, and SVG are supported.`,
     };
   }
 

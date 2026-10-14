@@ -23,7 +23,7 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-6 sm:p-8 shadow-brutal
+        border-2 border-zinc-800 bg-zinc-950 p-5 sm:p-8 shadow-brutal
         flex flex-col justify-between font-mono relative overflow-hidden group
         hover:border-zinc-700 hover:-translate-y-0.5 transition-all ${className}
       `}
@@ -33,7 +33,7 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
         &gt;_
       </div>
 
-      <div className="space-y-6 relative z-10">
+      <div className="space-y-5 sm:space-y-8 relative z-10">
         {/* Terminal Header Bar */}
         <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 text-xs text-zinc-400 select-none">
           <div className="flex items-center gap-2">
@@ -47,39 +47,43 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
         </div>
 
         {/* Profile Identity & Avatar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           {avatarUrl && (
             <div className="relative shrink-0">
               <img
-                src={getOptimizedImageUrl(avatarUrl, { width: 250, height: 250, crop: "fill" })}
+                src={getOptimizedImageUrl(avatarUrl, { width: 400, height: 400, crop: "fill" })}
                 alt={name}
-                className="w-20 h-20 sm:w-24 sm:h-24 object-cover border-2 border-zinc-800 shadow-brutal-sm bg-zinc-900"
+                className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 lg:w-44 lg:h-44 object-cover border-2 border-zinc-700 shadow-brutal bg-zinc-900"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = DEFAULT_PROFILE.avatar_url;
+                }}
               />
-              <span className="absolute -bottom-1.5 -right-1.5 w-4 h-4 bg-terminal-green border-2 border-black rounded-full" />
+              <span className="absolute -bottom-1.5 -right-1.5 w-5 h-5 bg-terminal-green border-2 border-zinc-950 rounded-full shadow-xs" />
             </div>
           )}
 
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <span className="text-xs text-terminal-cyan uppercase tracking-wider font-bold">
               Engineering Profile
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
               {name}
             </h1>
-            <p className="text-xs sm:text-sm text-terminal-green font-bold tracking-wide">
+            <p className="text-xs sm:text-sm md:text-base text-terminal-green font-bold tracking-wide">
               {role}
             </p>
           </div>
         </div>
 
         {/* Tagline & Bio Description */}
-        <div className="space-y-2.5">
+        <div className="space-y-3.5">
           {tagline && (
-            <p className="text-sm sm:text-base font-bold text-zinc-200 border-l-2 border-terminal-green pl-3 leading-snug">
+            <p className="text-base sm:text-lg font-bold text-zinc-200 border-l-2 border-terminal-green pl-3.5 leading-snug">
               {tagline}
             </p>
           )}
-          <div className="space-y-2 text-xs sm:text-sm text-zinc-400 font-sans leading-relaxed">
+          <div className="space-y-2.5 text-xs sm:text-sm md:text-[15px] text-zinc-400 font-sans leading-relaxed">
             {bioList.map((paragraph, idx) => (
               <p key={idx}>{paragraph}</p>
             ))}
@@ -88,7 +92,7 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
       </div>
 
       {/* CTA Action Buttons */}
-      <div className="pt-6 mt-6 border-t border-zinc-800/80 flex flex-wrap items-center gap-3 relative z-10">
+      <div className="pt-5 mt-5 sm:pt-6 sm:mt-6 border-t border-zinc-800/80 flex flex-wrap items-center gap-2.5 sm:gap-3 relative z-10">
         <Link to="/projects">
           <BrutalButton
             variant="primary"

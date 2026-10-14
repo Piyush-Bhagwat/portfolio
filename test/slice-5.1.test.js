@@ -138,7 +138,7 @@ test("BlogEditor renders split-screen workspace, telemetry, and actions", () => 
   assert.ok(html.includes("LIVE PREVIEW (GFM RENDERED)"), "Should render preview pane header");
 });
 
-test("Public Home Page renders refactoring notice banner", () => {
+test("Public Home Page has clean layout without temporary refactoring banner", () => {
   const html = renderToString(
     React.createElement(
       context.Provider,
@@ -152,7 +152,7 @@ test("Public Home Page renders refactoring notice banner", () => {
   );
 
   assert.ok(
-    html.includes("Website refactoring under process, expect unusual behaviour"),
-    "Should render refactoring banner on public website"
+    !html.includes("Website refactoring under process"),
+    "Temporary refactoring banner should be cleanly removed for production"
   );
 });

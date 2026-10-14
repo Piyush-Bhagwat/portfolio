@@ -518,7 +518,7 @@ export default function BlogPostPage() {
             </div>
           </main>
 
-          {/* Sticky Sidebar (Table of Contents + Telemetry) */}
+          {/* Sticky Sidebar (Table of Contents + Metadata) */}
           <aside className="lg:col-span-4 space-y-6">
             <div className="sticky top-6 space-y-6">
               {/* Table of Contents */}
@@ -526,7 +526,7 @@ export default function BlogPostPage() {
 
               {/* Quick Metadata Box */}
               <TerminalBox
-                title="article.telemetry"
+                title="article.metadata"
                 className="border-2 border-zinc-800 shadow-brutal-sm p-4 space-y-3 text-xs"
               >
                 <div className="space-y-2 text-zinc-400">

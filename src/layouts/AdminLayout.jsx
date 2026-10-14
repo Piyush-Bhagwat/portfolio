@@ -23,37 +23,31 @@ const NAV_ITEMS = [
     label: "Overview",
     to: "/admin/overview",
     icon: LayoutDashboard,
-    badge: "Sys",
   },
   {
     label: "Profile & Bio",
     to: "/admin/profile",
     icon: User,
-    badge: "Day 3",
   },
   {
     label: "Projects & Cases",
     to: "/admin/projects",
     icon: FolderKanban,
-    badge: "Day 4",
   },
   {
     label: "Skills & Stack",
     to: "/admin/skills",
     icon: Wrench,
-    badge: "Day 3",
   },
   {
     label: "Work Experience",
     to: "/admin/experience",
     icon: Briefcase,
-    badge: "Day 3",
   },
   {
     label: "Technical Blogs",
     to: "/admin/blogs",
     icon: BookOpen,
-    badge: "Day 5",
   },
 ];
 

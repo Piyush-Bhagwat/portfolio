@@ -44,7 +44,7 @@ export default function SocialsTile({ profile = DEFAULT_PROFILE, className = "" 
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-5 shadow-brutal-sm
+        border-2 border-zinc-800 bg-zinc-950 p-4 sm:p-5 shadow-brutal-sm
         flex flex-col justify-between font-mono hover:border-terminal-cyan
         transition-colors ${className}
       `}

@@ -23,12 +23,12 @@ export default function FeaturedProjectsTile({
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-6 sm:p-8 shadow-brutal
+        border-2 border-zinc-800 bg-zinc-950 p-5 sm:p-8 shadow-brutal
         flex flex-col justify-between font-mono hover:border-zinc-700
         transition-colors ${className}
       `}
     >
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         {/* Terminal Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-3 text-xs select-none">
           <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export default function FeaturedProjectsTile({
             return (
               <div
                 key={project.id || project.slug}
-                className="border-2 border-zinc-800/80 bg-zinc-900/50 p-4.5 flex flex-col justify-between hover:border-terminal-green hover:-translate-y-0.5 hover:shadow-brutal transition-all shadow-brutal-sm group"
+                className="border-2 border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-5 flex flex-col justify-between hover:border-terminal-green hover:-translate-y-0.5 hover:shadow-brutal transition-all shadow-brutal-sm group"
               >
                 <div className="space-y-3">
                   {/* Top Badges */}

@@ -52,10 +52,10 @@ test("Slice 7.4 Smoke Test: Public Homepage (/) renders full Bento Grid & live r
     )
   );
 
-  // Live banner
+  // Banner is removed for clean production release
   assert.ok(
-    html.includes("Website refactoring under process, expect unusual behaviour"),
-    "Public app must display the requested refactoring notice banner"
+    !html.includes("Website refactoring under process"),
+    "Production app should not display the temporary refactoring notice banner"
   );
 
   // Hero tile

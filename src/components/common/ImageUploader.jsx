@@ -26,6 +26,7 @@ import { BrutalButton, TagBadge } from "../brutalist";
  * @param {Function} [props.onUploadSuccess] - Callback ({ url, public_id, width, height, format }) => void
  * @param {Function} [props.onRemove] - Callback when image is cleared
  * @param {string} [props.label="Upload Image"]
+ * @param {"video" | "square"} [props.aspectRatio="video"] - Aspect ratio for preview container
  * @param {string} [props.className]
  */
 export default function ImageUploader({
@@ -34,6 +35,7 @@ export default function ImageUploader({
   onUploadSuccess,
   onRemove,
   label = "Upload Image",
+  aspectRatio = "video",
   className = "",
 }) {
   const [dragActive, setDragActive] = useState(false);
@@ -47,6 +49,7 @@ export default function ImageUploader({
 
   const fileInputRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const blobUrlRef = useRef(null);
 
   // Sync with incoming external value if provided
   useEffect(() => {
@@ -55,17 +58,17 @@ export default function ImageUploader({
     }
   }, [value, selectedFile]);
 
-  // Clean up object URL when file changes or unmounts
+  // Clean up object URL and abort any in-flight request only on unmount
   useEffect(() => {
     return () => {
-      if (localPreview && localPreview.startsWith("blob:")) {
-        URL.revokeObjectURL(localPreview);
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
       }
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, [localPreview]);
+  }, []);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -100,8 +103,15 @@ export default function ImageUploader({
       return;
     }
 
-    setSelectedFile(file);
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+
     const objectUrl = URL.createObjectURL(file);
+    blobUrlRef.current = objectUrl;
+
+    setSelectedFile(file);
     setLocalPreview(objectUrl);
     setUploadResult(null);
 
@@ -112,6 +122,10 @@ export default function ImageUploader({
   const executeUpload = async (fileToUpload) => {
     const file = fileToUpload || selectedFile;
     if (!file) return;
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
     setIsUploading(true);
     setProgress(0);
@@ -128,7 +142,12 @@ export default function ImageUploader({
         { signal: controller.signal }
       );
 
+      abortControllerRef.current = null;
       setUploadResult(result);
+      if (result.secure_url || result.url) {
+        setLocalPreview(result.secure_url || result.url);
+      }
+      setSelectedFile(null);
       setIsUploading(false);
       setProgress(100);
 
@@ -136,8 +155,10 @@ export default function ImageUploader({
         onUploadSuccess(result);
       }
     } catch (err) {
+      abortControllerRef.current = null;
       setIsUploading(false);
       if (err.name !== "AbortError") {
+        console.error("Cloudinary upload failed:", err);
         setErrorMessage(err.message || "Failed to upload image. Please retry.");
       }
     }
@@ -146,9 +167,11 @@ export default function ImageUploader({
   const handleReset = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
-    if (localPreview && localPreview.startsWith("blob:")) {
-      URL.revokeObjectURL(localPreview);
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
     }
     setSelectedFile(null);
     setLocalPreview("");
@@ -208,19 +231,35 @@ export default function ImageUploader({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/svg+xml,image/avif"
           className="hidden"
           onChange={handleFileChange}
+          onClick={(e) => {
+            e.target.value = null;
+          }}
         />
 
         {localPreview ? (
           /* Preview Mode */
           <div className="space-y-4">
-            <div className="relative group w-full aspect-video md:aspect-[21/9] max-h-64 bg-zinc-950 border border-zinc-800 overflow-hidden flex items-center justify-center">
+            <div
+              className={`relative group bg-zinc-950 border border-zinc-800 overflow-hidden flex items-center justify-center ${
+                aspectRatio === "square"
+                  ? "w-40 h-40 mx-auto aspect-square"
+                  : "w-full aspect-video md:aspect-[21/9] max-h-64"
+              }`}
+            >
               <img
-                src={getOptimizedImageUrl(localPreview, { width: 800 })}
+                src={getOptimizedImageUrl(
+                  localPreview,
+                  aspectRatio === "square"
+                    ? { width: 400, height: 400, crop: "fill" }
+                    : { width: 800 }
+                )}
                 alt="Upload preview"
-                className="w-full h-full object-contain"
+                className={`w-full h-full ${
+                  aspectRatio === "square" ? "object-cover" : "object-contain"
+                }`}
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src =
@@ -235,6 +274,26 @@ export default function ImageUploader({
                 aria-label="Remove image"
               >
                 <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Change / Replace or Remove Action Bar */}
+            <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-900">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-terminal-cyan hover:underline flex items-center gap-1.5 font-mono cursor-pointer"
+              >
+                <UploadCloud className="w-3.5 h-3.5" />
+                Change / Replace Image
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="text-rose-400 hover:underline flex items-center gap-1.5 font-mono cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+                Remove
               </button>
             </div>
 

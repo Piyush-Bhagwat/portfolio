@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../services/firebase.js";
 import { ImageUploader } from "../../components/common";
+import { getOptimizedImageUrl } from "../../services/cloudinary.js";
 import {
   BentoCard,
   BrutalButton,
@@ -35,8 +36,8 @@ export const DEFAULT_PROFILE = {
     "I'm a full-stack engineer focused on building robust, high-performance web applications and intuitive interfaces.",
     "Specialized in React, Node.js, Cloud Firestore, and modern Neo-Brutalist design systems with zero-cost cloud pipelines.",
   ],
-  avatar_url: "/assets/myIMG-czvx6SJz.jpg",
-  avatar_public_id: "",
+  avatar_url: "https://res.cloudinary.com/dsdqo228u/image/upload/v1791974281/portfolio/avatars/masarithpr6rydaz1ybq.jpg",
+  avatar_public_id: "portfolio/avatars/masarithpr6rydaz1ybq",
   location: "Brahmapuri, Maharashtra, India",
   status_badge: "Available for new opportunities",
   resume_url: "https://drive.google.com/file/d/1_resume_link/view",
@@ -82,6 +83,15 @@ export default function ProfileCMS() {
         if (isMounted) {
           if (docSnap.exists()) {
             const data = docSnap.data();
+            const rawAvatarUrl = data.avatar_url;
+            const validAvatarUrl =
+              !rawAvatarUrl || rawAvatarUrl.includes("myIMG-czvx6SJz") || rawAvatarUrl.startsWith("/assets/")
+                ? DEFAULT_PROFILE.avatar_url
+                : rawAvatarUrl;
+            const validPublicId =
+              data.avatar_public_id ||
+              (validAvatarUrl === DEFAULT_PROFILE.avatar_url ? DEFAULT_PROFILE.avatar_public_id : "");
+
             setProfile({
               name: data.name ?? DEFAULT_PROFILE.name,
               role: data.role ?? DEFAULT_PROFILE.role,
@@ -89,8 +99,8 @@ export default function ProfileCMS() {
               bio_paragraphs: Array.isArray(data.bio_paragraphs) && data.bio_paragraphs.length > 0
                 ? data.bio_paragraphs
                 : DEFAULT_PROFILE.bio_paragraphs,
-              avatar_url: data.avatar_url ?? DEFAULT_PROFILE.avatar_url,
-              avatar_public_id: data.avatar_public_id ?? "",
+              avatar_url: validAvatarUrl,
+              avatar_public_id: validPublicId,
               location: data.location ?? DEFAULT_PROFILE.location,
               status_badge: data.status_badge ?? DEFAULT_PROFILE.status_badge,
               resume_url: data.resume_url ?? DEFAULT_PROFILE.resume_url,
@@ -206,26 +216,67 @@ export default function ProfileCMS() {
   };
 
   // Cloudinary Avatar upload handlers
-  const handleAvatarUploaded = ({ url, public_id }) => {
+  const handleAvatarUploaded = async (uploadRes) => {
+    const avatarUrl = uploadRes?.secure_url || uploadRes?.url || "";
+    const publicId = uploadRes?.public_id || "";
+
     setProfile((prev) => ({
       ...prev,
-      avatar_url: url,
-      avatar_public_id: public_id,
+      avatar_url: avatarUrl,
+      avatar_public_id: publicId,
     }));
-    setIsDirty(true);
     setFeedback({
       type: "success",
-      message: "Avatar uploaded to Cloudinary. Remember to save changes.",
+      message: "Avatar uploaded to Cloudinary and profile saved successfully.",
     });
+
+    try {
+      const docRef = doc(db, "site_config", "profile");
+      await setDoc(
+        docRef,
+        {
+          avatar_url: avatarUrl,
+          avatar_public_id: publicId,
+          updated_at: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (err) {
+      console.error("Failed to auto-save avatar to Firestore:", err);
+      setFeedback({
+        type: "error",
+        message: "Avatar uploaded to Cloudinary, but failed to auto-save to Firestore. Please click 'Save Profile'.",
+      });
+      setIsDirty(true);
+    }
   };
 
-  const handleAvatarRemoved = () => {
+  const handleAvatarRemoved = async () => {
     setProfile((prev) => ({
       ...prev,
       avatar_url: "",
       avatar_public_id: "",
     }));
-    setIsDirty(true);
+    setFeedback({
+      type: "success",
+      message: "Avatar removed and profile updated.",
+    });
+
+    try {
+      const docRef = doc(db, "site_config", "profile");
+      await setDoc(
+        docRef,
+        {
+          avatar_url: "",
+          avatar_public_id: "",
+          updated_at: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (err) {
+      console.error("Failed to update avatar removal in Firestore:", err);
+      setIsDirty(true);
+    }
   };
 
   // Save to Firestore
@@ -504,6 +555,7 @@ export default function ProfileCMS() {
                 onUploadSuccess={handleAvatarUploaded}
                 onRemove={handleAvatarRemoved}
                 label="Drop Profile Avatar Here"
+                aspectRatio="square"
               />
 
               {profile.avatar_public_id && (
@@ -697,12 +749,12 @@ export default function ProfileCMS() {
                 <div className="flex items-center gap-3">
                   {profile.avatar_url ? (
                     <img
-                      src={profile.avatar_url}
+                      src={getOptimizedImageUrl(profile.avatar_url, { width: 120, height: 120, crop: "fill" })}
                       alt={profile.name}
                       className="w-14 h-14 object-cover border-2 border-zinc-700 bg-zinc-800 shrink-0 shadow-brutal-sm"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/assets/myIMG-czvx6SJz.jpg";
+                        e.currentTarget.src = DEFAULT_PROFILE.avatar_url;
                       }}
                     />
                   ) : (

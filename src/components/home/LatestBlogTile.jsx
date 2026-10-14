@@ -18,7 +18,7 @@ export default function LatestBlogTile({ post = SAMPLE_INITIAL_POST, className =
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-5 shadow-brutal-sm
+        border-2 border-zinc-800 bg-zinc-950 p-4 sm:p-5 shadow-brutal-sm
         flex flex-col justify-between font-mono hover:border-terminal-green
         hover:-translate-y-0.5 hover:shadow-brutal transition-all group ${className}
       `}

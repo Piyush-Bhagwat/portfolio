@@ -60,7 +60,13 @@ export default function HomePage() {
         const profileRef = doc(db, "site_config", "profile");
         const snap = await getDoc(profileRef);
         if (snap.exists() && isMounted) {
-          setProfile({ ...DEFAULT_PROFILE, ...snap.data() });
+          const profileData = snap.data();
+          const rawAvatarUrl = profileData.avatar_url;
+          const validAvatarUrl =
+            !rawAvatarUrl || rawAvatarUrl.includes("myIMG-czvx6SJz") || rawAvatarUrl.startsWith("/assets/")
+              ? DEFAULT_PROFILE.avatar_url
+              : rawAvatarUrl;
+          setProfile({ ...DEFAULT_PROFILE, ...profileData, avatar_url: validAvatarUrl });
         }
       } catch (err) {
         console.error("Error fetching homepage profile:", err);
@@ -136,7 +142,7 @@ export default function HomePage() {
           variants={bentoContainerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 auto-rows-fr"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
         >
           {/* Tile 1: Hero Profile (2x2) */}
           <motion.div

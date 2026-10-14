@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
-import { BentoCard, BrutalButton, TagBadge, TerminalBox, StatusPill } from "../../components/brutalist";
+import { BentoCard, BrutalButton, TerminalBox, StatusPill } from "../../components/brutalist";
 import {
   User,
   FolderKanban,
@@ -9,7 +9,6 @@ import {
   BookOpen,
   ArrowRight,
   CheckCircle2,
-  Clock,
   Sparkles,
   Database,
   AlertCircle,
@@ -81,7 +80,6 @@ export default function Overview() {
               <span className="p-2 bg-zinc-800 border border-zinc-700 inline-block text-terminal-green">
                 <User className="w-5 h-5" />
               </span>
-              <TagBadge variant="terminal" size="sm">Day 3</TagBadge>
             </div>
             <p className="text-xs text-zinc-400 font-mono">
               Manage personal headline, multi-paragraph bio, location, and Cloudinary avatar.
@@ -108,7 +106,6 @@ export default function Overview() {
               <span className="p-2 bg-zinc-800 border border-zinc-700 inline-block text-terminal-cyan">
                 <FolderKanban className="w-5 h-5" />
               </span>
-              <TagBadge variant="cyan" size="sm">Day 4</TagBadge>
             </div>
             <p className="text-xs text-zinc-400 font-mono">
               Full CRUD on projects with technical rationale, problem solving Q&A, and media.
@@ -135,7 +132,6 @@ export default function Overview() {
               <span className="p-2 bg-zinc-800 border border-zinc-700 inline-block text-amber-400">
                 <Wrench className="w-5 h-5" />
               </span>
-              <TagBadge variant="terminal" size="sm">Day 3</TagBadge>
             </div>
             <p className="text-xs text-zinc-400 font-mono">
               Organize frontend, backend, database skills and career milestones dynamically.
@@ -167,7 +163,6 @@ export default function Overview() {
               <span className="p-2 bg-zinc-800 border border-zinc-700 inline-block text-rose-400">
                 <BookOpen className="w-5 h-5" />
               </span>
-              <TagBadge variant="default" size="sm">Day 5</TagBadge>
             </div>
             <p className="text-xs text-zinc-400 font-mono">
               Split-pane markdown editor with Cloudinary asset drop and automatic reading time.
@@ -183,11 +178,10 @@ export default function Overview() {
         </BentoCard>
       </div>
 
-      {/* Diagnostic & Telemetry Window */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Telemetry Terminal */}
-        <div className="lg:col-span-2 space-y-4">
-          <TerminalBox title="system-telemetry.log" copyText="npm run dev">
+      {/* Diagnostic & Metadata Window */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Metadata Terminal */}
+        <TerminalBox title="system-metadata.log" copyText="npm run dev">
             <div className="space-y-2 text-xs font-mono">
               <div className="text-zinc-500"># System Infrastructure Status Check</div>
               <div className="flex items-center gap-2 text-zinc-300">
@@ -214,12 +208,12 @@ export default function Overview() {
                 <span className="text-terminal-green font-semibold">Enforced via ProtectedRoute</span>
               </div>
               <div className="pt-2 text-[11px] text-zinc-500 border-t border-zinc-800">
-                [OK] V2 Platform foundation verified. Day 3 CMS operational. Ready for Day 4 Projects.
+                [OK] V2 Production Platform verified. All CMS modules, media pipelines, and public routes operational.
               </div>
             </div>
           </TerminalBox>
 
-          {/* Database Initial Seeder Box (Slice 3.4) */}
+          {/* Database Initial Seeder Box */}
           <TerminalBox title="seed_database.sh" className="border-zinc-800">
             <div className="p-4 space-y-3 font-mono text-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-3">
@@ -305,49 +299,6 @@ export default function Overview() {
               )}
             </div>
           </TerminalBox>
-        </div>
-
-        {/* 7-Day Sprint Roadmap Progress */}
-        <div className="p-5 bg-zinc-900 border border-zinc-800 font-mono space-y-4 shadow-brutal">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-            <span className="text-xs font-bold text-zinc-200 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-terminal-green" />
-              SPRINT STATUS
-            </span>
-            <TagBadge variant="terminal" size="sm">Day 3 Done</TagBadge>
-          </div>
-
-          <div className="space-y-2.5 text-xs">
-            <div className="flex items-center justify-between text-zinc-400">
-              <span className="text-zinc-300">Day 1: Tokens &amp; Media</span>
-              <span className="text-terminal-green font-bold">COMPLETED</span>
-            </div>
-            <div className="flex items-center justify-between text-zinc-400">
-              <span className="text-zinc-300">Day 2: Auth &amp; Admin Shell</span>
-              <span className="text-terminal-green font-bold">COMPLETED</span>
-            </div>
-            <div className="flex items-center justify-between text-zinc-400">
-              <span className="text-zinc-100 font-bold">Day 3: Profile &amp; Skills CMS</span>
-              <span className="text-terminal-green font-bold">COMPLETED</span>
-            </div>
-            <div className="flex items-center justify-between text-zinc-400">
-              <span className="text-zinc-200 font-bold">Day 4: Projects &amp; Cases</span>
-              <span className="text-terminal-cyan font-bold">ACTIVE</span>
-            </div>
-            <div className="flex items-center justify-between text-zinc-500">
-              <span>Day 5: Blog Engine CMS</span>
-              <span>QUEUED</span>
-            </div>
-            <div className="flex items-center justify-between text-zinc-500">
-              <span>Day 6: Public Readers</span>
-              <span>QUEUED</span>
-            </div>
-            <div className="flex items-center justify-between text-zinc-500">
-              <span>Day 7: Bento Redesign &amp; SEO</span>
-              <span>QUEUED</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

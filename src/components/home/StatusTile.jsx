@@ -38,7 +38,7 @@ export default function StatusTile({ profile = DEFAULT_PROFILE, className = "" }
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-5 shadow-brutal-sm
+        border-2 border-zinc-800 bg-zinc-950 p-4 sm:p-5 shadow-brutal-sm
         flex flex-col justify-between font-mono hover:border-terminal-green
         hover:-translate-y-0.5 hover:shadow-brutal transition-all ${className}
       `}
@@ -48,7 +48,7 @@ export default function StatusTile({ profile = DEFAULT_PROFILE, className = "" }
         <div className="flex items-center gap-1.5 text-terminal-green">
           <Radio className="w-3.5 h-3.5 animate-pulse" />
           <span className="text-[11px] font-bold uppercase tracking-wider text-terminal-cyan">
-            Telemetry
+            Metadata
           </span>
         </div>
         <span className="text-[10px] text-zinc-500 bg-zinc-900 px-1.5 py-0.5 border border-zinc-800">

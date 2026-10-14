@@ -28,7 +28,7 @@ export default function SkillsTile({ skills = DEFAULT_SKILLS, className = "" }) 
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-5 sm:p-6 shadow-brutal-sm
+        border-2 border-zinc-800 bg-zinc-950 p-4 sm:p-6 shadow-brutal-sm
         flex flex-col justify-between font-mono hover:border-zinc-700
         transition-colors ${className}
       `}
@@ -44,7 +44,7 @@ export default function SkillsTile({ skills = DEFAULT_SKILLS, className = "" }) 
           </div>
 
           {/* Category Toggle Pills */}
-          <div className="flex items-center gap-1 text-[10px]">
+          <div className="flex flex-wrap items-center gap-1 text-[10px]">
             {categories.map((cat) => (
               <button
                 key={cat.id}

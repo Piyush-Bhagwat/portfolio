@@ -88,13 +88,9 @@ test("Overview page renders Firestore Seeder controls and updated roadmap", () =
     "Should render Force Overwrite option"
   );
 
-  // Updated 7-day sprint status
+  // Metadata status verified
   assert.ok(
-    html.includes("Day 3 Done") || html.includes("Day 3"),
-    "Should display Day 3 completion status"
-  );
-  assert.ok(
-    html.includes("Day 4: Projects"),
-    "Should show Day 4 Projects as active/next"
+    html.includes("system-metadata.log") || html.includes("Production Platform verified"),
+    "Should display system metadata operational status"
   );
 });

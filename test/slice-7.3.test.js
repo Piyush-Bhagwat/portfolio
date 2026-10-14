@@ -5,7 +5,11 @@ import path from "node:path";
 import React from "react";
 import { renderToString } from "react-dom/server";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
-import { getOptimizedImageUrl } from "../src/services/cloudinary.js";
+import {
+  getOptimizedImageUrl,
+  validateImageFile,
+  CLOUDINARY_CONFIG,
+} from "../src/services/cloudinary.js";
 import BlogPostPage from "../src/pages/public/BlogPostPage.jsx";
 import { ProjectCard } from "../src/components/project";
 import { HeroTile } from "../src/components/home";
@@ -115,7 +119,7 @@ test("Public components apply getOptimizedImageUrl to images", () => {
     )
   );
   assert.ok(
-    heroHtml.includes("/image/upload/c_fill,w_250,h_250,f_auto,q_auto/avatar.jpg"),
+    heroHtml.includes("/image/upload/c_fill,w_400,h_400,f_auto,q_auto/avatar.jpg"),
     "HeroTile avatar must use optimized Cloudinary URL"
   );
 });
@@ -146,3 +150,40 @@ test("App.jsx no longer imports legacy CSS stylesheets", () => {
     "App.jsx should no longer import legacy mobile.style.css"
   );
 });
+
+test("CLOUDINARY_CONFIG provides valid cloudName and uploadPreset fallback defaults", () => {
+  assert.ok(CLOUDINARY_CONFIG.cloudName, "cloudName must not be empty");
+  assert.ok(CLOUDINARY_CONFIG.uploadPreset, "uploadPreset must not be empty");
+  assert.ok(Array.isArray(CLOUDINARY_CONFIG.allowedTypes), "allowedTypes must be an array");
+  assert.ok(CLOUDINARY_CONFIG.allowedTypes.includes("image/jpeg"));
+  assert.ok(CLOUDINARY_CONFIG.allowedTypes.includes("image/jpg"));
+  assert.ok(CLOUDINARY_CONFIG.allowedTypes.includes("image/png"));
+});
+
+test("validateImageFile validates image formats and sizes flexibly", () => {
+  // Valid MIME type
+  assert.equal(
+    validateImageFile({ type: "image/png", size: 1024 * 1024, name: "avatar.png" }).valid,
+    true
+  );
+  // Valid by extension even if type is unusual
+  assert.equal(
+    validateImageFile({ type: "image/jpg", size: 2 * 1024 * 1024, name: "photo.jpg" }).valid,
+    true
+  );
+  assert.equal(
+    validateImageFile({ type: "", size: 500 * 1024, name: "avatar.WEBP" }).valid,
+    true
+  );
+  // Rejects invalid extension/type
+  assert.equal(
+    validateImageFile({ type: "application/pdf", size: 500, name: "resume.pdf" }).valid,
+    false
+  );
+  // Rejects oversized file (> 5MB)
+  assert.equal(
+    validateImageFile({ type: "image/png", size: 6 * 1024 * 1024, name: "huge.png" }).valid,
+    false
+  );
+});
+

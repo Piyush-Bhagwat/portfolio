@@ -47,17 +47,6 @@ const MainContent = () => {
 
     return (
         <div className="app min-h-screen bg-black text-zinc-100 font-mono flex flex-col justify-between selection:bg-terminal-green selection:text-black">
-            {/* Live Deployment Notice Banner */}
-            <div
-                role="alert"
-                className="bg-amber-400 text-black px-4 py-2.5 border-b-2 border-black font-mono text-xs sm:text-sm font-bold flex items-center justify-center gap-2 tracking-tight z-50 text-center shadow-sm"
-            >
-                <span className="inline-block w-2 h-2 bg-black rounded-full animate-ping shrink-0" />
-                <span>
-                    ⚠️ Website refactoring under process, expect unusual behaviour.
-                </span>
-            </div>
-
             <PublicNavbar />
 
             <main className="flex-1">
