@@ -3,7 +3,9 @@ import "./style/main.style.css";
 import "./style/mobile.style.css";
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
 import HomePage from "./pages/Home.page";
-import ProjectPage from "./pages/Project.page";
+import ProjectsPage from "./pages/public/ProjectsPage";
+import BlogsPage from "./pages/public/BlogsPage";
+import BlogPostPage from "./pages/public/BlogPostPage";
 import Dashboard from "./pages/Dashboard";
 import { BrutalistShowcase } from "./components/brutalist";
 import ProtectedRoute from "./components/common/ProtectedRoute";
@@ -86,6 +88,9 @@ const MainContent = () => {
                                 <Link to="/projects">Projects</Link>
                             </li>
                             <li>
+                                <Link to="/blogs">Articles</Link>
+                            </li>
+                            <li>
                                 <Link to="/v2-preview" style={{ color: "#10b981", fontWeight: "bold" }}>
                                     ⚡ V2 Primitives
                                 </Link>
@@ -109,7 +114,9 @@ const MainContent = () => {
             </header>
             <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/projects" element={<ProjectPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/blogs" element={<BlogsPage />} />
+                <Route path="/blogs/:slug" element={<BlogPostPage />} />
                 <Route path="/manage" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/v2-preview" element={<BrutalistShowcase />} />
             </Routes>
