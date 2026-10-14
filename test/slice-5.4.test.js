@@ -104,10 +104,10 @@ test("BlogsCMS renders header, search, filter tabs, and action controls", () => 
   assert.ok(html.includes("sys.cms.blogs"), "Should contain sys.cms.blogs breadcrumb");
   assert.ok(html.includes("Technical Articles CMS"), "Should render main page title");
 
-  // Telemetry metrics
-  assert.ok(html.includes("Total:"), "Should display total count telemetry");
-  assert.ok(html.includes("published"), "Should display published count telemetry");
-  assert.ok(html.includes("drafts"), "Should display drafts count telemetry");
+  // Metadata metrics
+  assert.ok(html.includes("Total:"), "Should display total count metadata");
+  assert.ok(html.includes("published"), "Should display published count metadata");
+  assert.ok(html.includes("drafts"), "Should display drafts count metadata");
 
   // Action controls
   assert.ok(html.includes("Sync"), "Should render Sync button");

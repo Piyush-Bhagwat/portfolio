@@ -36,12 +36,12 @@ test("HeroTile renders whoami terminal prompt, profile details, and CTA buttons"
   assert.ok(html.includes("Say Hello"), "Should render Say Hello CTA");
 });
 
-test("StatusTile renders telemetry header, availability pill, IST time, and location", () => {
+test("StatusTile renders metadata header, availability pill, IST time, and location", () => {
   const html = renderToString(
     React.createElement(StatusTile, { profile: DEFAULT_PROFILE })
   );
 
-  assert.ok(html.includes("Telemetry"), "Should render Telemetry header");
+  assert.ok(html.includes("Metadata"), "Should render Metadata header");
   assert.ok(html.includes("NODE: IST"), "Should render IST node badge");
   assert.ok(html.includes("Available for new opportunities"), "Should render availability status");
   assert.ok(html.includes("IST"), "Should render IST timezone label");
@@ -85,7 +85,7 @@ test("LatestBlogTile renders article title, read time, and direct publication li
 
   assert.ok(html.includes("Latest Publication"), "Should render Latest Publication header");
   assert.ok(html.includes("Building Resilient Web Interfaces with Neo-Brutalism"), "Should render article title");
-  assert.ok(html.includes("min read"), "Should display read time telemetry");
+  assert.ok(html.includes("min read"), "Should display read time metadata");
   assert.ok(html.includes("Read Full Article"), "Should render Read Full Article link");
   assert.ok(html.includes("/blogs/building-resilient-web-interfaces"), "Should link to article slug");
 });
@@ -153,7 +153,7 @@ test("HomePage renders complete 6-Tile Bento Grid architecture", () => {
   // Tile 1: Hero
   assert.ok(html.includes("whoami"), "Bento grid must contain HeroTile");
   // Tile 2: Status
-  assert.ok(html.includes("Telemetry"), "Bento grid must contain StatusTile");
+  assert.ok(html.includes("Metadata"), "Bento grid must contain StatusTile");
   // Tile 3: Socials Dock
   assert.ok(html.includes("Links &amp; Dock") || html.includes("Links & Dock"), "Bento grid must contain SocialsTile");
   // Tile 4: Tech Stack

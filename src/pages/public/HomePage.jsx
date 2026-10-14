@@ -155,7 +155,7 @@ export default function HomePage() {
             />
           </motion.div>
 
-          {/* Tile 2: Status & Real-Time IST Telemetry (1x1) */}
+          {/* Tile 2: Status & Real-Time IST Metadata (1x1) */}
           <motion.div
             variants={bentoTileVariants}
             className="col-span-1 flex flex-col"

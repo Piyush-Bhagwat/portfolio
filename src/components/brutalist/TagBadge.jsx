@@ -15,6 +15,7 @@ import React from "react";
  */
 export default function TagBadge({
   children,
+  label,
   variant = "default",
   size = "md",
   dot = false,
@@ -24,6 +25,7 @@ export default function TagBadge({
   className = "",
   ...props
 }) {
+  const content = children ?? label;
   const isClickable = Boolean(onClick);
 
   const sizeStyles = {
@@ -72,7 +74,7 @@ export default function TagBadge({
         />
       )}
       {icon && <span className="shrink-0">{icon}</span>}
-      <span className="truncate">{children}</span>
+      <span className="truncate">{content}</span>
       {onRemove && (
         <button
           type="button"

@@ -47,7 +47,7 @@ test("BlogCard renders title, excerpt, date, read time, and tags", () => {
   // Post details
   assert.ok(html.includes("Building Resilient Web Interfaces with Neo-Brutalism"), "Should render post title");
   assert.ok(html.includes("A deep dive into building tactile"), "Should render excerpt");
-  assert.ok(html.includes("4 min read"), "Should display read time telemetry");
+  assert.ok(html.includes("4 min read"), "Should display read time metadata");
   assert.ok(html.includes("/blogs/building-resilient-web-interfaces"), "Should link to post route");
   assert.ok(html.includes("Read Article"), "Should render Read Article link");
 

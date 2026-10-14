@@ -131,6 +131,29 @@ This document serves as the persistent memory, architectural reference, and oper
      - `SkillsTile.jsx`: Refined mobile padding to `p-4 sm:p-6` and added `flex-wrap` to category filter pills to prevent horizontal clipping on narrow mobile screens.
      - `LatestBlogTile.jsx`: Refined mobile padding to `p-4 sm:p-5`.
 
+### 5. Terminology Alignment: "Telemetry" to "Metadata"
+- **Scope**: Uniform replacement of legacy "Telemetry" terminology with "Metadata".
+- **Updates Applied**:
+  - `StatusTile.jsx`: Header label updated from `Telemetry` to `Metadata`.
+  - `Overview.jsx`: Diagnostic log updated from `system-telemetry.log` to `system-metadata.log`.
+  - Component comments synchronized in `HomePage.jsx`, `LatestBlogTile.jsx`, `BlogPostPage.jsx`, `BlogEditor.jsx`, and `BlogsCMS.jsx`.
+  - Automated test assertions updated across `test/slice-2.3.test.js`, `test/slice-5.1.test.js`, `test/slice-5.4.test.js`, `test/slice-6.1.test.js`, `test/slice-6.2.test.js`, `test/slice-6.3.test.js`, `test/slice-7.1.test.js`, and `test/slice-7.2.test.js`.
+  - Verified 0 remaining occurrences of "telemetry" across the repository and 108/108 passing tests.
+
+### 6. Empty Category Tag Badges, Seeder Deprecation & Public Nav Cleanup
+- **TagBadge Empty Boxes Fix**:
+  - In `src/components/brutalist/TagBadge.jsx`, the component previously expected `children` to render text, but multiple callers (`ProjectCard.jsx`, `FeaturedProjectsTile.jsx`, `BlogPostPage.jsx`, `CaseStudyModal.jsx`) passed `label={tag}` without children.
+  - As a result, `<span className="truncate">{children}</span>` rendered empty strings while the badge container styling created empty dark boxes.
+  - Updated `TagBadge.jsx` to support `const content = children ?? label`, and updated all callers to pass children explicitly.
+- **Admin Overview Database Seeder Removal**:
+  - Removed `seed_database.sh` TerminalBox from `src/pages/admin/Overview.jsx` as initial seeding is complete.
+  - Cleaned up unused seeder imports and state (`seedAllData`, `seeding`, `overwrite`, `seedResult`, `handleSeed`).
+  - Expanded `system-metadata.log` diagnostic TerminalBox to clean single-column presentation.
+  - Aligned `test/slice-3.4.test.js` to assert that `seed_database.sh` is cleanly omitted in production.
+- **Public Navigation Cleanup**:
+  - Removed `{ label: "⚡ V2 Primitives", path: "/v2-preview", accent: "text-terminal-green" }` from `navLinks` in `src/components/layout/PublicNavbar.jsx`.
+  - Updated `HeroTile.jsx` terminal badge from `sys.v2.active` to `sys.prod.active`.
+
 ---
 
 ## 5. Verification & Test Suite Status

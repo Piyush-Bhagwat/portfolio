@@ -290,7 +290,7 @@ export default function BlogsCMS() {
           </p>
         </div>
 
-        {/* Action buttons & telemetry */}
+        {/* Action buttons & metadata */}
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300">
             <span className="text-zinc-500">Total:</span>

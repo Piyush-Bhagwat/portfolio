@@ -247,7 +247,9 @@ export default function BlogPostPage() {
           {Array.isArray(post.tags) && post.tags.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               {post.tags.map((tag) => (
-                <TagBadge key={tag} label={tag} variant="cyan" />
+                <TagBadge key={tag} label={tag} variant="cyan">
+                  {tag}
+                </TagBadge>
               ))}
             </div>
           )}
@@ -264,7 +266,7 @@ export default function BlogPostPage() {
             </p>
           )}
 
-          {/* Article Telemetry Bar & Social Share */}
+          {/* Article Metadata Bar & Social Share */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 border-y-2 border-zinc-800 bg-zinc-950 px-4 text-xs">
             {/* Left: Metadata */}
             <div className="flex flex-wrap items-center gap-4 text-zinc-300">

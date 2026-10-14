@@ -104,7 +104,7 @@ console.log(greeting);
   assert.ok(formattedHtml.includes("Val 1"), "Should render table cell");
 });
 
-test("BlogEditor renders split-screen workspace, telemetry, and actions", () => {
+test("BlogEditor renders split-screen workspace, metadata metrics, and actions", () => {
   const html = renderToString(
     React.createElement(
       MemoryRouter,
@@ -132,8 +132,8 @@ test("BlogEditor renders split-screen workspace, telemetry, and actions", () => 
   assert.ok(html.includes("URL Slug"), "Should contain URL slug label");
   assert.ok(html.includes("Save Draft"), "Should contain Save Draft button");
   assert.ok(html.includes("Publish Article"), "Should contain Publish Article button");
-  assert.ok(html.includes("min read"), "Should display estimated read time telemetry");
-  assert.ok(html.includes("words"), "Should display word count telemetry");
+  assert.ok(html.includes("min read"), "Should display estimated read time metadata");
+  assert.ok(html.includes("words"), "Should display word count metadata");
   assert.ok(html.includes("EDITOR (MARKDOWN SOURCE)"), "Should render editor pane header");
   assert.ok(html.includes("LIVE PREVIEW (GFM RENDERED)"), "Should render preview pane header");
 });

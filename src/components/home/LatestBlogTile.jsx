@@ -53,7 +53,7 @@ export default function LatestBlogTile({ post = SAMPLE_INITIAL_POST, className =
           )}
         </div>
 
-        {/* Telemetry (Date & Read Time) */}
+        {/* Metadata (Date & Read Time) */}
         <div className="flex items-center gap-3 text-[11px] text-zinc-500 pt-1">
           <span className="flex items-center gap-1">
             <Calendar className="w-3 h-3 text-zinc-600" />

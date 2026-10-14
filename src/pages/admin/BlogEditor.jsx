@@ -473,7 +473,7 @@ export default function BlogEditor() {
     }
   };
 
-  // Metrics telemetry
+  // Metrics metadata
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
   const readTime = calculateReadTime(content);
   const lineCount = content.split("\n").length;
@@ -507,7 +507,7 @@ export default function BlogEditor() {
           </h1>
         </div>
 
-        {/* Action Controls & Telemetry */}
+        {/* Action Controls & Metadata */}
         <div className="flex flex-wrap items-center gap-2.5">
           {syncing && <StatusPill status="SYNCING..." variant="terminal" />}
 

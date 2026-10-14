@@ -42,7 +42,7 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
             <span className="text-terminal-green font-bold">whoami</span>
           </div>
           <span className="text-[10px] sm:text-xs text-terminal-cyan bg-zinc-900 px-2 py-0.5 border border-zinc-800">
-            sys.v2.active
+            sys.prod.active
           </span>
         </div>
 

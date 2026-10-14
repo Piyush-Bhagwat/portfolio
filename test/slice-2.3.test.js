@@ -140,7 +140,10 @@ test("Overview page renders control center and bento cards", () => {
   assert.ok(html.includes("Profile &amp; Bio") || html.includes("Profile & Bio"), "Should render Profile BentoCard");
   assert.ok(html.includes("Projects &amp; Cases") || html.includes("Projects & Cases"), "Should render Projects BentoCard");
   assert.ok(html.includes("Technical Articles"), "Should render Articles BentoCard");
-  assert.ok(html.includes("system-telemetry.log"), "Should render telemetry window");
+  assert.ok(
+    html.includes("system-metadata.log"),
+    "Should render metadata window"
+  );
   assert.ok(!html.includes("SPRINT STATUS"), "Sprint status should not be present in production dashboard");
 });
 

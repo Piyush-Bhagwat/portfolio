@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
 import { BentoCard, BrutalButton, TerminalBox, StatusPill } from "../../components/brutalist";
@@ -9,39 +8,15 @@ import {
   BookOpen,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
-  Database,
-  AlertCircle,
 } from "lucide-react";
-import { seedAllData } from "../../scripts/seedData.js";
 
 /**
  * Admin Overview Page
  * Dashboard home providing quick operational metrics, diagnostic health,
- * quick-action shortcuts across portfolio modules, and database seeding utilities.
+ * and quick-action shortcuts across portfolio modules.
  */
 export default function Overview() {
   const { user, adminEmail } = useAuth();
-  const [seeding, setSeeding] = useState(false);
-  const [overwrite, setOverwrite] = useState(false);
-  const [seedResult, setSeedResult] = useState(null);
-
-  const handleSeed = async () => {
-    if (!window.confirm("Initialize or seed Firestore with canonical profile, skills, and experience data?")) return;
-    setSeeding(true);
-    setSeedResult(null);
-    try {
-      const res = await seedAllData({ overwrite });
-      setSeedResult(res);
-    } catch (err) {
-      setSeedResult({
-        success: false,
-        error: err.message || "Failed to execute seeder.",
-      });
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -179,126 +154,39 @@ export default function Overview() {
       </div>
 
       {/* Diagnostic & Metadata Window */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {/* Metadata Terminal */}
         <TerminalBox title="system-metadata.log" copyText="npm run dev">
-            <div className="space-y-2 text-xs font-mono">
-              <div className="text-zinc-500"># System Infrastructure Status Check</div>
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-terminal-green shrink-0" />
-                <span className="text-zinc-400">Firebase Auth:</span>
-                <span className="text-terminal-green font-semibold">Active &amp; Whitelisted</span>
-                <span className="text-zinc-600">({adminEmail})</span>
-              </div>
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-terminal-green shrink-0" />
-                <span className="text-zinc-400">Cloud Firestore:</span>
-                <span className="text-terminal-green font-semibold">Ready</span>
-                <span className="text-zinc-600">(portfolio-c6f29)</span>
-              </div>
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-terminal-green shrink-0" />
-                <span className="text-zinc-400">Cloudinary Media CDN:</span>
-                <span className="text-terminal-green font-semibold">Configured</span>
-                <span className="text-zinc-600">(portfolio_unsigned)</span>
-              </div>
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-terminal-green shrink-0" />
-                <span className="text-zinc-400">Route Session Guard:</span>
-                <span className="text-terminal-green font-semibold">Enforced via ProtectedRoute</span>
-              </div>
-              <div className="pt-2 text-[11px] text-zinc-500 border-t border-zinc-800">
-                [OK] V2 Production Platform verified. All CMS modules, media pipelines, and public routes operational.
-              </div>
+          <div className="space-y-2 text-xs font-mono">
+            <div className="text-zinc-500"># System Infrastructure Status Check</div>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <CheckCircle2 className="w-3.5 h-3.5 text-terminal-green shrink-0" />
+              <span className="text-zinc-400">Firebase Auth:</span>
+              <span className="text-terminal-green font-semibold">Active &amp; Whitelisted</span>
+              <span className="text-zinc-600">({adminEmail})</span>
             </div>
-          </TerminalBox>
-
-          {/* Database Initial Seeder Box */}
-          <TerminalBox title="seed_database.sh" className="border-zinc-800">
-            <div className="p-4 space-y-3 font-mono text-xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-3">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2 text-zinc-200 font-bold">
-                    <Database className="w-4 h-4 text-terminal-green" />
-                    <span>Firestore Initial Data Seeder</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400">
-                    Seed initial V1 bio, skills stack, and career milestones to Firestore if empty.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={overwrite}
-                      onChange={(e) => setOverwrite(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded-none text-terminal-green bg-zinc-900 border-zinc-700"
-                    />
-                    <span>Force Overwrite</span>
-                  </label>
-                  <BrutalButton
-                    variant="terminal"
-                    size="sm"
-                    onClick={handleSeed}
-                    loading={seeding}
-                    disabled={seeding}
-                    icon={<Sparkles className="w-3.5 h-3.5" />}
-                  >
-                    {seeding ? "Seeding..." : "Seed Initial Data"}
-                  </BrutalButton>
-                </div>
-              </div>
-
-              {seedResult && (
-                <div
-                  className={`p-3 border text-xs space-y-1.5 ${
-                    seedResult.success
-                      ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
-                      : "bg-rose-950/40 border-rose-800 text-rose-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 font-bold">
-                    {seedResult.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-rose-400" />
-                    )}
-                    <span>
-                      {seedResult.success
-                        ? "Database Seeder Execution Completed"
-                        : "Seeder Encountered Issues"}
-                    </span>
-                  </div>
-                  {seedResult.profile && (
-                    <div className="text-[11px] text-zinc-300">
-                      • Profile: <span className="font-semibold">{seedResult.profile.status}</span> - {seedResult.profile.message}
-                    </div>
-                  )}
-                  {seedResult.skills && (
-                    <div className="text-[11px] text-zinc-300">
-                      • Skills: <span className="font-semibold">{seedResult.skills.status}</span> - {seedResult.skills.message}
-                    </div>
-                  )}
-                  {seedResult.experiences && (
-                    <div className="text-[11px] text-zinc-300">
-                      • Experiences: <span className="font-semibold">{seedResult.experiences.status}</span> - {seedResult.experiences.message}
-                    </div>
-                  )}
-                  {seedResult.projects && (
-                    <div className="text-[11px] text-zinc-300">
-                      • Projects: <span className="font-semibold">{seedResult.projects.status}</span> - {seedResult.projects.message}
-                    </div>
-                  )}
-                  {seedResult.error && (
-                    <div className="text-[11px] text-rose-400 font-semibold">
-                      [Error] {seedResult.error}
-                    </div>
-                  )}
-                </div>
-              )}
+            <div className="flex items-center gap-2 text-zinc-300">
+              <CheckCircle2 className="w-3.5 h-3.5 text-terminal-green shrink-0" />
+              <span className="text-zinc-400">Cloud Firestore:</span>
+              <span className="text-terminal-green font-semibold">Ready</span>
+              <span className="text-zinc-600">(portfolio-c6f29)</span>
             </div>
-          </TerminalBox>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <CheckCircle2 className="w-3.5 h-3.5 text-terminal-green shrink-0" />
+              <span className="text-zinc-400">Cloudinary Media CDN:</span>
+              <span className="text-terminal-green font-semibold">Configured</span>
+              <span className="text-zinc-600">(portfolio_unsigned)</span>
+            </div>
+            <div className="flex items-center gap-2 text-zinc-300">
+              <CheckCircle2 className="w-3.5 h-3.5 text-terminal-green shrink-0" />
+              <span className="text-zinc-400">Route Session Guard:</span>
+              <span className="text-terminal-green font-semibold">Enforced via ProtectedRoute</span>
+            </div>
+            <div className="pt-2 text-[11px] text-zinc-500 border-t border-zinc-800">
+              [OK] V2 Production Platform verified. All CMS modules, media pipelines, and public routes operational.
+            </div>
+          </div>
+        </TerminalBox>
       </div>
     </div>
   );

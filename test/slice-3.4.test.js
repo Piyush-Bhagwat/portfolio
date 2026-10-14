@@ -61,7 +61,7 @@ test("seedData exports and schema validation", () => {
   assert.ok(SEED_EXPERIENCES.length >= 3, "Must contain at least 3 career milestones");
 });
 
-test("Overview page renders Firestore Seeder controls and updated roadmap", () => {
+test("Overview page renders system metadata operational status and cleanly omits database seeder in production", () => {
   const html = renderToString(
     React.createElement(
       MemoryRouter,
@@ -74,23 +74,21 @@ test("Overview page renders Firestore Seeder controls and updated roadmap", () =
     )
   );
 
-  // Seeder controls
+  // Control Center & Diagnostic Metadata
   assert.ok(
-    html.includes("Firestore Initial Data Seeder"),
-    "Should render Firestore Initial Data Seeder title"
+    html.includes("Control Center"),
+    "Should render Control Center title"
   );
   assert.ok(
-    html.includes("Seed Initial Data"),
-    "Should render Seed Initial Data button"
-  );
-  assert.ok(
-    html.includes("Force Overwrite"),
-    "Should render Force Overwrite option"
-  );
-
-  // Metadata status verified
-  assert.ok(
-    html.includes("system-metadata.log") || html.includes("Production Platform verified"),
+    html.includes("system-metadata.log"),
     "Should display system metadata operational status"
+  );
+  assert.ok(
+    !html.includes("seed_database.sh"),
+    "Database seeder widget should be removed from production overview"
+  );
+  assert.ok(
+    !html.includes("Firestore Initial Data Seeder"),
+    "Firestore seeder card should no longer be present"
   );
 });

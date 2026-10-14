@@ -124,7 +124,9 @@ export default function ProjectCard({
                 variant="default"
                 onClick={onTagClick ? () => onTagClick(tag) : undefined}
                 className={onTagClick ? "cursor-pointer hover:border-terminal-cyan" : ""}
-              />
+              >
+                {tag}
+              </TagBadge>
             ))}
           </div>
         )}

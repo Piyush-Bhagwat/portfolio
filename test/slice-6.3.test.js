@@ -123,7 +123,7 @@ test("ProjectsPage renders hero header, search input, filter pills, and default 
   // Hero Section
   assert.ok(html.includes("sys.projects.engineering_portfolio"), "Should render terminal breadcrumb");
   assert.ok(html.includes("Engineered Applications &amp; Projects") || html.includes("Engineered Applications & Projects"), "Should render main title");
-  assert.ok(html.includes("Total Projects"), "Should render project count telemetry");
+  assert.ok(html.includes("Total Projects"), "Should render project count metadata");
   assert.ok(html.includes("Deep-Dive Case Studies"), "Should render case studies count");
 
   // Filter & Search Controls

@@ -127,7 +127,7 @@ test("HomePage renders motion-animated bento container with responsive 1-col, 2-
 
   // All 6 tiles successfully rendered within motion wrappers
   assert.ok(html.includes("whoami"), "HeroTile present in animated grid");
-  assert.ok(html.includes("Telemetry"), "StatusTile present in animated grid");
+  assert.ok(html.includes("Metadata"), "StatusTile present in animated grid");
   assert.ok(html.includes("Links &amp; Dock") || html.includes("Links & Dock"), "SocialsTile present in animated grid");
   assert.ok(html.includes("Tech Stack &amp; Skills") || html.includes("Tech Stack & Skills"), "SkillsTile present in animated grid");
   assert.ok(html.includes("Latest Publication"), "LatestBlogTile present in animated grid");

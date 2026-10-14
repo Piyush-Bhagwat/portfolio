@@ -14,7 +14,6 @@ export default function PublicNavbar() {
     { label: "Home", path: "/" },
     { label: "Projects", path: "/projects" },
     { label: "Articles", path: "/blogs" },
-    { label: "⚡ V2 Primitives", path: "/v2-preview", accent: "text-terminal-green" },
     { label: "🛡️ Admin CMS", path: "/admin", accent: "text-terminal-cyan" },
   ];
 

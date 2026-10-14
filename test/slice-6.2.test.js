@@ -141,7 +141,7 @@ test("BlogPostPage renders article title, author, metadata, markdown prose and s
   // Header & Author
   assert.ok(html.includes("Building Resilient Web Interfaces with Neo-Brutalism"), "Should render article title");
   assert.ok(html.includes("Piyush Bhagwat"), "Should display author name");
-  assert.ok(html.includes("min read"), "Should display read time telemetry");
+  assert.ok(html.includes("min read"), "Should display read time metadata");
   assert.ok(html.includes("Back to all engineering logs"), "Should include back breadcrumb");
 
   // Tags

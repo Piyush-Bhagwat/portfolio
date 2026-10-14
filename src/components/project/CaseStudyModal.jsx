@@ -178,7 +178,9 @@ export default function CaseStudyModal({ project, onClose }) {
               </span>
               <div className="flex flex-wrap gap-2">
                 {techStack.map((tech) => (
-                  <TagBadge key={tech} label={tech} variant="cyan" />
+                  <TagBadge key={tech} label={tech} variant="cyan">
+                    {tech}
+                  </TagBadge>
                 ))}
               </div>
             </div>
