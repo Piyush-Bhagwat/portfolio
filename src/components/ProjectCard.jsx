@@ -19,8 +19,8 @@ const ProjectCard = ({ project, isEditable }) => {
 
             <Reveal>
                 <div className="tags">
-                    {project.tags.map((tag) => (
-                        <div className="tag">{tag}</div>
+                    {project.tags.map((tag, idx) => (
+                        <div key={tag || idx} className="tag">{tag}</div>
                     ))}
                 </div>
             </Reveal>

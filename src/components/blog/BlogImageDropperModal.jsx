@@ -6,7 +6,6 @@ import {
   AlertCircle,
   X,
   RefreshCw,
-  Image as ImageIcon,
   Link2,
   Sparkles,
 } from "lucide-react";

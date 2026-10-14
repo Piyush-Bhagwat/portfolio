@@ -19,7 +19,7 @@ export default function BrutalistShowcase() {
         </div>
       </BentoCard>
       <TerminalBox title="bash" copyText="npm run dev">
-        <code>$ echo 'Brutalist primitives & Cloudinary verified'</code>
+        <code>{"$ echo 'Brutalist primitives & Cloudinary verified'"}</code>
       </TerminalBox>
       <div className="flex gap-4">
         <BrutalButton variant="primary" icon={<ArrowRight className="w-4 h-4" />} iconPosition="right">

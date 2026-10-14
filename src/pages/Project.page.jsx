@@ -13,8 +13,8 @@ const ProjectPage = () => {
     const renderProjects = () => {
         return (
             <>
-                {projects?.map((item) => {
-                    return <ProjectCard project={item} />;
+                {projects?.map((item, index) => {
+                    return <ProjectCard key={item.id || item.title || index} project={item} />;
                 })}
             </>
         );

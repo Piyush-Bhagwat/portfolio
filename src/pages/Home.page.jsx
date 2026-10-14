@@ -14,8 +14,6 @@ import { context } from "../context/context";
 import ProjectCard from "../components/ProjectCard";
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
-import Symbol from "../components/ui/Symbols";
-import SymbolLayer from "../components/ui/SymbolLayer";
 import SymbolLayers from "../components/ui/SymbolLayers";
 
 const HomePage = () => {
@@ -24,8 +22,8 @@ const HomePage = () => {
     const renderProjects = () => {
         return (
             <>
-                {projects?.slice(0, 6).map((item) => {
-                    return <ProjectCard project={item} />;
+                {projects?.slice(0, 6).map((item, index) => {
+                    return <ProjectCard key={item.id || item.title || index} project={item} />;
                 })}
             </>
         );
@@ -55,25 +53,25 @@ const HomePage = () => {
                                 target="_blank"
                                 href="https://www.instagram.com/ab_nrmal/"
                             >
-                                <i class="fa-brands fa-instagram"></i>
+                                <i className="fa-brands fa-instagram"></i>
                             </a>
                             <a
                                 target="_blank"
                                 href="https://www.linkedin.com/in/piyush-bhagwat/"
                             >
-                                <i class="fa-brands fa-linkedin"></i>
+                                <i className="fa-brands fa-linkedin"></i>
                             </a>
                             <a
                                 target="_blank"
                                 href="https://www.facebook.com/profile.php?id=100085488072819"
                             >
-                                <i class="fa-brands fa-facebook"></i>
+                                <i className="fa-brands fa-facebook"></i>
                             </a>
                             <a
                                 target="_blank"
                                 href="https://x.com/PiyushBhagwat11"
                             >
-                                <i class="fa-brands fa-twitter"></i>
+                                <i className="fa-brands fa-twitter"></i>
                             </a>
                         </div>
                     </Reveal>
@@ -103,18 +101,18 @@ const HomePage = () => {
                 <Reveal>
                     <div className="content">
                         <p>
-                            Hi, I'm Piyush Bhawgat! I'm a well-rounded{" "}
+                            Hi, I&apos;m Piyush Bhawgat! I&apos;m a well-rounded{" "}
                             <span className="highlight">Web Developer</span>with
                             a passion for crafting clean and{" "}
                             <span className="highlight">minimal</span> websites.
-                            I've tackled numerous projects throughout my career,
+                            I&apos;ve tackled numerous projects throughout my career,
                             wielding my expertise in both{" "}
                             <span className="highlight">
                                 frontend and backend development
                             </span>
-                            . I'm always eager to learn and explore new
+                            . I&apos;m always eager to learn and explore new
                             technologies, constantly pushing the boundaries of
-                            what's possible on the web. When I'm not coding, you
+                            what&apos;s possible on the web. When I&apos;m not coding, you
                             might find me getting creative through{" "}
                             <span className="highlight">art.</span>
                         </p>

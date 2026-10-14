@@ -1,13 +1,11 @@
-import { useState } from "react";
-import "./style/main.style.css";
-import "./style/mobile.style.css";
-import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
-import HomePage from "./pages/Home.page";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import HomePage from "./pages/public/HomePage";
 import ProjectsPage from "./pages/public/ProjectsPage";
 import BlogsPage from "./pages/public/BlogsPage";
 import BlogPostPage from "./pages/public/BlogPostPage";
 import Dashboard from "./pages/Dashboard";
 import { BrutalistShowcase } from "./components/brutalist";
+import { PublicNavbar, PublicFooter } from "./components/layout";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import Login from "./pages/admin/Login";
@@ -20,7 +18,6 @@ import BlogsCMS from "./pages/admin/BlogsCMS";
 import BlogEditor from "./pages/admin/BlogEditor";
 
 const MainContent = () => {
-    const [navOpen, setNavOpen] = useState(false);
     const location = useLocation();
     const isAdminRoute = location.pathname.startsWith("/admin");
 
@@ -49,7 +46,7 @@ const MainContent = () => {
     }
 
     return (
-        <div className="app">
+        <div className="app min-h-screen bg-black text-zinc-100 font-mono flex flex-col justify-between selection:bg-terminal-green selection:text-black">
             {/* Live Deployment Notice Banner */}
             <div
                 role="alert"
@@ -60,95 +57,21 @@ const MainContent = () => {
                     ⚠️ Website refactoring under process, expect unusual behaviour.
                 </span>
             </div>
-            <header>
-                <div className="container">
-                    <div className="logo">
-                        Ab
-                        {!navOpen && (
-                            <button
-                                className="ham"
-                                onClick={() => setNavOpen(true)}
-                            >
-                                <i className="fa-solid fa-bars"></i>
-                            </button>
-                        )}
-                    </div>
-                    <nav className={navOpen ? "nav-open" : ""}>
-                        <button
-                            className="close"
-                            onClick={() => setNavOpen(false)}
-                        >
-                            X
-                        </button>
-                        <ul>
-                            <li>
-                                <Link to="/">Home</Link>
-                            </li>
-                            <li>
-                                <Link to="/projects">Projects</Link>
-                            </li>
-                            <li>
-                                <Link to="/blogs">Articles</Link>
-                            </li>
-                            <li>
-                                <Link to="/v2-preview" style={{ color: "#10b981", fontWeight: "bold" }}>
-                                    ⚡ V2 Primitives
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/admin" style={{ color: "#06b6d4", fontWeight: "bold" }}>
-                                    🛡️ Admin CMS
-                                </Link>
-                            </li>
-                            <li>
-                                <a href="/#about">About</a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <span className="btn cta">
-                        <a href="mailto:piyushbhagwat5@example.com?subject=Website Inquiry">
-                            Contact Me
-                        </a>
-                    </span>
-                </div>
-            </header>
-            <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/projects" element={<ProjectsPage />} />
-                <Route path="/blogs" element={<BlogsPage />} />
-                <Route path="/blogs/:slug" element={<BlogPostPage />} />
-                <Route path="/manage" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/v2-preview" element={<BrutalistShowcase />} />
-            </Routes>
 
-            <section className="action">
-                <h1>Have a project in mind? Let&apos;s get to work. 🤝</h1>
-                <div className="control">
-                    <span className="btn cta">
-                        <a href="mailto:piyushbhagwat5@example.com?subject=Website Inquiry">
-                            Say Hello
-                        </a>
-                    </span>
+            <PublicNavbar />
 
-                    <div className="btn">
-                        <Link to="/projects">Portfolio</Link>
-                    </div>
-                </div>
-            </section>
+            <main className="flex-1">
+                <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/projects" element={<ProjectsPage />} />
+                    <Route path="/blogs" element={<BlogsPage />} />
+                    <Route path="/blogs/:slug" element={<BlogPostPage />} />
+                    <Route path="/manage" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                    <Route path="/v2-preview" element={<BrutalistShowcase />} />
+                </Routes>
+            </main>
 
-            <footer>
-                <div className="box">
-                    <i className="fa-solid fa-phone"></i> +91 93099861442
-                </div>
-                <div className="box">
-                    <i className="fa-solid fa-envelope"></i>{" "}
-                    piyushbhagwat5@gmail.com
-                </div>
-                <div className="box">
-                    <i className="fa-solid fa-location-dot"></i> Brahmapuri,
-                    Maharashtra, India
-                </div>
-            </footer>
+            <PublicFooter />
         </div>
     );
 };

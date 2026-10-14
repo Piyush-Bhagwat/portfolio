@@ -1,6 +1,6 @@
 import React from 'react'
 import SymbolLayer from './SymbolLayer'
-import { FaCode, FaDollarSign, FaPercent, FaPlus } from 'react-icons/fa6'
+import { FaCode, FaDollarSign } from 'react-icons/fa6'
 import { FiTriangle } from "react-icons/fi";
 
 const SymbolLayers = () => {

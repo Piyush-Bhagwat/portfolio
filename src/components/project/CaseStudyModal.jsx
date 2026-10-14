@@ -10,10 +10,8 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
-  Terminal,
-  BookOpen,
 } from "lucide-react";
-import { TagBadge, BrutalButton, TerminalBox } from "../brutalist";
+import { TagBadge, BrutalButton } from "../brutalist";
 
 /**
  * CaseStudyModal - Interactive sliding drawer / modal showcasing

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { FaPlus } from "react-icons/fa6";
 
 export default function Symbol({ mouse, size = 40, symbol }) {
     const [rotation, setRotation] = useState(0);

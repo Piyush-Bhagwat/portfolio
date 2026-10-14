@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { ExternalLink, GitBranch, BookOpen, Star, Terminal } from "lucide-react";
 import { TagBadge, BrutalButton } from "../brutalist";
+import { getOptimizedImageUrl } from "../../services/cloudinary.js";
 
 /**
  * ProjectCard - Neo-Brutalist Project Card with interactive
@@ -49,7 +50,7 @@ export default function ProjectCard({
         <div className="relative border-2 border-zinc-800 bg-zinc-900 overflow-hidden aspect-video sm:aspect-[2/1] flex items-center justify-center">
           {imageUrl ? (
             <img
-              src={imageUrl}
+              src={getOptimizedImageUrl(imageUrl, { width: 800 })}
               alt={title}
               loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

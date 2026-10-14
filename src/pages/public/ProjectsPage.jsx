@@ -8,12 +8,10 @@ import {
   FolderKanban,
   Search,
   X,
-  Sparkles,
   RefreshCw,
   Terminal,
   BookOpen,
   Star,
-  Layers,
 } from "lucide-react";
 import { DEFAULT_PROJECTS } from "../admin/ProjectsCMS.jsx";
 

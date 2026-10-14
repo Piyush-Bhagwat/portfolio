@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../../services/firebase.js";
+import { getOptimizedImageUrl } from "../../services/cloudinary.js";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -332,7 +333,7 @@ export default function BlogPostPage() {
           {post.cover_image_url ? (
             <div className="border-2 border-zinc-800 shadow-brutal overflow-hidden bg-zinc-950">
               <img
-                src={post.cover_image_url}
+                src={getOptimizedImageUrl(post.cover_image_url, { width: 1200 })}
                 alt={post.title}
                 className="w-full max-h-[460px] object-cover"
               />

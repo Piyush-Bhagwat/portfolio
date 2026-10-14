@@ -1,6 +1,5 @@
 import React from "react";
 import Reveal from "./Reveal";
-import SymbolLayers from "./ui/SymbolLayers";
 import SymbolLayer from "./ui/SymbolLayer";
 import { FaCode } from "react-icons/fa6";
 

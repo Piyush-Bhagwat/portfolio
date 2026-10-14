@@ -228,5 +228,23 @@ export function getOptimizedImageUrl(url, options = {}) {
     return url;
   }
 
+  // If the URL already contains the exact transform string, return as-is
+  if (parts[1].startsWith(`${transformString}/`)) {
+    return url;
+  }
+
+  // Check if parts[1] already starts with a transformation segment
+  const firstSlashIndex = parts[1].indexOf("/");
+  if (firstSlashIndex !== -1) {
+    const firstSegment = parts[1].slice(0, firstSlashIndex);
+    const isTransformSegment = /^[a-z]{1,4}_/.test(firstSegment) && !/^v\d+$/.test(firstSegment);
+    if (isTransformSegment) {
+      if (transforms.length === 2 && transforms.includes("f_auto") && transforms.includes("q_auto")) {
+        return url;
+      }
+      return `${parts[0]}${uploadMarker}${transformString}/${parts[1].slice(firstSlashIndex + 1)}`;
+    }
+  }
+
   return `${parts[0]}${uploadMarker}${transformString}/${parts[1]}`;
 }

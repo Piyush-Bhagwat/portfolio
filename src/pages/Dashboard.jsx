@@ -28,8 +28,8 @@ const Dashboard = () => {
     const renderProjects = () => {
         return (
             <>
-                {projects?.map((item) => {
-                    return <ProjectCard isEditable={true} project={item} />;
+                {projects?.map((item, index) => {
+                    return <ProjectCard key={item.id || item.title || index} isEditable={true} project={item} />;
                 })}
             </>
         );
