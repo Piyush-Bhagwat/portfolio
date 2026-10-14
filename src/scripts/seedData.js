@@ -236,8 +236,13 @@ export async function seedExperiences(options = {}) {
   }
 }
 
+import { migrateLegacyProjects, LEGACY_PROJECTS } from "./migrateLegacyProjects.js";
+
+export const seedProjects = migrateLegacyProjects;
+export const SEED_PROJECTS = LEGACY_PROJECTS;
+
 /**
- * Master seeder: Initializes profile, skills, and experiences.
+ * Master seeder: Initializes profile, skills, experiences, and projects.
  * @param {Object} options
  * @param {boolean} [options.overwrite=false]
  */
@@ -245,16 +250,19 @@ export async function seedAllData(options = {}) {
   const profileRes = await seedProfile(options);
   const skillsRes = await seedSkills(options);
   const expRes = await seedExperiences(options);
+  const projectsRes = await migrateLegacyProjects(options);
 
   const hasError =
     profileRes.status === "error" ||
     skillsRes.status === "error" ||
-    expRes.status === "error";
+    expRes.status === "error" ||
+    projectsRes.status === "error";
 
   return {
     success: !hasError,
     profile: profileRes,
     skills: skillsRes,
     experiences: expRes,
+    projects: projectsRes,
   };
 }

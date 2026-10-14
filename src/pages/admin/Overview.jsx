@@ -291,6 +291,11 @@ export default function Overview() {
                       • Experiences: <span className="font-semibold">{seedResult.experiences.status}</span> - {seedResult.experiences.message}
                     </div>
                   )}
+                  {seedResult.projects && (
+                    <div className="text-[11px] text-zinc-300">
+                      • Projects: <span className="font-semibold">{seedResult.projects.status}</span> - {seedResult.projects.message}
+                    </div>
+                  )}
                   {seedResult.error && (
                     <div className="text-[11px] text-rose-400 font-semibold">
                       [Error] {seedResult.error}

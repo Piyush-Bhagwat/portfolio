@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { TerminalBox, BrutalButton, TagBadge } from "../../components/brutalist";
 import ImageUploader from "../../components/common/ImageUploader.jsx";
+import CaseStudyFields from "../../components/admin/CaseStudyFields.jsx";
 import {
   X,
   Save,
@@ -54,6 +55,15 @@ export default function ProjectEditorModal({
   const [featured, setFeatured] = useState(project?.featured ?? false);
   const [date, setDate] = useState(project?.date || new Date().getFullYear().toString());
   const [order, setOrder] = useState(project?.order ?? 1);
+  const [caseStudy, setCaseStudy] = useState(
+    project?.case_study || {
+      enabled: false,
+      why: "",
+      tech_stack: [],
+      learnings: [],
+      problems: [],
+    }
+  );
   const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
@@ -70,6 +80,15 @@ export default function ProjectEditorModal({
       setFeatured(project.featured ?? false);
       setDate(project.date || "");
       setOrder(project.order ?? 1);
+      setCaseStudy(
+        project.case_study || {
+          enabled: false,
+          why: "",
+          tech_stack: [],
+          learnings: [],
+          problems: [],
+        }
+      );
     } else {
       setTitle("");
       setSlug("");
@@ -83,6 +102,13 @@ export default function ProjectEditorModal({
       setFeatured(false);
       setDate(new Date().getFullYear().toString());
       setOrder(1);
+      setCaseStudy({
+        enabled: false,
+        why: "",
+        tech_stack: [],
+        learnings: [],
+        problems: [],
+      });
     }
     setTagInput("");
     setValidationError("");
@@ -145,8 +171,7 @@ export default function ProjectEditorModal({
       featured: Boolean(featured),
       date: date.trim(),
       order: Number(order) || 1,
-      // Preserve existing case study data if editing
-      ...(project?.case_study ? { case_study: project.case_study } : {}),
+      case_study: caseStudy,
     });
   };
 
@@ -413,6 +438,9 @@ export default function ProjectEditorModal({
                 />
               </div>
             </div>
+
+            {/* Structured Case Study Builder */}
+            <CaseStudyFields value={caseStudy} onChange={setCaseStudy} />
 
             {/* Actions */}
             <div className="pt-3 border-t border-zinc-800 flex justify-end gap-2.5">

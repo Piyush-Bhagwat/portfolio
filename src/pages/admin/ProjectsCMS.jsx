@@ -18,6 +18,7 @@ import {
   StatusPill,
 } from "../../components/brutalist";
 import ProjectEditorModal from "./ProjectEditorModal.jsx";
+import { migrateLegacyProjects } from "../../scripts/migrateLegacyProjects.js";
 import {
   Plus,
   Edit2,
@@ -348,25 +349,11 @@ export default function ProjectsCMS() {
     setFeedback({ type: null, message: "" });
 
     try {
-      const batch = writeBatch(db);
-      DEFAULT_PROJECTS.forEach((proj) => {
-        const docRef = doc(db, "projects", proj.id);
-        batch.set(
-          docRef,
-          {
-            ...proj,
-            created_at: serverTimestamp(),
-            updated_at: serverTimestamp(),
-          },
-          { merge: true }
-        );
-      });
-
-      await batch.commit();
+      const res = await migrateLegacyProjects({ overwrite: true });
       await fetchProjects();
       setFeedback({
-        type: "success",
-        message: "Default projects seeded successfully into Firestore.",
+        type: res.status === "error" ? "error" : "success",
+        message: res.message,
       });
     } catch (err) {
       console.error("Seed projects error:", err);
