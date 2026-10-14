@@ -11,6 +11,9 @@ import AdminLayout from "./layouts/AdminLayout";
 import Login from "./pages/admin/Login";
 import Overview from "./pages/admin/Overview";
 import ModulePlaceholder from "./pages/admin/ModulePlaceholder";
+import ProfileCMS from "./pages/admin/ProfileCMS";
+import SkillsCMS from "./pages/admin/SkillsCMS";
+import ExperienceCMS from "./pages/admin/ExperienceCMS";
 
 const MainContent = () => {
     const [navOpen, setNavOpen] = useState(false);
@@ -28,16 +31,7 @@ const MainContent = () => {
                     <Route element={<AdminLayout />}>
                         <Route index element={<Navigate to="/admin/overview" replace />} />
                         <Route path="overview" element={<Overview />} />
-                        <Route
-                            path="profile"
-                            element={
-                                <ModulePlaceholder
-                                    title="Profile & Bio CMS"
-                                    day="Day 3"
-                                    description="Manage personal headline, multi-paragraph bio, location, and Cloudinary avatar."
-                                />
-                            }
-                        />
+                        <Route path="profile" element={<ProfileCMS />} />
                         <Route
                             path="projects"
                             element={
@@ -48,26 +42,8 @@ const MainContent = () => {
                                 />
                             }
                         />
-                        <Route
-                            path="skills"
-                            element={
-                                <ModulePlaceholder
-                                    title="Skills & Stack CMS"
-                                    day="Day 3"
-                                    description="Categorize and reorder frontend, backend, database skills with Cloudinary icons."
-                                />
-                            }
-                        />
-                        <Route
-                            path="experience"
-                            element={
-                                <ModulePlaceholder
-                                    title="Work Experience CMS"
-                                    day="Day 3"
-                                    description="Manage career milestones, roles, companies, and date ranges."
-                                />
-                            }
-                        />
+                        <Route path="skills" element={<SkillsCMS />} />
+                        <Route path="experience" element={<ExperienceCMS />} />
                         <Route
                             path="blogs"
                             element={
