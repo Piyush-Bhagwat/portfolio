@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db } from "../../services/firebase.js";
 import {
   BrutalButton,
@@ -10,6 +15,7 @@ import {
 } from "../../components/brutalist";
 import MarkdownEditorToolbar from "../../components/blog/MarkdownEditorToolbar.jsx";
 import MarkdownPreview from "../../components/blog/MarkdownPreview.jsx";
+import ImageUploader from "../../components/common/ImageUploader.jsx";
 import {
   Save,
   ArrowLeft,
@@ -20,6 +26,9 @@ import {
   CheckCircle2,
   UploadCloud,
   RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   uploadToCloudinary,
@@ -29,83 +38,51 @@ import BlogImageDropperModal, {
   filenameToAltText,
   formatMarkdownImage,
 } from "../../components/blog/BlogImageDropperModal.jsx";
+import {
+  DEFAULT_BLOG_MARKDOWN,
+  SUGGESTED_TAGS,
+  calculateReadTime,
+  slugifyTitle,
+  checkSlugCollision,
+} from "../../utils/blogUtils.js";
 
-export const DEFAULT_BLOG_MARKDOWN = `# Building Resilient Web Interfaces with Neo-Brutalism
-
-A deep dive into building tactile, high-contrast user interfaces with zero-runtime CSS tokens and modern accessibility standards.
-
-## Architecture Overview
-
-Modern web design often leans heavily on flat, homogenized components. Neo-Brutalism brings back bold boundaries, high-contrast borders, and tactile physical feedback.
-
-### Key Tenets
-1. **High Contrast**: Clean 2px solid borders with deliberate color blocking.
-2. **Tactile Interaction**: Active translation transforms (\`translate-x-0.5 translate-y-0.5\`).
-3. **Typography**: Monospace and system fonts that evoke classic terminal consoles.
-
-\`\`\`javascript
-// Example: Neo-Brutalist button primitive
-export function BrutalButton({ children, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="border-2 border-black bg-emerald-400 px-4 py-2 font-mono font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px]"
-    >
-      {children}
-    </button>
-  );
-}
-\`\`\`
-
-> "Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away."
-
-## Performance Benchmarks
-| Framework | First Contentful Paint | Bundle Size |
-| :--- | :--- | :--- |
-| React + Vite | 0.4s | 42 KB |
-| Legacy SPA | 1.8s | 340 KB |
-
----
-*Published by Piyush Bhagwat*
-`;
+// Re-export utilities for external consumers and test suites
+export {
+  DEFAULT_BLOG_MARKDOWN,
+  SUGGESTED_TAGS,
+  calculateReadTime,
+  slugifyTitle,
+  checkSlugCollision,
+};
 
 /**
- * Utility to calculate reading time
- */
-export function calculateReadTime(text = "") {
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
-
-/**
- * Utility to generate URL slugs
- */
-export function slugifyTitle(text = "") {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, "")
-    .replace(/--+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-/**
- * BlogEditor - Split-Screen Markdown Authoring Environment
+ * BlogEditor - Split-Screen Markdown Authoring Studio with Post Metadata & Publishing Pipeline
  */
 export default function BlogEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Core metadata states
   const [title, setTitle] = useState("Building Resilient Web Interfaces with Neo-Brutalism");
   const [slug, setSlug] = useState("building-resilient-web-interfaces");
+  const [excerpt, setExcerpt] = useState(
+    "A deep dive into building tactile, high-contrast user interfaces with zero-runtime CSS tokens and modern accessibility standards."
+  );
   const [content, setContent] = useState(DEFAULT_BLOG_MARKDOWN);
+  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [coverImagePublicId, setCoverImagePublicId] = useState("");
+  const [showCoverUploader, setShowCoverUploader] = useState(false);
   const [published, setPublished] = useState(false);
+  const [publishedAt, setPublishedAt] = useState(null);
   const [tags, setTags] = useState(["React", "UI Engineering", "Design Systems"]);
   const [tagInput, setTagInput] = useState("");
+
+  // Process states
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(Boolean(id));
+  const [isDirty, setIsDirty] = useState(false);
+  const [slugChecking, setSlugChecking] = useState(false);
+  const [slugStatus, setSlugStatus] = useState(null); // { state: "available" | "duplicate", message: string }
   const [feedback, setFeedback] = useState({ type: null, message: "" });
 
   // View mode and scroll sync controls
@@ -123,6 +100,18 @@ export default function BlogEditor() {
   const isScrollingRef = useRef(false);
   const cursorPosRef = useRef({ start: 0, end: 0 });
 
+  // Warn before closing tab with unsaved edits
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
   // Fetch article if editing existing ID
   useEffect(() => {
     if (!id) return;
@@ -136,9 +125,14 @@ export default function BlogEditor() {
           const data = snap.data();
           setTitle(data.title || "");
           setSlug(data.slug || id);
+          setExcerpt(data.excerpt || "");
           setContent(data.content_markdown || "");
+          setCoverImageUrl(data.cover_image_url || "");
+          setCoverImagePublicId(data.cover_image_public_id || "");
           setPublished(Boolean(data.published));
+          setPublishedAt(data.published_at || null);
           setTags(Array.isArray(data.tags) ? data.tags : []);
+          setIsDirty(false);
         } else {
           setFeedback({
             type: "error",
@@ -191,6 +185,7 @@ export default function BlogEditor() {
       content.substring(0, start) + replacement + content.substring(end);
 
     setContent(newContent);
+    setIsDirty(true);
 
     // Reposition cursor
     setTimeout(() => {
@@ -237,6 +232,7 @@ export default function BlogEditor() {
     const updated = `${before}\n\n${snippet}\n\n${after}`;
 
     setContent(updated);
+    setIsDirty(true);
 
     setTimeout(() => {
       if (textarea) {
@@ -271,6 +267,7 @@ export default function BlogEditor() {
     const after = content.substring(safeIndex);
     const contentWithPlaceholder = `${before}${placeholder}${after}`;
     setContent(contentWithPlaceholder);
+    setIsDirty(true);
 
     setDirectUploadStatus({
       isUploading: true,
@@ -368,14 +365,41 @@ export default function BlogEditor() {
     if (trimmed && !tags.includes(trimmed)) {
       setTags([...tags, trimmed]);
       setTagInput("");
+      setIsDirty(true);
     }
   };
 
   const handleRemoveTag = (tagToRemove) => {
     setTags(tags.filter((t) => t !== tagToRemove));
+    setIsDirty(true);
   };
 
-  // Save handler
+  // On-demand slug uniqueness validation
+  const handleCheckSlug = async () => {
+    const targetSlug = slugifyTitle(slug || title);
+    if (!targetSlug) return;
+
+    setSlugChecking(true);
+    setSlugStatus(null);
+
+    const collision = await checkSlugCollision(db, targetSlug, id);
+    setSlugChecking(false);
+
+    if (collision.isDuplicate) {
+      setSlugStatus({
+        state: "duplicate",
+        message: `Slug in use! Auto-suggested: "${collision.suggestedSlug}"`,
+        suggested: collision.suggestedSlug,
+      });
+    } else {
+      setSlugStatus({
+        state: "available",
+        message: "Slug is unique & available for this post.",
+      });
+    }
+  };
+
+  // Save handler with slug collision auto-resolution and publishing controls
   const handleSave = async (publishStatus = published) => {
     if (!title.trim()) {
       setFeedback({ type: "error", message: "Article title is required." });
@@ -390,14 +414,25 @@ export default function BlogEditor() {
     setFeedback({ type: null, message: "" });
 
     try {
-      const docId = id || slugifyTitle(slug || title);
+      // Validate slug collision before committing
+      let finalSlug = slugifyTitle(slug || title);
+      const collision = await checkSlugCollision(db, finalSlug, id);
+      if (collision.isDuplicate) {
+        finalSlug = collision.suggestedSlug;
+        setSlug(finalSlug);
+      }
+
+      const docId = id || finalSlug;
       const docRef = doc(db, "blogs", docId);
       const readTime = calculateReadTime(content);
 
       const payload = {
         title: title.trim(),
-        slug: slugifyTitle(slug || title),
+        slug: finalSlug,
+        excerpt: excerpt.trim(),
         content_markdown: content,
+        cover_image_url: coverImageUrl || "",
+        cover_image_public_id: coverImagePublicId || "",
         tags,
         published: Boolean(publishStatus),
         read_time_minutes: readTime,
@@ -408,13 +443,20 @@ export default function BlogEditor() {
         payload.created_at = serverTimestamp();
       }
 
+      // If changing to published for the first time, record published_at
+      if (publishStatus && !publishedAt) {
+        payload.published_at = serverTimestamp();
+      }
+
       await setDoc(docRef, payload, { merge: true });
 
+      setIsDirty(false);
+      setPublished(Boolean(publishStatus));
       setFeedback({
         type: "success",
         message: `Article "${title}" saved successfully as ${
           publishStatus ? "PUBLISHED" : "DRAFT"
-        }.`,
+        }${collision.isDuplicate ? ` (Slug resolved to "${finalSlug}")` : ""}.`,
       });
 
       if (!id) {
@@ -453,6 +495,11 @@ export default function BlogEditor() {
             <span className="text-terminal-cyan">
               {id ? `edit:${id}` : "new_article"}
             </span>
+            {isDirty && (
+              <span className="text-amber-400 text-[11px] font-bold animate-pulse">
+                * unsaved changes
+              </span>
+            )}
           </div>
           <h1 className="text-2xl font-mono font-bold text-zinc-100 tracking-tight flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-terminal-green" />
@@ -492,7 +539,7 @@ export default function BlogEditor() {
             disabled={saving}
             icon={<Save className="w-3.5 h-3.5" />}
           >
-            Publish Article
+            {published ? "Update Published" : "Publish Article"}
           </BrutalButton>
         </div>
       </div>
@@ -521,9 +568,10 @@ export default function BlogEditor() {
         </div>
       )}
 
-      {/* Post Metadata Inputs: Title, Slug, Tags */}
-      <div className="p-4 bg-zinc-950 border border-zinc-800 shadow-brutal-sm space-y-3 font-mono text-xs">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {/* Post Metadata Inputs: Title, Slug, Excerpt, Cover & Tags */}
+      <div className="p-4 sm:p-5 bg-zinc-950 border border-zinc-800 shadow-brutal space-y-4 font-mono text-xs">
+        {/* Row 1: Title & Slug */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 space-y-1">
             <label htmlFor="blog-title" className="block text-zinc-300 font-bold">
               Article Headline / Title *
@@ -535,7 +583,11 @@ export default function BlogEditor() {
               value={title}
               onChange={(e) => {
                 setTitle(e.target.value);
-                if (!id) setSlug(slugifyTitle(e.target.value));
+                setIsDirty(true);
+                if (!id) {
+                  setSlug(slugifyTitle(e.target.value));
+                  setSlugStatus(null);
+                }
               }}
               placeholder="e.g. Architecting Zero-Cost Static CMS with Firestore"
               className="w-full bg-zinc-900 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-sm focus:outline-none"
@@ -543,58 +595,256 @@ export default function BlogEditor() {
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="blog-slug" className="block text-zinc-300 font-bold">
-              URL Slug *
-            </label>
-            <input
-              id="blog-slug"
-              type="text"
-              required
-              value={slug}
-              onChange={(e) => setSlug(slugifyTitle(e.target.value))}
-              placeholder="e.g. zero-cost-cms"
-              className="w-full bg-zinc-900 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-sm focus:outline-none"
-            />
+            <div className="flex items-center justify-between">
+              <label htmlFor="blog-slug" className="block text-zinc-300 font-bold">
+                URL Slug *
+              </label>
+              {slugStatus && (
+                <span
+                  className={`text-[10px] font-bold ${
+                    slugStatus.state === "available"
+                      ? "text-terminal-green"
+                      : "text-amber-400"
+                  }`}
+                >
+                  [{slugStatus.state.toUpperCase()}]
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input
+                id="blog-slug"
+                type="text"
+                required
+                value={slug}
+                onChange={(e) => {
+                  setSlug(slugifyTitle(e.target.value));
+                  setIsDirty(true);
+                  setSlugStatus(null);
+                }}
+                placeholder="e.g. zero-cost-cms"
+                className="w-full bg-zinc-900 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-sm focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleCheckSlug}
+                disabled={slugChecking}
+                className="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 text-[11px] whitespace-nowrap active:scale-95 transition-all"
+                title="Verify slug uniqueness in Firestore"
+              >
+                {slugChecking ? "Checking..." : "Verify"}
+              </button>
+            </div>
+            {slugStatus?.message && (
+              <p
+                className={`text-[10px] mt-0.5 ${
+                  slugStatus.state === "available"
+                    ? "text-emerald-400"
+                    : "text-amber-400"
+                }`}
+              >
+                {slugStatus.message}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Tags input */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-zinc-800/80">
-          <span className="text-[11px] text-zinc-400 font-bold">Tags:</span>
-          <div className="flex items-center gap-1.5 flex-1 max-w-sm">
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === ",") {
-                  e.preventDefault();
-                  handleAddTag();
-                }
+        {/* Row 2: Excerpt & Publishing Controls Status */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-zinc-800/80">
+          <div className="md:col-span-2 space-y-1">
+            <div className="flex items-center justify-between">
+              <label htmlFor="blog-excerpt" className="block text-zinc-300 font-bold">
+                Short Excerpt / Teaser (Displayed on Cards & Social Cards) *
+              </label>
+              <span className={`text-[10px] ${excerpt.length > 250 ? "text-amber-400" : "text-zinc-500"}`}>
+                {excerpt.length} / 250 chars
+              </span>
+            </div>
+            <textarea
+              id="blog-excerpt"
+              rows="2"
+              value={excerpt}
+              onChange={(e) => {
+                setExcerpt(e.target.value);
+                setIsDirty(true);
               }}
-              placeholder="Add tag and press Enter..."
-              className="w-full bg-zinc-900 border border-zinc-800 focus:border-terminal-green px-2 py-1 text-zinc-200 text-xs focus:outline-none"
+              placeholder="A concise, punchy 1-2 sentence overview of the article..."
+              className="w-full bg-zinc-900 border border-zinc-700 focus:border-terminal-green px-3 py-1.5 text-zinc-200 font-mono text-xs focus:outline-none resize-none leading-relaxed"
             />
-            <button
-              type="button"
-              onClick={handleAddTag}
-              className="px-2 py-1 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 border border-zinc-700"
-            >
-              Add
-            </button>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <TagBadge
-                key={tag}
-                variant="terminal"
-                size="sm"
-                onRemove={() => handleRemoveTag(tag)}
+          <div className="space-y-1.5">
+            <span className="block text-zinc-300 font-bold">
+              Publishing Status
+            </span>
+            <div className="p-2.5 bg-zinc-900/80 border border-zinc-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-zinc-400">Current State:</span>
+                <StatusPill
+                  status={published ? "PUBLISHED" : "DRAFT"}
+                  variant={published ? "terminal" : "outline"}
+                />
+              </div>
+
+              {/* Toggle draft/published */}
+              <div className="flex items-center gap-2 pt-1 border-t border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPublished(!published);
+                    setIsDirty(true);
+                  }}
+                  className={`w-full py-1 px-2 border text-[11px] font-bold text-center transition-all ${
+                    published
+                      ? "bg-amber-950/40 border-amber-700 text-amber-300 hover:bg-amber-900/50"
+                      : "bg-emerald-950/40 border-emerald-700 text-emerald-300 hover:bg-emerald-900/50"
+                  }`}
+                >
+                  {published ? "Switch to Draft Mode" : "Switch to Published Mode"}
+                </button>
+              </div>
+
+              {publishedAt && (
+                <div className="text-[10px] text-zinc-500 pt-0.5">
+                  Published: {publishedAt?.toDate ? publishedAt.toDate().toLocaleDateString() : "Active"}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Cover Banner Image & Tags */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-zinc-800/80">
+          {/* Cover Banner Uploader / Preview */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-300 font-bold flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-terminal-cyan" />
+                Cover Banner Image
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowCoverUploader(!showCoverUploader)}
+                className="text-[11px] text-terminal-cyan hover:underline flex items-center gap-1"
               >
-                {tag}
-              </TagBadge>
-            ))}
+                {showCoverUploader ? (
+                  <>Hide Uploader <ChevronUp className="w-3 h-3" /></>
+                ) : (
+                  <>
+                    {coverImageUrl ? "Replace Banner" : "+ Upload Banner"} <ChevronDown className="w-3 h-3" />
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Display Cover Banner Preview if URL exists */}
+            {coverImageUrl && !showCoverUploader && (
+              <div className="relative group aspect-video max-h-24 bg-zinc-900 border border-zinc-800 overflow-hidden">
+                <img
+                  src={coverImageUrl}
+                  alt="Article Cover Banner"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCoverImageUrl("");
+                    setCoverImagePublicId("");
+                    setIsDirty(true);
+                  }}
+                  className="absolute top-1 right-1 px-1.5 py-0.5 bg-black/80 hover:bg-rose-900 text-zinc-300 hover:text-white border border-zinc-700 text-[10px]"
+                  title="Remove cover banner"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+
+            {/* Full ImageUploader when expanded or when no cover image */}
+            {(showCoverUploader || !coverImageUrl) && (
+              <ImageUploader
+                folder="portfolio/blogs/covers"
+                value={coverImageUrl}
+                label=""
+                onUploadSuccess={({ secure_url, url, public_id }) => {
+                  setCoverImageUrl(secure_url || url);
+                  setCoverImagePublicId(public_id);
+                  setIsDirty(true);
+                  setShowCoverUploader(false);
+                }}
+                onRemove={() => {
+                  setCoverImageUrl("");
+                  setCoverImagePublicId("");
+                  setIsDirty(true);
+                }}
+              />
+            )}
+          </div>
+
+          {/* Tags Manager with suggestions */}
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-300 font-bold">Tags / Categories</span>
+              <span className="text-[11px] text-zinc-500">{tags.length} selected</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                placeholder="Type tag and press Enter..."
+                className="w-full bg-zinc-900 border border-zinc-800 focus:border-terminal-green px-2.5 py-1.5 text-zinc-200 text-xs focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                className="px-3 py-1.5 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 border border-zinc-700 text-xs"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Active Tags */}
+            <div className="flex flex-wrap gap-1.5 min-h-6">
+              {tags.map((tag) => (
+                <TagBadge
+                  key={tag}
+                  variant="terminal"
+                  size="sm"
+                  onRemove={() => handleRemoveTag(tag)}
+                >
+                  {tag}
+                </TagBadge>
+              ))}
+              {tags.length === 0 && (
+                <span className="text-[11px] text-zinc-600 italic">No tags selected. Add some below.</span>
+              )}
+            </div>
+
+            {/* Quick Suggestions */}
+            <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-zinc-800/60">
+              <span className="text-[10px] text-zinc-500 mr-1">Suggestions:</span>
+              {SUGGESTED_TAGS.filter((t) => !tags.includes(t)).map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => {
+                    setTags([...tags, suggestion]);
+                    setIsDirty(true);
+                  }}
+                  className="px-1.5 py-0.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 text-[10px] transition-colors"
+                >
+                  {`+ ${suggestion}`}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -675,7 +925,10 @@ export default function BlogEditor() {
                 <textarea
                   ref={textareaRef}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    setIsDirty(true);
+                  }}
                   onScroll={handleEditorScroll}
                   onPaste={handleTextareaPaste}
                   placeholder="# Write your technical post in Markdown here..."
