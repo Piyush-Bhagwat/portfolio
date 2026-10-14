@@ -10,6 +10,7 @@ import {
   SkillsTile,
   LatestBlogTile,
   FeaturedProjectsTile,
+  ExperienceTimeline,
 } from "../src/components/home";
 import { PublicNavbar, PublicFooter } from "../src/components/layout";
 import HomePage from "../src/pages/public/HomePage.jsx";
@@ -17,7 +18,9 @@ import { MainContent } from "../src/App.jsx";
 import { DEFAULT_PROFILE } from "../src/pages/admin/ProfileCMS.jsx";
 import { DEFAULT_SKILLS } from "../src/pages/admin/SkillsCMS.jsx";
 import { DEFAULT_PROJECTS } from "../src/pages/admin/ProjectsCMS.jsx";
+import { DEFAULT_EXPERIENCES } from "../src/pages/admin/ExperienceCMS.jsx";
 import { SAMPLE_INITIAL_POST } from "../src/pages/admin/BlogsCMS.jsx";
+
 
 test("HeroTile renders whoami terminal prompt, profile details, and CTA buttons", () => {
   const html = renderToString(
@@ -141,7 +144,24 @@ test("PublicNavbar and PublicFooter render accessible navigation and branding", 
   assert.ok(footerHtml.includes("Brahmapuri, Maharashtra, India"), "Footer should render location");
 });
 
-test("HomePage renders complete 6-Tile Bento Grid architecture", () => {
+test("ExperienceTimeline renders career milestones, roles, companies, dates, and skills", () => {
+  const html = renderToString(
+    React.createElement(ExperienceTimeline, { experiences: DEFAULT_EXPERIENCES })
+  );
+
+  assert.ok(
+    html.includes("Work Experience &amp; Milestones") || html.includes("Work Experience & Milestones"),
+    "Timeline must render section title"
+  );
+  assert.ok(html.includes("sys.timeline --career"), "Timeline must render terminal command indicator");
+  assert.ok(html.includes("Full Stack Developer"), "Timeline must render role title");
+  assert.ok(html.includes("Freelance &amp; Independent Consulting") || html.includes("Freelance & Independent Consulting"), "Timeline must render company");
+  assert.ok(html.includes("2024 - Present"), "Timeline must render period badge");
+  assert.ok(html.includes("Remote / India"), "Timeline must render location");
+  assert.ok(html.includes("React"), "Timeline must render skill badge");
+});
+
+test("HomePage renders complete 6-Tile Bento Grid architecture and Experience Timeline", () => {
   const html = renderToString(
     React.createElement(
       MemoryRouter,
@@ -162,6 +182,12 @@ test("HomePage renders complete 6-Tile Bento Grid architecture", () => {
   assert.ok(html.includes("Latest Publication"), "Bento grid must contain LatestBlogTile");
   // Tile 6: Featured Projects
   assert.ok(html.includes("Featured Systems &amp; Deployments") || html.includes("Featured Systems & Deployments"), "Bento grid must contain FeaturedProjectsTile");
+  // Experience Timeline Section
+  assert.ok(
+    html.includes("Work Experience &amp; Milestones") || html.includes("Work Experience & Milestones"),
+    "HomePage must render Work Experience & Milestones section"
+  );
+  assert.ok(html.includes("Full Stack Developer"), "HomePage experience section must render role");
 });
 
 test("App routing mounts HomePage at root / with PublicNavbar and PublicFooter", () => {
@@ -178,3 +204,4 @@ test("App routing mounts HomePage at root / with PublicNavbar and PublicFooter",
   assert.ok(html.includes("Have an architecture or project in mind?") || html.includes("Have an architecture or project in mind"), "App root / should render PublicFooter");
   assert.ok(!html.includes("Website refactoring under process"), "App should no longer display temporary warning banner");
 });
+

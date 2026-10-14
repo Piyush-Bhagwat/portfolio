@@ -9,12 +9,15 @@ import {
   SkillsTile,
   LatestBlogTile,
   FeaturedProjectsTile,
+  ExperienceTimeline,
 } from "../../components/home";
 import { CaseStudyModal } from "../../components/project";
 import { DEFAULT_PROFILE } from "../admin/ProfileCMS.jsx";
 import { DEFAULT_SKILLS } from "../admin/SkillsCMS.jsx";
 import { DEFAULT_PROJECTS } from "../admin/ProjectsCMS.jsx";
+import { DEFAULT_EXPERIENCES } from "../admin/ExperienceCMS.jsx";
 import { SAMPLE_INITIAL_POST } from "../admin/BlogsCMS.jsx";
+
 
 const bentoContainerVariants = {
   hidden: { opacity: 0 },
@@ -49,10 +52,12 @@ export default function HomePage() {
   const [skills, setSkills] = useState(DEFAULT_SKILLS);
   const [projects, setProjects] = useState(DEFAULT_PROJECTS);
   const [latestBlog, setLatestBlog] = useState(SAMPLE_INITIAL_POST);
+  const [experiences, setExperiences] = useState(DEFAULT_EXPERIENCES);
   const [selectedCaseStudyProject, setSelectedCaseStudyProject] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
+
 
     // Fetch Profile
     const fetchProfile = async () => {
@@ -124,15 +129,31 @@ export default function HomePage() {
       }
     };
 
+    // Fetch Experiences
+    const fetchExperiences = async () => {
+      try {
+        const expRef = collection(db, "experiences");
+        const q = query(expRef, orderBy("order", "asc"));
+        const snap = await getDocs(q);
+        if (!snap.empty && isMounted) {
+          setExperiences(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        }
+      } catch (err) {
+        console.error("Error fetching homepage experiences:", err);
+      }
+    };
+
     fetchProfile();
     fetchSkills();
     fetchProjects();
     fetchLatestBlog();
+    fetchExperiences();
 
     return () => {
       isMounted = false;
     };
   }, []);
+
 
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-mono py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -211,7 +232,17 @@ export default function HomePage() {
             />
           </motion.div>
         </motion.div>
+
+        {/* Dedicated Career Experience & Milestones Timeline Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15 }}
+        >
+          <ExperienceTimeline experiences={experiences} />
+        </motion.div>
       </div>
+
 
       {/* Interactive Case Study Drawer Modal */}
       {selectedCaseStudyProject && (

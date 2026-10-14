@@ -180,11 +180,24 @@ This document serves as the persistent memory, architectural reference, and oper
   3. **Automated Verification**:
      - Added test in `test/slice-7.3.test.js` validating that `public/_redirects` and `netlify.toml` exist with the proper 200 rewrite rule.
 
+### 8. Work Experience & Milestones Timeline Integration on Homepage
+- **Problem**: While career experiences were persisted in Firestore (`experiences` collection) and fully manageable via the Admin CMS (`/admin/experience`), the public homepage (`HomePage.jsx`) lacked a public-facing display for career milestones, making work history invisible to visitors.
+- **Implementation**:
+  1. **`ExperienceTimeline.jsx` Component**:
+     - Created `src/components/home/ExperienceTimeline.jsx` implementing a Neo-Brutalist chronological timeline.
+     - Features: Terminal header (`$ sys.timeline --career`), vertical spine border, pulsing node indicators, role titles, company names with `Building` icons, period badges (`Calendar`), location indicators (`MapPin`), full role descriptions, and wrap tags for `skills_used`.
+  2. **`HomePage.jsx` Integration**:
+     - Placed as a dedicated timeline section directly below the 4-column Bento grid.
+     - Dynamic Firestore listener fetching documents from `collection(db, "experiences")` ordered by `order: "asc"`, with resilient fallback to `DEFAULT_EXPERIENCES`.
+     - Exported through `src/components/home/index.js`.
+  3. **Automated Verification**:
+     - Added unit tests in `test/slice-7.1.test.js` asserting proper rendering of `ExperienceTimeline` and verifying its presence on the public `HomePage`.
+
 ---
 
 ## 5. Verification & Test Suite Status
 
-- **Automated Test Suite**: **109 tests passing** (0 failures, 0 skipped) across all vertical slices:
+- **Automated Test Suite**: **110 tests passing** (0 failures, 0 skipped) across all vertical slices:
   - `slice-1.1` to `slice-1.3`: Brutalist primitives & Cloudinary service.
   - `slice-2.1` to `slice-2.3`: AuthContext, ProtectedRoute, AdminLayout.
   - `slice-3.1` to `slice-3.4`: ProfileCMS, SkillsCMS, ExperienceCMS, Seeder.
