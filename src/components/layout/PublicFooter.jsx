@@ -16,7 +16,7 @@ export default function PublicFooter() {
               Ready to Collaborate
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight">
-              Have an architecture or project in mind? Let&apos;s build.
+              Have any project in mind? Let&apos;s build.
             </h2>
             <p className="text-xs text-zinc-400 font-sans max-w-lg">
               Open to high-impact software engineering roles, distributed system challenges, and custom UI design systems.

@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { doc, getDoc, collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import { db } from "../../services/firebase.js";
 import { motion } from "framer-motion";
 import {
@@ -17,7 +26,6 @@ import { DEFAULT_SKILLS } from "../admin/SkillsCMS.jsx";
 import { DEFAULT_PROJECTS } from "../admin/ProjectsCMS.jsx";
 import { DEFAULT_EXPERIENCES } from "../admin/ExperienceCMS.jsx";
 import { SAMPLE_INITIAL_POST } from "../admin/BlogsCMS.jsx";
-
 
 const bentoContainerVariants = {
   hidden: { opacity: 0 },
@@ -53,11 +61,11 @@ export default function HomePage() {
   const [projects, setProjects] = useState(DEFAULT_PROJECTS);
   const [latestBlog, setLatestBlog] = useState(SAMPLE_INITIAL_POST);
   const [experiences, setExperiences] = useState(DEFAULT_EXPERIENCES);
-  const [selectedCaseStudyProject, setSelectedCaseStudyProject] = useState(null);
+  const [selectedCaseStudyProject, setSelectedCaseStudyProject] =
+    useState(null);
 
   useEffect(() => {
     let isMounted = true;
-
 
     // Fetch Profile
     const fetchProfile = async () => {
@@ -68,10 +76,16 @@ export default function HomePage() {
           const profileData = snap.data();
           const rawAvatarUrl = profileData.avatar_url;
           const validAvatarUrl =
-            !rawAvatarUrl || rawAvatarUrl.includes("myIMG-czvx6SJz") || rawAvatarUrl.startsWith("/assets/")
+            !rawAvatarUrl ||
+            rawAvatarUrl.includes("myIMG-czvx6SJz") ||
+            rawAvatarUrl.startsWith("/assets/")
               ? DEFAULT_PROFILE.avatar_url
               : rawAvatarUrl;
-          setProfile({ ...DEFAULT_PROFILE, ...profileData, avatar_url: validAvatarUrl });
+          setProfile({
+            ...DEFAULT_PROFILE,
+            ...profileData,
+            avatar_url: validAvatarUrl,
+          });
         }
       } catch (err) {
         console.error("Error fetching homepage profile:", err);
@@ -154,7 +168,6 @@ export default function HomePage() {
     };
   }, []);
 
-
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-mono py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -170,10 +183,7 @@ export default function HomePage() {
             variants={bentoTileVariants}
             className="col-span-1 md:col-span-2 lg:col-span-2 lg:row-span-2 flex flex-col"
           >
-            <HeroTile
-              profile={profile}
-              className="h-full"
-            />
+            <HeroTile profile={profile} className="h-full" />
           </motion.div>
 
           {/* Tile 2: Status & Real-Time IST Metadata (1x1) */}
@@ -181,10 +191,7 @@ export default function HomePage() {
             variants={bentoTileVariants}
             className="col-span-1 flex flex-col"
           >
-            <StatusTile
-              profile={profile}
-              className="h-full"
-            />
+            <StatusTile profile={profile} className="h-full" />
           </motion.div>
 
           {/* Tile 3: Verified Social Channels & Resume Dock (1x1) */}
@@ -192,10 +199,7 @@ export default function HomePage() {
             variants={bentoTileVariants}
             className="col-span-1 flex flex-col"
           >
-            <SocialsTile
-              profile={profile}
-              className="h-full"
-            />
+            <SocialsTile profile={profile} className="h-full" />
           </motion.div>
 
           {/* Tile 4: Integrated Tech Stack Matrix (2x1) */}
@@ -203,21 +207,17 @@ export default function HomePage() {
             variants={bentoTileVariants}
             className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col"
           >
-            <SkillsTile
-              skills={skills}
-              className="h-full"
-            />
+            <SkillsTile skills={skills} className="h-full" />
           </motion.div>
 
-          {/* Tile 5: Latest Technical Publication Feature (Wide / 4-col or 2-col) */}
+          {/* Dedicated Career Experience & Milestones Timeline Section */}
           <motion.div
-            variants={bentoTileVariants}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
             className="col-span-1 md:col-span-2 lg:col-span-4 flex flex-col"
+            transition={{ duration: 0.35, delay: 0.15 }}
           >
-            <LatestBlogTile
-              post={latestBlog}
-              className="h-full"
-            />
+            <ExperienceTimeline experiences={experiences} />
           </motion.div>
 
           {/* Tile 6: Featured Projects Spotlight & Case Studies (Wide / 4-col) */}
@@ -231,18 +231,16 @@ export default function HomePage() {
               className="h-full"
             />
           </motion.div>
-        </motion.div>
 
-        {/* Dedicated Career Experience & Milestones Timeline Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.15 }}
-        >
-          <ExperienceTimeline experiences={experiences} />
+          {/* Tile 5: Latest Technical Publication Feature (Wide / 4-col or 2-col) */}
+          <motion.div
+            variants={bentoTileVariants}
+            className="col-span-1 md:col-span-2 lg:col-span-4 flex flex-col"
+          >
+            <LatestBlogTile post={latestBlog} className="h-full" />
+          </motion.div>
         </motion.div>
       </div>
-
 
       {/* Interactive Case Study Drawer Modal */}
       {selectedCaseStudyProject && (

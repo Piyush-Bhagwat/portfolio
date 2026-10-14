@@ -135,7 +135,7 @@ test("PublicNavbar and PublicFooter render accessible navigation and branding", 
   );
 
   assert.ok(
-    footerHtml.includes("Have an architecture or project in mind") ||
+    footerHtml.includes("Have any project in mind?") ||
       footerHtml.includes("Ready to Collaborate"),
     "Footer should render CTA"
   );
@@ -201,7 +201,7 @@ test("App routing mounts HomePage at root / with PublicNavbar and PublicFooter",
 
   assert.ok(html.includes("whoami"), "App root / should render HomePage bento grid");
   assert.ok(html.includes("piyush.bhagwat"), "App root / should render PublicNavbar");
-  assert.ok(html.includes("Have an architecture or project in mind?") || html.includes("Have an architecture or project in mind"), "App root / should render PublicFooter");
+  assert.ok(html.includes("Have any project in mind?") || html.includes("Have any project in mind"), "App root / should render PublicFooter");
   assert.ok(!html.includes("Website refactoring under process"), "App should no longer display temporary warning banner");
 });
 
