@@ -10,11 +10,11 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import Login from "./pages/admin/Login";
 import Overview from "./pages/admin/Overview";
-import ModulePlaceholder from "./pages/admin/ModulePlaceholder";
 import ProfileCMS from "./pages/admin/ProfileCMS";
 import SkillsCMS from "./pages/admin/SkillsCMS";
 import ExperienceCMS from "./pages/admin/ExperienceCMS";
 import ProjectsCMS from "./pages/admin/ProjectsCMS";
+import BlogsCMS from "./pages/admin/BlogsCMS";
 import BlogEditor from "./pages/admin/BlogEditor";
 
 const MainContent = () => {
@@ -37,16 +37,7 @@ const MainContent = () => {
                         <Route path="projects" element={<ProjectsCMS />} />
                         <Route path="skills" element={<SkillsCMS />} />
                         <Route path="experience" element={<ExperienceCMS />} />
-                        <Route
-                            path="blogs"
-                            element={
-                                <ModulePlaceholder
-                                    title="Technical Blogs CMS"
-                                    day="Day 5"
-                                    description="Split-pane Markdown authoring editor with real-time preview and Cloudinary asset pipeline."
-                                />
-                            }
-                        />
+                        <Route path="blogs" element={<BlogsCMS />} />
                         <Route path="blogs/new" element={<BlogEditor />} />
                         <Route path="blogs/edit/:id" element={<BlogEditor />} />
                     </Route>
