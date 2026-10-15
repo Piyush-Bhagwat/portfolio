@@ -113,13 +113,13 @@ export default function ExperienceEditorModal({
       <div className="w-full max-w-xl max-h-[90vh] flex flex-col">
         <TerminalBox
           title={experience ? "edit_experience.sh" : "new_experience.sh"}
-          className="shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-zinc-800 flex flex-col overflow-hidden"
+          className="shadow-brutal-forest dark:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-[#1b2e23] dark:border-zinc-800 flex flex-col overflow-hidden"
           actions={
             <button
               type="button"
               onClick={onClose}
               aria-label="Close dialog"
-              className="text-zinc-400 hover:text-zinc-100 p-1"
+              className="text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-100 p-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -129,20 +129,20 @@ export default function ExperienceEditorModal({
             onSubmit={handleSubmit}
             className="p-6 space-y-4 font-mono text-xs overflow-y-auto max-h-[75vh]"
           >
-            <div className="border-b border-zinc-800 pb-3 flex items-center justify-between">
+            <div className="border-b border-[#cbdad0] dark:border-zinc-800 pb-3 flex items-center justify-between">
               <div>
-                <h2 id="experience-modal-title" className="text-base font-bold text-zinc-100 flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-terminal-green" />
+                <h2 id="experience-modal-title" className="text-base font-bold text-[#0f1a14] dark:text-zinc-100 flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-emerald-600 dark:text-terminal-green" />
                   {experience ? "Edit Career Milestone" : "Add Career Milestone"}
                 </h2>
-                <p className="text-[11px] text-zinc-400 mt-0.5">
+                <p className="text-[11px] text-[#4b5e53] dark:text-zinc-400 mt-0.5">
                   Record work timeline entries, roles, responsibilities, and technologies used.
                 </p>
               </div>
             </div>
 
             {validationError && (
-              <div className="p-2.5 bg-rose-950/40 border border-rose-800 text-rose-300">
+              <div className="p-2.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300">
                 [ERROR] {validationError}
               </div>
             )}
@@ -150,7 +150,7 @@ export default function ExperienceEditorModal({
             {/* Role & Company */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label htmlFor="exp-role" className="block text-zinc-300 font-medium">
+                <label htmlFor="exp-role" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                   Role / Position Title *
                 </label>
                 <input
@@ -163,13 +163,13 @@ export default function ExperienceEditorModal({
                     setValidationError("");
                   }}
                   placeholder="e.g. Full Stack Developer"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="exp-company" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <Building className="w-3.5 h-3.5 text-zinc-400" />
+                <label htmlFor="exp-company" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <Building className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Company / Organization *
                 </label>
                 <input
@@ -182,7 +182,7 @@ export default function ExperienceEditorModal({
                     setValidationError("");
                   }}
                   placeholder="e.g. Freelance / Tech Labs"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
             </div>
@@ -190,8 +190,8 @@ export default function ExperienceEditorModal({
             {/* Period, Location & Order */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <label htmlFor="exp-period" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                <label htmlFor="exp-period" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Period / Dates *
                 </label>
                 <input
@@ -204,13 +204,13 @@ export default function ExperienceEditorModal({
                     setValidationError("");
                   }}
                   placeholder="e.g. 2024 - Present"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="exp-location" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                <label htmlFor="exp-location" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Location
                 </label>
                 <input
@@ -219,13 +219,13 @@ export default function ExperienceEditorModal({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. Remote / India"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="exp-order" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <Hash className="w-3.5 h-3.5 text-zinc-400" />
+                <label htmlFor="exp-order" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <Hash className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Sort Order
                 </label>
                 <input
@@ -234,14 +234,14 @@ export default function ExperienceEditorModal({
                   min="1"
                   value={order}
                   onChange={(e) => setOrder(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
             </div>
 
             {/* Description */}
             <div className="space-y-1.5">
-              <label htmlFor="exp-description" className="block text-zinc-300 font-medium">
+              <label htmlFor="exp-description" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                 Description &amp; Key Responsibilities
               </label>
               <textarea
@@ -250,13 +250,13 @@ export default function ExperienceEditorModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Overview of contributions, key achievements, system architecture decisions..."
-                className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green p-2.5 text-zinc-100 font-mono focus:outline-none resize-y"
+                className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green p-2.5 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none resize-y"
               />
             </div>
 
             {/* Key Skills Used */}
             <div className="space-y-2">
-              <label htmlFor="skill-tag-input" className="block text-zinc-300 font-medium">
+              <label htmlFor="skill-tag-input" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                 Key Skills &amp; Tech Utilized
               </label>
               <div className="flex gap-2">
@@ -267,7 +267,7 @@ export default function ExperienceEditorModal({
                   onChange={(e) => setSkillInput(e.target.value)}
                   onKeyDown={handleKeyDownSkill}
                   placeholder="Type a skill and press Enter (e.g. React, Docker)"
-                  className="flex-1 bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="flex-1 bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
                 <BrutalButton
                   type="button"
@@ -297,7 +297,7 @@ export default function ExperienceEditorModal({
             </div>
 
             {/* Actions */}
-            <div className="pt-3 border-t border-zinc-800 flex justify-end gap-2.5">
+            <div className="pt-3 border-t border-[#cbdad0] dark:border-zinc-800 flex justify-end gap-2.5">
               <BrutalButton
                 variant="outline"
                 size="sm"

@@ -274,31 +274,31 @@ export default function BlogsCMS() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-mono">
       {/* Top Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#cbdad0] dark:border-zinc-800 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs text-terminal-green mb-1">
+          <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-terminal-green mb-1">
             <span>sys.cms.blogs</span>
             <span>/</span>
-            <span className="text-terminal-cyan">overview</span>
+            <span className="text-emerald-600 dark:text-terminal-cyan">overview</span>
           </div>
-          <h1 className="text-2xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-terminal-green" />
+          <h1 className="text-2xl font-bold text-[#0f1a14] dark:text-zinc-100 tracking-tight flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-emerald-600 dark:text-terminal-green" />
             Technical Articles CMS
           </h1>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-[#4b5e53] dark:text-zinc-400 mt-1">
             Manage, author, and publish developer articles and system design deep dives.
           </p>
         </div>
 
         {/* Action buttons & metadata */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300">
-            <span className="text-zinc-500">Total:</span>
-            <span className="font-bold text-zinc-100">{posts.length}</span>
-            <span className="text-zinc-700">|</span>
-            <span className="text-emerald-400 font-bold">{publishedCount} published</span>
-            <span className="text-zinc-700">|</span>
-            <span className="text-amber-400 font-bold">{draftCount} drafts</span>
+          <div className="flex items-center gap-2 bg-[#e9f0ea] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 px-3 py-1.5 text-xs text-[#4b5e53] dark:text-zinc-300">
+            <span className="text-[#6e8276] dark:text-zinc-500">Total:</span>
+            <span className="font-bold text-[#0f1a14] dark:text-zinc-100">{posts.length}</span>
+            <span className="text-[#cbdad0] dark:text-zinc-700">|</span>
+            <span className="text-emerald-700 dark:text-emerald-400 font-bold">{publishedCount} published</span>
+            <span className="text-[#cbdad0] dark:text-zinc-700">|</span>
+            <span className="text-amber-700 dark:text-amber-400 font-bold">{draftCount} drafts</span>
           </div>
 
           <BrutalButton
@@ -329,15 +329,15 @@ export default function BlogsCMS() {
             p-3.5 border text-xs flex items-start gap-2 shadow-brutal-sm
             ${
               feedback.type === "success"
-                ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
-                : "bg-rose-950/40 border-rose-800 text-rose-300"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+                : "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300"
             }
           `}
         >
           {feedback.type === "success" ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
           ) : (
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
           )}
           <div className="space-y-0.5">
             <span className="font-bold uppercase">[{feedback.type}]</span>
@@ -347,7 +347,7 @@ export default function BlogsCMS() {
       )}
 
       {/* Search & Filter Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-zinc-950 p-3 border border-zinc-800 shadow-brutal-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-zinc-950 p-3 border-2 border-[#1b2e23] dark:border-zinc-800 shadow-brutal-forest dark:shadow-brutal-sm">
         {/* Filter Tabs */}
         <div className="flex items-center gap-1 text-xs">
           <button
@@ -355,8 +355,8 @@ export default function BlogsCMS() {
             onClick={() => setFilterTab("all")}
             className={`px-3 py-1.5 border transition-all ${
               filterTab === "all"
-                ? "bg-terminal-green text-black font-bold border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 border-zinc-800 hover:border-zinc-700"
+                ? "bg-emerald-500 dark:bg-terminal-green text-black font-bold border-[#1b2e23] dark:border-black shadow-[2px_2px_0px_0px_rgba(27,46,35,1)] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                : "bg-[#f4f7f4] dark:bg-zinc-900 text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200 border-[#cbdad0] dark:border-zinc-800 hover:border-[#1b2e23] dark:hover:border-zinc-700"
             }`}
           >
             {`All (${posts.length})`}
@@ -366,8 +366,8 @@ export default function BlogsCMS() {
             onClick={() => setFilterTab("published")}
             className={`px-3 py-1.5 border transition-all ${
               filterTab === "published"
-                ? "bg-terminal-cyan text-black font-bold border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 border-zinc-800 hover:border-zinc-700"
+                ? "bg-emerald-400 dark:bg-terminal-cyan text-black font-bold border-[#1b2e23] dark:border-black shadow-[2px_2px_0px_0px_rgba(27,46,35,1)] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                : "bg-[#f4f7f4] dark:bg-zinc-900 text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200 border-[#cbdad0] dark:border-zinc-800 hover:border-[#1b2e23] dark:hover:border-zinc-700"
             }`}
           >
             {`Published (${publishedCount})`}
@@ -377,8 +377,8 @@ export default function BlogsCMS() {
             onClick={() => setFilterTab("drafts")}
             className={`px-3 py-1.5 border transition-all ${
               filterTab === "drafts"
-                ? "bg-amber-400 text-black font-bold border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 border-zinc-800 hover:border-zinc-700"
+                ? "bg-amber-400 text-black font-bold border-[#1b2e23] dark:border-black shadow-[2px_2px_0px_0px_rgba(27,46,35,1)] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                : "bg-[#f4f7f4] dark:bg-zinc-900 text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200 border-[#cbdad0] dark:border-zinc-800 hover:border-[#1b2e23] dark:hover:border-zinc-700"
             }`}
           >
             {`Drafts (${draftCount})`}
@@ -387,13 +387,13 @@ export default function BlogsCMS() {
 
         {/* Search Bar */}
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6e8276] dark:text-zinc-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by title, slug, tag..."
-            className="w-full bg-zinc-900 border border-zinc-800 focus:border-terminal-green pl-8 pr-3 py-1.5 text-xs text-zinc-200 focus:outline-none"
+            className="w-full bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 focus:border-emerald-600 dark:focus:border-terminal-green pl-8 pr-3 py-1.5 text-xs text-[#0f1a14] dark:text-zinc-200 placeholder-[#6e8276] dark:placeholder-zinc-500 focus:outline-none"
           />
         </div>
       </div>
@@ -401,24 +401,24 @@ export default function BlogsCMS() {
       {/* Main Articles Table */}
       <TerminalBox
         title="articles_manifest.tbl"
-        className="border-2 border-zinc-800 shadow-brutal overflow-hidden"
+        className="border-2 border-[#1b2e23] dark:border-zinc-800 shadow-brutal-forest dark:shadow-brutal overflow-hidden"
       >
         {loading ? (
-          <div className="p-12 text-center text-zinc-400 flex flex-col items-center justify-center gap-3">
-            <RefreshCw className="w-6 h-6 animate-spin text-terminal-green" />
+          <div className="p-12 text-center text-[#4b5e53] dark:text-zinc-400 flex flex-col items-center justify-center gap-3">
+            <RefreshCw className="w-6 h-6 animate-spin text-emerald-600 dark:text-terminal-green" />
             <p className="text-xs">Querying Firestore blogs collection...</p>
           </div>
         ) : filteredPosts.length === 0 ? (
           /* Empty State */
           <div className="p-12 text-center space-y-4">
-            <div className="w-12 h-12 mx-auto bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
+            <div className="w-12 h-12 mx-auto bg-[#e9f0ea] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 flex items-center justify-center text-[#4b5e53] dark:text-zinc-500">
               <BookOpen className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-sm font-bold text-zinc-200">
+              <h3 className="text-sm font-bold text-[#0f1a14] dark:text-zinc-200">
                 {posts.length === 0 ? "No Articles Found in Database" : "No Matching Articles"}
               </h3>
-              <p className="text-xs text-zinc-400 max-w-md mx-auto">
+              <p className="text-xs text-[#4b5e53] dark:text-zinc-400 max-w-md mx-auto">
                 {posts.length === 0
                   ? "Your technical blog collection is currently empty. Author a new article or seed a starter post."
                   : `No articles match the current filter criteria ("${searchQuery || filterTab}").`}
@@ -451,8 +451,8 @@ export default function BlogsCMS() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-zinc-900 border-b border-zinc-800 text-[11px] text-zinc-400 uppercase select-none">
-                  <th className="py-2.5 px-4 font-bold">Article & Category</th>
+                <tr className="bg-[#e9f0ea] dark:bg-zinc-900 border-b border-[#cbdad0] dark:border-zinc-800 text-[11px] text-[#4b5e53] dark:text-zinc-400 uppercase select-none">
+                  <th className="py-2.5 px-4 font-bold">Article &amp; Category</th>
                   <th className="py-2.5 px-4 font-bold">Slug / Route</th>
                   <th className="py-2.5 px-3 font-bold">Read Time</th>
                   <th className="py-2.5 px-3 font-bold">Status</th>
@@ -460,7 +460,7 @@ export default function BlogsCMS() {
                   <th className="py-2.5 px-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/80 bg-zinc-950">
+              <tbody className="divide-y divide-[#cbdad0] dark:divide-zinc-800/80 bg-white dark:bg-zinc-950">
                 {filteredPosts.map((post) => {
                   const readTime =
                     post.read_time_minutes ||
@@ -470,19 +470,19 @@ export default function BlogsCMS() {
                   return (
                     <tr
                       key={post.id}
-                      className="hover:bg-zinc-900/40 transition-colors group"
+                      className="hover:bg-[#f4f7f4] dark:hover:bg-zinc-900/40 transition-colors group"
                     >
                       {/* Title, Excerpt, Tags */}
                       <td className="py-3 px-4 max-w-md">
                         <div className="space-y-1">
                           <Link
                             to={`/admin/blogs/edit/${post.id}`}
-                            className="font-bold text-sm text-zinc-100 hover:text-terminal-green transition-colors block line-clamp-1"
+                            className="font-bold text-sm text-[#0f1a14] dark:text-zinc-100 hover:text-emerald-700 dark:hover:text-terminal-green transition-colors block line-clamp-1"
                           >
                             {post.title}
                           </Link>
                           {post.excerpt && (
-                            <p className="text-[11px] text-zinc-400 line-clamp-1">
+                            <p className="text-[11px] text-[#4b5e53] dark:text-zinc-400 line-clamp-1">
                               {post.excerpt}
                             </p>
                           )}
@@ -494,7 +494,7 @@ export default function BlogsCMS() {
                                 </TagBadge>
                               ))}
                             {Array.isArray(post.tags) && post.tags.length > 3 && (
-                              <span className="text-[10px] text-zinc-500 self-center">
+                              <span className="text-[10px] text-[#6e8276] dark:text-zinc-500 self-center">
                                 +{post.tags.length - 3}
                               </span>
                             )}
@@ -503,20 +503,20 @@ export default function BlogsCMS() {
                       </td>
 
                       {/* Slug / Route Preview */}
-                      <td className="py-3 px-4 text-zinc-400 font-mono text-[11px] whitespace-nowrap">
+                      <td className="py-3 px-4 text-[#4b5e53] dark:text-zinc-400 font-mono text-[11px] whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-zinc-500">/blogs/</span>
-                          <span className="text-terminal-cyan font-semibold">
+                          <span className="text-[#6e8276] dark:text-zinc-500">/blogs/</span>
+                          <span className="text-emerald-700 dark:text-terminal-cyan font-semibold">
                             {post.slug || post.id}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleCopySlug(post.slug || post.id)}
                             title="Copy public route URL"
-                            className="p-1 hover:text-zinc-200 text-zinc-600 transition-colors"
+                            className="p-1 hover:text-[#0f1a14] dark:hover:text-zinc-200 text-[#6e8276] dark:text-zinc-600 transition-colors"
                           >
                             {isCopied ? (
-                              <Check className="w-3 h-3 text-terminal-green" />
+                              <Check className="w-3 h-3 text-emerald-600 dark:text-terminal-green" />
                             ) : (
                               <Copy className="w-3 h-3" />
                             )}
@@ -525,9 +525,9 @@ export default function BlogsCMS() {
                       </td>
 
                       {/* Read Time */}
-                      <td className="py-3 px-3 text-zinc-300 text-[11px] whitespace-nowrap">
+                      <td className="py-3 px-3 text-[#2c3e34] dark:text-zinc-300 text-[11px] whitespace-nowrap">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-terminal-cyan shrink-0" />
+                          <Clock className="w-3 h-3 text-emerald-600 dark:text-terminal-cyan shrink-0" />
                           <span>{readTime} min read</span>
                         </span>
                       </td>
@@ -548,7 +548,7 @@ export default function BlogsCMS() {
                       </td>
 
                       {/* Date */}
-                      <td className="py-3 px-3 text-[11px] text-zinc-400 whitespace-nowrap">
+                      <td className="py-3 px-3 text-[11px] text-[#4b5e53] dark:text-zinc-400 whitespace-nowrap">
                         {formatBlogDate(post.updated_at || post.created_at)}
                       </td>
 
@@ -560,7 +560,7 @@ export default function BlogsCMS() {
                             to={`/blogs/${post.slug || post.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-transparent hover:border-zinc-700 transition-colors"
+                            className="p-1.5 text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200 hover:bg-[#e9f0ea] dark:hover:bg-zinc-800 border border-transparent hover:border-[#cbdad0] dark:hover:border-zinc-700 transition-colors"
                             title="Preview Public Article"
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -569,7 +569,7 @@ export default function BlogsCMS() {
                           {/* Edit */}
                           <Link
                             to={`/admin/blogs/edit/${post.id}`}
-                            className="p-1.5 text-zinc-400 hover:text-terminal-green hover:bg-zinc-800 border border-transparent hover:border-zinc-700 transition-colors"
+                            className="p-1.5 text-[#4b5e53] dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-terminal-green hover:bg-[#e9f0ea] dark:hover:bg-zinc-800 border border-transparent hover:border-[#cbdad0] dark:hover:border-zinc-700 transition-colors"
                             title="Edit Markdown Post"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -579,7 +579,7 @@ export default function BlogsCMS() {
                           <button
                             type="button"
                             onClick={() => handleOpenDelete(post)}
-                            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 border border-transparent hover:border-zinc-700 transition-colors"
+                            className="p-1.5 text-[#4b5e53] dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-[#e9f0ea] dark:hover:bg-zinc-800 border border-transparent hover:border-[#cbdad0] dark:hover:border-zinc-700 transition-colors"
                             title="Delete Article"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

@@ -22,23 +22,23 @@ export default function ModulePlaceholder({ title, day, description }) {
 
       <TerminalBox title={`${title.toLowerCase().replace(/\s+/g, "-")}.sh`}>
         <div className="space-y-4 font-mono text-sm">
-          <div className="flex items-center gap-2 text-terminal-green">
+          <div className="flex items-center gap-2 text-emerald-700 dark:text-terminal-green">
             <span>$</span>
             <span>cat {title.toLowerCase().replace(/\s+/g, "_")}_roadmap.md</span>
           </div>
 
-          <h1 className="text-xl font-bold text-zinc-100">{title}</h1>
-          <p className="text-xs text-zinc-400 leading-relaxed">
+          <h1 className="text-xl font-bold text-[#0f1a14] dark:text-zinc-100">{title}</h1>
+          <p className="text-xs text-[#4b5e53] dark:text-zinc-400 leading-relaxed">
             {description || `This module is scheduled for implementation in ${day} of the Portfolio V2 sprint.`}
           </p>
 
-          <div className="p-4 bg-zinc-950 border border-zinc-800 text-xs text-zinc-400 space-y-2">
-            <div className="flex items-center gap-2 text-amber-400">
+          <div className="p-4 bg-white dark:bg-zinc-950 border-2 border-[#1b2e23] dark:border-zinc-800 text-xs text-[#4b5e53] dark:text-zinc-400 space-y-2 shadow-brutal-forest dark:shadow-brutal">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold">
               <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span className="font-semibold">Sprint Status:</span>
+              <span>Sprint Status:</span>
             </div>
             <p>
-              Day 2 (Auth, Session Guard & Admin Shell) is currently in progress.
+              Day 2 (Auth, Session Guard &amp; Admin Shell) is currently in progress.
               This interface will be populated with full Firestore CRUD forms in {day}.
             </p>
           </div>

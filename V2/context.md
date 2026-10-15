@@ -222,11 +222,37 @@ This document serves as the persistent memory, architectural reference, and oper
   - *Zero-FOUC Initialization*: Inline script in `index.html` resolving theme before React hydration to eliminate visual flash.
   - *`ThemeToggle.jsx` Component*: Neo-brutalist interactive switch placed in `PublicNavbar` and `AdminLayout`, complete with animated Sun/Moon transitions and full accessibility (`aria-label`).
 
+### 10. Admin Panel Comprehensive Dual-Theme Calibration
+- **Motivation**: While public routes adopted the subtle greenish light theme, portions of the Admin Panel (specifically cards in `ProjectsCMS`, `BlogsCMS`, `Overview`, `ProfileCMS`, `SkillsCMS`, `ExperienceCMS`, and editor modals) previously maintained hardcoded dark-mode backgrounds (`bg-zinc-900` or `#09090b`) without proper daylight surface elevation and border contrast.
+- **Implementation**:
+  - Aligned all admin cards, forms, inputs, table rows, and modals to the Neo-Brutalist sage/forest theme system (`bg-white dark:bg-zinc-950`, border `border-[#1b2e23] dark:border-zinc-800`, text `text-[#0f1a14] dark:text-zinc-100`, muted text `text-[#4b5e53] dark:text-zinc-400`, drop shadows `shadow-brutal-forest dark:shadow-brutal`).
+  - Calibrated status badges, empty logs, and action bars across all CMS sub-views.
+
+### 11. Drag-and-Drop Project Sequence Reordering & Automatic Normalization Engine
+- **Problem**: In project management (`src/pages/admin/ProjectsCMS.jsx`), sequence numbers required updating all projects manually whenever an order position changed. There was no visual drag-and-drop capability, and creating or editing a project with a specific order caused duplicate sequence numbers or required manual re-indexing of every subsequent item.
+- **Implementation & Architecture**:
+  1. **Native HTML5 Drag-and-Drop System**:
+     - Integrated `GripVertical` tactile drag handle on each project card header.
+     - Handlers implemented: `handleDragStart`, `handleDragOver`, `handleDragEnter`, `handleDragLeave`, `handleDrop`, and `handleDragEnd`.
+     - Visual states: Active drag item shows dimmed dashed border (`opacity-40 border-dashed border-emerald-600 dark:border-terminal-cyan scale-[0.99]`), while drop target highlights with emerald focus ring (`ring-2 ring-emerald-500 dark:ring-terminal-cyan shadow-lg`).
+  2. **Centralized Sequence Normalizer & Firestore Batch Sync (`reorderAndPersist`)**:
+     - Accepts reordered array of projects and strictly normalizes order to $1..N$ (`order: index + 1`).
+     - Differential write optimization: Computes shifted documents (`prevOrder !== newOrder`) and executes an atomic Firestore `writeBatch` containing only the modified documents.
+     - Centralizes state for both drag-and-drop and the accessible Up/Down chevron controls.
+  3. **Auto-Shifting Display Order on Create / Edit**:
+     - In `handleSaveProject`: When a project is assigned order $k$, the remaining projects are split and re-indexed around index $k - 1$, and all subsequent items auto-shift by $+1$.
+     - `ProjectEditorModal` receives `nextOrder={projects.length + 1}` to automatically default new projects to the next available sequence number.
+     - UI microcopy added on `Display Order`: `(Auto-shifts others)`.
+  4. **Gapless Sequence Collapse on Deletion**:
+     - When deleting a project in `handleDeleteProject`, remaining projects are automatically re-indexed to $1..(N-1)$ without leaving sequence gaps, committing shifted order numbers atomically in Firestore.
+  5. **Live Status Feedback**:
+     - Added `isReordering` state rendering a `REORDERING...` terminal status pill and success notification confirming the exact assigned sequence number.
+
 ---
 
 ## 5. Verification & Test Suite Status
 
-- **Automated Test Suite**: **110 tests passing** (0 failures, 0 skipped) across all vertical slices:
+- **Automated Test Suite**: **117 tests passing** (0 failures, 0 skipped) across all vertical slices + theme engine:
   - `slice-1.1` to `slice-1.3`: Brutalist primitives & Cloudinary service.
   - `slice-2.1` to `slice-2.3`: AuthContext, ProtectedRoute, AdminLayout.
   - `slice-3.1` to `slice-3.4`: ProfileCMS, SkillsCMS, ExperienceCMS, Seeder.

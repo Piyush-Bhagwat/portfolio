@@ -130,18 +130,18 @@ export default function CaseStudyFields({ value = {}, onChange }) {
   };
 
   return (
-    <div className="space-y-4 pt-3 border-t border-zinc-800 font-mono text-xs">
+    <div className="space-y-4 pt-3 border-t border-[#cbdad0] dark:border-zinc-800 font-mono text-xs">
       {/* Enable Toggle Banner */}
-      <div className="p-3 bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-3">
+      <div className="p-3 bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 flex items-center justify-between gap-3 shadow-brutal-forest dark:shadow-none">
         <div className="space-y-0.5">
           <label
             htmlFor="case-study-toggle"
-            className="text-zinc-200 font-bold flex items-center gap-2 cursor-pointer"
+            className="text-[#0f1a14] dark:text-zinc-200 font-bold flex items-center gap-2 cursor-pointer"
           >
-            <BookOpen className="w-4 h-4 text-terminal-cyan" />
+            <BookOpen className="w-4 h-4 text-emerald-700 dark:text-terminal-cyan" />
             <span>Structured Case Study Builder</span>
           </label>
-          <p className="text-[11px] text-zinc-400">
+          <p className="text-[11px] text-[#4b5e53] dark:text-zinc-400">
             Publish an in-depth technical writeup with architecture motivation, learnings, and problem-solving Q&amp;A.
           </p>
         </div>
@@ -152,20 +152,20 @@ export default function CaseStudyFields({ value = {}, onChange }) {
             type="checkbox"
             checked={isEnabled}
             onChange={handleToggleEnabled}
-            className="w-4 h-4 text-terminal-cyan bg-zinc-900 border-zinc-700 rounded-none focus:ring-0 cursor-pointer"
+            className="w-4 h-4 text-emerald-600 dark:text-terminal-cyan bg-white dark:bg-zinc-900 border-[#cbdad0] dark:border-zinc-700 rounded-none focus:ring-0 cursor-pointer"
           />
-          <span className="text-[11px] font-bold text-terminal-cyan uppercase">
+          <span className="text-[11px] font-bold text-emerald-700 dark:text-terminal-cyan uppercase">
             {isEnabled ? "Enabled" : "Disabled"}
           </span>
         </label>
       </div>
 
       {isEnabled && (
-        <div className="space-y-5 p-4 bg-zinc-900/40 border border-zinc-800">
+        <div className="space-y-5 p-4 bg-[#f4f7f4] dark:bg-zinc-900/40 border border-[#cbdad0] dark:border-zinc-800">
           {/* Motivation & Problem Statement */}
           <div className="space-y-1.5">
-            <label htmlFor="case-study-why" className="block text-zinc-300 font-bold flex items-center gap-1.5">
-              <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+            <label htmlFor="case-study-why" className="block text-[#0f1a14] dark:text-zinc-300 font-bold flex items-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
               Motivation &amp; Problem Statement (Why this was built)
             </label>
             <textarea
@@ -174,14 +174,14 @@ export default function CaseStudyFields({ value = {}, onChange }) {
               value={why}
               onChange={handleWhyChange}
               placeholder="What motivated this project? What specific gap, challenge, or learning goal did this application address?"
-              className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan p-2.5 text-zinc-100 font-mono focus:outline-none resize-y"
+              className="w-full bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan p-2.5 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none resize-y"
             />
           </div>
 
           {/* Tech Stack Rationale Breakdown */}
           <div className="space-y-2">
-            <label className="block text-zinc-300 font-bold flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-terminal-green" />
+            <label className="block text-[#0f1a14] dark:text-zinc-300 font-bold flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-emerald-600 dark:text-terminal-green" />
               Tech Stack Rationale (Frameworks &amp; why chosen)
             </label>
 
@@ -191,7 +191,7 @@ export default function CaseStudyFields({ value = {}, onChange }) {
                 value={techInput}
                 onChange={(e) => setTechInput(e.target.value)}
                 placeholder="Tech / Library (e.g. ReactJS, Cloud Firestore)"
-                className="bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-1.5 text-zinc-100 font-mono focus:outline-none"
+                className="bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-1.5 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
               />
               <div className="flex gap-2">
                 <input
@@ -199,7 +199,7 @@ export default function CaseStudyFields({ value = {}, onChange }) {
                   value={techRationaleInput}
                   onChange={(e) => setTechRationaleInput(e.target.value)}
                   placeholder="Why chosen (e.g. Real-time sync, zero cost)"
-                  className="flex-1 bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-1.5 text-zinc-100 font-mono focus:outline-none"
+                  className="flex-1 bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-1.5 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
                 <BrutalButton
                   type="button"
@@ -223,14 +223,14 @@ export default function CaseStudyFields({ value = {}, onChange }) {
                   return (
                     <div
                       key={idx}
-                      className="p-2 bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-2"
+                      className="p-2 bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 flex items-center justify-between gap-2"
                     >
                       <div className="flex items-center gap-2">
                         <TagBadge variant="terminal" size="sm">
                           {name}
                         </TagBadge>
                         {rationale && (
-                          <span className="text-[11px] text-zinc-400">
+                          <span className="text-[11px] text-[#4b5e53] dark:text-zinc-400">
                             — {rationale}
                           </span>
                         )}
@@ -239,7 +239,7 @@ export default function CaseStudyFields({ value = {}, onChange }) {
                         type="button"
                         onClick={() => handleRemoveTech(idx)}
                         aria-label={`Remove ${name}`}
-                        className="text-zinc-500 hover:text-rose-400 p-1"
+                        className="text-[#6e8276] dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 p-1"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -252,8 +252,8 @@ export default function CaseStudyFields({ value = {}, onChange }) {
 
           {/* Key Learnings */}
           <div className="space-y-2">
-            <label htmlFor="learning-input" className="block text-zinc-300 font-bold flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-terminal-cyan" />
+            <label htmlFor="learning-input" className="block text-[#0f1a14] dark:text-zinc-300 font-bold flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-cyan" />
               Key Learnings &amp; Insights
             </label>
 
@@ -265,7 +265,7 @@ export default function CaseStudyFields({ value = {}, onChange }) {
                 onChange={(e) => setLearningInput(e.target.value)}
                 onKeyDown={handleKeyDownLearning}
                 placeholder="Type a learning take-away and press Enter (e.g. CORS setup, State machines)"
-                className="flex-1 bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-1.5 text-zinc-100 font-mono focus:outline-none"
+                className="flex-1 bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-1.5 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
               />
               <BrutalButton
                 type="button"
@@ -295,10 +295,10 @@ export default function CaseStudyFields({ value = {}, onChange }) {
           </div>
 
           {/* Technical Challenges & Q&A Manager */}
-          <div className="space-y-3 pt-2 border-t border-zinc-800/80">
+          <div className="space-y-3 pt-2 border-t border-[#cbdad0] dark:border-zinc-800/80">
             <div className="flex items-center justify-between">
-              <label className="text-zinc-300 font-bold flex items-center gap-1.5">
-                <HelpCircle className="w-3.5 h-3.5 text-rose-400" />
+              <label className="text-[#0f1a14] dark:text-zinc-300 font-bold flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                 Technical Challenges &amp; Solutions ({problems.length})
               </label>
               {!showAddProblem && (
@@ -316,20 +316,20 @@ export default function CaseStudyFields({ value = {}, onChange }) {
 
             {/* Add Challenge Card Form */}
             {showAddProblem && (
-              <div className="p-3.5 bg-zinc-950 border border-terminal-cyan space-y-3 shadow-brutal-sm">
+              <div className="p-3.5 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-terminal-cyan space-y-3 shadow-brutal-forest dark:shadow-brutal-sm">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-terminal-cyan">New Challenge &amp; Solution</span>
+                  <span className="font-bold text-emerald-800 dark:text-terminal-cyan">New Challenge &amp; Solution</span>
                   <button
                     type="button"
                     onClick={() => setShowAddProblem(false)}
-                    className="text-zinc-500 hover:text-zinc-200"
+                    className="text-[#4b5e53] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200"
                   >
                     Cancel
                   </button>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="challenge-que" className="block text-zinc-400 text-[11px]">
+                  <label htmlFor="challenge-que" className="block text-[#4b5e53] dark:text-zinc-400 text-[11px]">
                     Problem / Challenge Question *
                   </label>
                   <input
@@ -338,12 +338,12 @@ export default function CaseStudyFields({ value = {}, onChange }) {
                     value={problemQue}
                     onChange={(e) => setProblemQue(e.target.value)}
                     placeholder="e.g. How to deploy environment variables in render.com"
-                    className="w-full bg-zinc-900 border border-zinc-700 focus:border-terminal-cyan px-2.5 py-1.5 text-zinc-100 font-mono focus:outline-none"
+                    className="w-full bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-2.5 py-1.5 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="challenge-ans" className="block text-zinc-400 text-[11px]">
+                  <label htmlFor="challenge-ans" className="block text-[#4b5e53] dark:text-zinc-400 text-[11px]">
                     Technical Solution / Architecture Decision *
                   </label>
                   <textarea
@@ -352,7 +352,7 @@ export default function CaseStudyFields({ value = {}, onChange }) {
                     value={problemAns}
                     onChange={(e) => setProblemAns(e.target.value)}
                     placeholder="Detail how you resolved it, preventing security leaks or performance bottlenecks..."
-                    className="w-full bg-zinc-900 border border-zinc-700 focus:border-terminal-cyan p-2.5 text-zinc-100 font-mono focus:outline-none resize-y"
+                    className="w-full bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan p-2.5 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none resize-y"
                   />
                 </div>
 
@@ -385,33 +385,33 @@ export default function CaseStudyFields({ value = {}, onChange }) {
                 {problems.map((prob, idx) => (
                   <div
                     key={idx}
-                    className="p-3 bg-zinc-950 border border-zinc-800 space-y-2 relative group"
+                    className="p-3 bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 space-y-2 relative group"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 bg-rose-950/60 border border-rose-800 text-rose-300 text-[10px] font-bold">
+                        <span className="px-1.5 py-0.5 bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-[10px] font-bold">
                           Q#{idx + 1}
                         </span>
-                        <h4 className="text-zinc-200 font-bold text-xs">{prob.que}</h4>
+                        <h4 className="text-[#0f1a14] dark:text-zinc-200 font-bold text-xs">{prob.que}</h4>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveProblem(idx)}
                         aria-label={`Remove problem ${idx + 1}`}
-                        className="text-zinc-500 hover:text-rose-400 p-1"
+                        className="text-[#6e8276] dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 p-1"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
-                    <div className="pl-6 border-l-2 border-zinc-800 text-zinc-400 text-[11px] leading-relaxed">
+                    <div className="pl-6 border-l-2 border-[#cbdad0] dark:border-zinc-800 text-[#4b5e53] dark:text-zinc-400 text-[11px] leading-relaxed">
                       <p>{prob.ans}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-[11px] text-zinc-500 italic">
+              <p className="text-[11px] text-[#6e8276] dark:text-zinc-500 italic">
                 No technical challenges or solution notes recorded yet.
               </p>
             )}

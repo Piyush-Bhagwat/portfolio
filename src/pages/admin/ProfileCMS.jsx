@@ -336,16 +336,16 @@ export default function ProfileCMS() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#cbdad0] dark:border-zinc-800 pb-5">
         <div>
-          <div className="flex items-center gap-2 font-mono text-xs text-terminal-green mb-1">
+          <div className="flex items-center gap-2 font-mono text-xs text-emerald-700 dark:text-terminal-green mb-1">
             <span>$</span>
             <span>cms.profile.edit --interactive</span>
           </div>
-          <h1 className="text-2xl font-mono font-bold text-zinc-100 tracking-tight">
+          <h1 className="text-2xl font-mono font-bold text-[#0f1a14] dark:text-zinc-100 tracking-tight">
             Profile &amp; Bio CMS
           </h1>
-          <p className="text-xs font-mono text-zinc-400 mt-1">
+          <p className="text-xs font-mono text-[#4b5e53] dark:text-zinc-400 mt-1">
             Manage your hero statement, multi-paragraph bio, Cloudinary avatar, and social links.
           </p>
         </div>
@@ -386,17 +386,17 @@ export default function ProfileCMS() {
             p-3.5 border font-mono text-xs flex items-start gap-2.5 shadow-brutal-sm
             ${
               feedback.type === "success"
-                ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
+                ? "bg-emerald-100 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300"
                 : feedback.type === "error"
-                ? "bg-rose-950/40 border-rose-800 text-rose-300"
-                : "bg-cyan-950/40 border-cyan-800 text-cyan-300"
+                ? "bg-rose-100 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-300"
+                : "bg-cyan-100 dark:bg-cyan-950/40 border-cyan-300 dark:border-cyan-800 text-cyan-900 dark:text-cyan-300"
             }
           `}
         >
           {feedback.type === "success" ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
           ) : (
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-rose-700 dark:text-rose-400 shrink-0 mt-0.5" />
           )}
           <div className="space-y-0.5">
             <span className="font-bold uppercase">[{feedback.type}]</span>
@@ -406,14 +406,14 @@ export default function ProfileCMS() {
       )}
 
       {/* Mobile Tab Switcher */}
-      <div className="flex lg:hidden gap-2 border-b border-zinc-800 pb-2">
+      <div className="flex lg:hidden gap-2 border-b border-[#cbdad0] dark:border-zinc-800 pb-2">
         <button
           type="button"
           onClick={() => setActiveTab("editor")}
           className={`px-3 py-1.5 font-mono text-xs border ${
             activeTab === "editor"
-              ? "bg-zinc-800 border-zinc-700 text-terminal-green font-bold"
-              : "border-transparent text-zinc-400"
+              ? "bg-[#e9f0ea] dark:bg-zinc-800 border-[#cbdad0] dark:border-zinc-700 text-emerald-700 dark:text-terminal-green font-bold"
+              : "border-transparent text-[#4b5e53] dark:text-zinc-400"
           }`}
         >
           Edit Form
@@ -423,8 +423,8 @@ export default function ProfileCMS() {
           onClick={() => setActiveTab("preview")}
           className={`px-3 py-1.5 font-mono text-xs border ${
             activeTab === "preview"
-              ? "bg-zinc-800 border-zinc-700 text-terminal-cyan font-bold"
-              : "border-transparent text-zinc-400"
+              ? "bg-[#e9f0ea] dark:bg-zinc-800 border-[#cbdad0] dark:border-zinc-700 text-cyan-700 dark:text-terminal-cyan font-bold"
+              : "border-transparent text-[#4b5e53] dark:text-zinc-400"
           }`}
         >
           Live Preview
@@ -438,15 +438,15 @@ export default function ProfileCMS() {
           {/* Section 1: Core Identity */}
           <TerminalBox title="identity_config.json" dotControls={false}>
             <div className="space-y-4 font-mono text-xs">
-              <div className="flex items-center gap-1.5 text-zinc-400 font-bold uppercase tracking-wider pb-1 border-b border-zinc-800">
-                <User className="w-3.5 h-3.5 text-terminal-green" />
+              <div className="flex items-center gap-1.5 text-[#4b5e53] dark:text-zinc-400 font-bold uppercase tracking-wider pb-1 border-b border-[#cbdad0] dark:border-zinc-800">
+                <User className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-green" />
                 <span>Primary Identity</span>
               </div>
 
               {/* Name & Role */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label htmlFor="name" className="block text-zinc-300 font-medium">
+                  <label htmlFor="name" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                     Full Name
                   </label>
                   <input
@@ -455,11 +455,11 @@ export default function ProfileCMS() {
                     value={profile.name}
                     onChange={(e) => updateField("name", e.target.value)}
                     placeholder="Piyush Bhagwat"
-                    className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none"
+                    className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="role" className="block text-zinc-300 font-medium">
+                  <label htmlFor="role" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                     Professional Role / Title
                   </label>
                   <input
@@ -468,14 +468,14 @@ export default function ProfileCMS() {
                     value={profile.role}
                     onChange={(e) => updateField("role", e.target.value)}
                     placeholder="Full Stack Developer"
-                    className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none"
+                    className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Tagline */}
               <div className="space-y-1">
-                <label htmlFor="tagline" className="block text-zinc-300 font-medium">
+                <label htmlFor="tagline" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                   Hero Tagline / Punchline
                 </label>
                 <input
@@ -484,15 +484,15 @@ export default function ProfileCMS() {
                   value={profile.tagline}
                   onChange={(e) => updateField("tagline", e.target.value)}
                   placeholder="Crafting minimal, resilient web experiences"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs focus:outline-none"
                 />
               </div>
 
               {/* Location & Status Badge */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label htmlFor="location" className="block text-zinc-300 font-medium flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-zinc-400" />
+                  <label htmlFor="location" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-[#4b5e53] dark:text-zinc-400" />
                     Location
                   </label>
                   <input
@@ -501,12 +501,12 @@ export default function ProfileCMS() {
                     value={profile.location}
                     onChange={(e) => updateField("location", e.target.value)}
                     placeholder="Maharashtra, India"
-                    className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none"
+                    className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="status_badge" className="block text-zinc-300 font-medium flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-terminal-green" />
+                  <label htmlFor="status_badge" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-emerald-700 dark:text-terminal-green" />
                     Status Badge Text
                   </label>
                   <input
@@ -515,15 +515,15 @@ export default function ProfileCMS() {
                     value={profile.status_badge}
                     onChange={(e) => updateField("status_badge", e.target.value)}
                     placeholder="Available for work"
-                    className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none"
+                    className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Resume URL */}
               <div className="space-y-1">
-                <label htmlFor="resume_url" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <FileText className="w-3 h-3 text-zinc-400" />
+                <label htmlFor="resume_url" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <FileText className="w-3 h-3 text-[#4b5e53] dark:text-zinc-400" />
                   Resume URL (Drive / Cloudinary link)
                 </label>
                 <input
@@ -532,7 +532,7 @@ export default function ProfileCMS() {
                   value={profile.resume_url}
                   onChange={(e) => updateField("resume_url", e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3 py-2 text-zinc-100 font-mono text-xs focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs focus:outline-none"
                 />
               </div>
             </div>
@@ -541,12 +541,12 @@ export default function ProfileCMS() {
           {/* Section 2: Avatar & Media Pipeline */}
           <TerminalBox title="avatar_uploader.sh" dotControls={false}>
             <div className="space-y-3 font-mono text-xs">
-              <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
-                <span className="text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-terminal-cyan" />
+              <div className="flex items-center justify-between pb-1 border-b border-[#cbdad0] dark:border-zinc-800">
+                <span className="text-[#4b5e53] dark:text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-cyan" />
                   Cloudinary Avatar Pipeline
                 </span>
-                <span className="text-[10px] text-zinc-500">folder: portfolio/avatars</span>
+                <span className="text-[10px] text-[#6e8276] dark:text-zinc-500">folder: portfolio/avatars</span>
               </div>
 
               <ImageUploader
@@ -559,9 +559,9 @@ export default function ProfileCMS() {
               />
 
               {profile.avatar_public_id && (
-                <div className="text-[11px] text-zinc-500 flex items-center gap-1.5 pt-1">
-                  <span className="text-zinc-400">Cloudinary ID:</span>
-                  <code className="text-terminal-cyan">{profile.avatar_public_id}</code>
+                <div className="text-[11px] text-[#6e8276] dark:text-zinc-500 flex items-center gap-1.5 pt-1">
+                  <span className="text-[#4b5e53] dark:text-zinc-400">Cloudinary ID:</span>
+                  <code className="text-emerald-700 dark:text-terminal-cyan">{profile.avatar_public_id}</code>
                 </div>
               )}
             </div>
@@ -570,14 +570,14 @@ export default function ProfileCMS() {
           {/* Section 3: Bio Paragraphs */}
           <TerminalBox title="bio_paragraphs.md" dotControls={false}>
             <div className="space-y-4 font-mono text-xs">
-              <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
-                <span className="text-zinc-400 font-bold uppercase tracking-wider">
+              <div className="flex items-center justify-between pb-1 border-b border-[#cbdad0] dark:border-zinc-800">
+                <span className="text-[#4b5e53] dark:text-zinc-400 font-bold uppercase tracking-wider">
                   Bio Paragraphs ({profile.bio_paragraphs.length})
                 </span>
                 <button
                   type="button"
                   onClick={addParagraph}
-                  className="text-terminal-green hover:underline flex items-center gap-1 text-[11px]"
+                  className="text-emerald-700 dark:text-terminal-green hover:underline flex items-center gap-1 text-[11px]"
                 >
                   <Plus className="w-3 h-3" />
                   Add Paragraph
@@ -587,9 +587,9 @@ export default function ProfileCMS() {
               {profile.bio_paragraphs.map((paragraph, index) => (
                 <div
                   key={index}
-                  className="p-3 bg-zinc-950 border border-zinc-800 space-y-2 relative group"
+                  className="p-3 bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 space-y-2 relative group"
                 >
-                  <div className="flex items-center justify-between text-[11px] text-zinc-500">
+                  <div className="flex items-center justify-between text-[11px] text-[#4b5e53] dark:text-zinc-500">
                     <span>Paragraph #{index + 1}</span>
                     <div className="flex items-center gap-1">
                       <button
@@ -597,7 +597,7 @@ export default function ProfileCMS() {
                         onClick={() => moveParagraph(index, -1)}
                         disabled={index === 0}
                         aria-label="Move paragraph up"
-                        className="p-1 text-zinc-500 hover:text-zinc-200 disabled:opacity-30"
+                        className="p-1 text-[#4b5e53] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-30"
                       >
                         <ChevronUp className="w-3.5 h-3.5" />
                       </button>
@@ -606,7 +606,7 @@ export default function ProfileCMS() {
                         onClick={() => moveParagraph(index, 1)}
                         disabled={index === profile.bio_paragraphs.length - 1}
                         aria-label="Move paragraph down"
-                        className="p-1 text-zinc-500 hover:text-zinc-200 disabled:opacity-30"
+                        className="p-1 text-[#4b5e53] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-30"
                       >
                         <ChevronDown className="w-3.5 h-3.5" />
                       </button>
@@ -614,7 +614,7 @@ export default function ProfileCMS() {
                         type="button"
                         onClick={() => removeParagraph(index)}
                         aria-label="Remove paragraph"
-                        className="p-1 text-rose-500 hover:text-rose-400"
+                        className="p-1 text-rose-600 dark:text-rose-500 hover:text-rose-700 dark:hover:text-rose-400"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -626,7 +626,7 @@ export default function ProfileCMS() {
                     value={paragraph}
                     onChange={(e) => handleParagraphChange(index, e.target.value)}
                     placeholder="Enter paragraph text..."
-                    className="w-full bg-zinc-900 border border-zinc-800 focus:border-terminal-green p-2 text-zinc-100 font-mono text-xs focus:outline-none resize-y"
+                    className="w-full bg-white dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 focus:border-emerald-600 dark:focus:border-terminal-green p-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs focus:outline-none resize-y"
                   />
                 </div>
               ))}
@@ -636,15 +636,15 @@ export default function ProfileCMS() {
           {/* Section 4: Social Accounts */}
           <TerminalBox title="social_links.json" dotControls={false}>
             <div className="space-y-4 font-mono text-xs">
-              <div className="flex items-center justify-between pb-1 border-b border-zinc-800">
-                <span className="text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <Share2 className="w-3.5 h-3.5 text-terminal-green" />
+              <div className="flex items-center justify-between pb-1 border-b border-[#cbdad0] dark:border-zinc-800">
+                <span className="text-[#4b5e53] dark:text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <Share2 className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-green" />
                   Social Profiles ({profile.socials.length})
                 </span>
                 <button
                   type="button"
                   onClick={addSocial}
-                  className="text-terminal-green hover:underline flex items-center gap-1 text-[11px]"
+                  className="text-emerald-700 dark:text-terminal-green hover:underline flex items-center gap-1 text-[11px]"
                 >
                   <Plus className="w-3 h-3" />
                   Add Platform
@@ -655,14 +655,14 @@ export default function ProfileCMS() {
                 {profile.socials.map((social, index) => (
                   <div
                     key={index}
-                    className="p-3 bg-zinc-950 border border-zinc-800 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
+                    className="p-3 bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
                   >
                     {/* Platform Selector */}
                     <div className="sm:col-span-3">
                       <select
                         value={social.platform}
                         onChange={(e) => handleSocialChange(index, "platform", e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 focus:border-terminal-green px-2 py-1.5 text-zinc-200 text-xs font-mono focus:outline-none"
+                        className="w-full bg-white dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 focus:border-emerald-600 dark:focus:border-terminal-green px-2 py-1.5 text-[#0f1a14] dark:text-zinc-200 text-xs font-mono focus:outline-none"
                       >
                         {SOCIAL_PLATFORMS.map((plat) => (
                           <option key={plat.value} value={plat.value}>
@@ -679,7 +679,7 @@ export default function ProfileCMS() {
                         value={social.label}
                         onChange={(e) => handleSocialChange(index, "label", e.target.value)}
                         placeholder="Label"
-                        className="w-full bg-zinc-900 border border-zinc-800 focus:border-terminal-green px-2 py-1.5 text-zinc-100 text-xs font-mono focus:outline-none"
+                        className="w-full bg-white dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 focus:border-emerald-600 dark:focus:border-terminal-green px-2 py-1.5 text-[#0f1a14] dark:text-zinc-100 text-xs font-mono focus:outline-none"
                       />
                     </div>
 
@@ -690,7 +690,7 @@ export default function ProfileCMS() {
                         value={social.url}
                         onChange={(e) => handleSocialChange(index, "url", e.target.value)}
                         placeholder="https://..."
-                        className="w-full bg-zinc-900 border border-zinc-800 focus:border-terminal-green px-2 py-1.5 text-zinc-100 text-xs font-mono focus:outline-none"
+                        className="w-full bg-white dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 focus:border-emerald-600 dark:focus:border-terminal-green px-2 py-1.5 text-[#0f1a14] dark:text-zinc-100 text-xs font-mono focus:outline-none"
                       />
                     </div>
 
@@ -700,7 +700,7 @@ export default function ProfileCMS() {
                         type="button"
                         onClick={() => removeSocial(index)}
                         aria-label="Remove social profile"
-                        className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors"
+                        className="p-1.5 text-[#4b5e53] dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -729,8 +729,8 @@ export default function ProfileCMS() {
         {/* Right Column: Live Bento Preview */}
         <div className={`space-y-4 lg:col-span-5 sticky top-20 ${activeTab === "editor" ? "hidden lg:block" : ""}`}>
           <div className="flex items-center justify-between px-1">
-            <span className="font-mono text-xs uppercase tracking-wider text-zinc-500 font-bold flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-terminal-cyan" />
+            <span className="font-mono text-xs uppercase tracking-wider text-[#4b5e53] dark:text-zinc-500 font-bold flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-cyan" />
               Live Bento Preview
             </span>
             <TagBadge variant="terminal" size="sm">Real-time</TagBadge>
@@ -741,7 +741,7 @@ export default function ProfileCMS() {
             title="$ whoami"
             subtitle={profile.role || "Developer"}
             dotPattern
-            className="shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] border-2 border-zinc-800"
+            className="border-2 border-[#1b2e23] dark:border-zinc-800 shadow-brutal-forest dark:shadow-brutal"
           >
             <div className="space-y-4">
               {/* Header with Avatar and Status */}
@@ -751,23 +751,23 @@ export default function ProfileCMS() {
                     <img
                       src={getOptimizedImageUrl(profile.avatar_url, { width: 120, height: 120, crop: "fill" })}
                       alt={profile.name}
-                      className="w-14 h-14 object-cover border-2 border-zinc-700 bg-zinc-800 shrink-0 shadow-brutal-sm"
+                      className="w-14 h-14 object-cover border-2 border-[#1b2e23] dark:border-zinc-700 bg-[#e9f0ea] dark:bg-zinc-800 shrink-0 shadow-brutal-sm"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = DEFAULT_PROFILE.avatar_url;
                       }}
                     />
                   ) : (
-                    <div className="w-14 h-14 bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center text-zinc-400 font-mono text-lg font-bold shrink-0">
+                    <div className="w-14 h-14 bg-[#e9f0ea] dark:bg-zinc-800 border-2 border-[#1b2e23] dark:border-zinc-700 flex items-center justify-center text-[#0f1a14] dark:text-zinc-400 font-mono text-lg font-bold shrink-0">
                       {profile.name ? profile.name.slice(0, 2).toUpperCase() : "AB"}
                     </div>
                   )}
 
                   <div>
-                    <h2 className="text-base font-mono font-bold text-zinc-100">
+                    <h2 className="text-base font-mono font-bold text-[#0f1a14] dark:text-zinc-100">
                       {profile.name || "Your Name"}
                     </h2>
-                    <p className="text-xs font-mono text-terminal-cyan">
+                    <p className="text-xs font-mono text-emerald-700 dark:text-terminal-cyan">
                       {profile.role || "Your Role"}
                     </p>
                   </div>
@@ -780,22 +780,22 @@ export default function ProfileCMS() {
 
               {/* Tagline */}
               {profile.tagline && (
-                <p className="text-xs font-mono text-zinc-300 italic border-l-2 border-terminal-green pl-2.5 py-0.5">
+                <p className="text-xs font-mono text-[#4b5e53] dark:text-zinc-300 italic border-l-2 border-emerald-600 dark:border-terminal-green pl-2.5 py-0.5">
                   &ldquo;{profile.tagline}&rdquo;
                 </p>
               )}
 
               {/* Bio Paragraphs */}
-              <div className="space-y-2 text-xs font-mono text-zinc-400 leading-relaxed border-t border-zinc-800/80 pt-3">
+              <div className="space-y-2 text-xs font-mono text-[#4b5e53] dark:text-zinc-400 leading-relaxed border-t border-[#cbdad0] dark:border-zinc-800/80 pt-3">
                 {profile.bio_paragraphs.filter(Boolean).map((para, i) => (
                   <p key={i}>{para}</p>
                 ))}
               </div>
 
               {/* Location & Resume Footer */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-zinc-800 text-[11px] font-mono text-zinc-500">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#cbdad0] dark:border-zinc-800 text-[11px] font-mono text-[#4b5e53] dark:text-zinc-500">
                 <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-zinc-400" />
+                  <MapPin className="w-3 h-3 text-[#4b5e53] dark:text-zinc-400" />
                   {profile.location || "Location"}
                 </span>
 
@@ -804,7 +804,7 @@ export default function ProfileCMS() {
                     href={profile.resume_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-terminal-cyan hover:underline flex items-center gap-1"
+                    className="text-emerald-700 dark:text-terminal-cyan hover:underline flex items-center gap-1"
                   >
                     <span>Resume</span>
                     <ExternalLink className="w-3 h-3" />

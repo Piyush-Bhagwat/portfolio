@@ -289,16 +289,16 @@ export default function ExperienceCMS() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#cbdad0] dark:border-zinc-800 pb-5">
         <div>
-          <div className="flex items-center gap-2 font-mono text-xs text-terminal-green mb-1">
+          <div className="flex items-center gap-2 font-mono text-xs text-emerald-700 dark:text-terminal-green mb-1">
             <span>$</span>
             <span>sys.cms.experience --timeline</span>
           </div>
-          <h1 className="text-2xl font-mono font-bold text-zinc-100 tracking-tight">
+          <h1 className="text-2xl font-mono font-bold text-[#0f1a14] dark:text-zinc-100 tracking-tight">
             Work Experience &amp; Milestones CMS
           </h1>
-          <p className="text-xs font-mono text-zinc-400 mt-1">
+          <p className="text-xs font-mono text-[#4b5e53] dark:text-zinc-400 mt-1">
             Manage your career progression, roles, accomplishments, and tech stack utilized.
           </p>
         </div>
@@ -332,13 +332,13 @@ export default function ExperienceCMS() {
             p-3.5 border font-mono text-xs flex items-start gap-2.5 shadow-brutal-sm
             ${
               feedback.type === "success"
-                ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
-                : "bg-rose-950/40 border-rose-800 text-rose-300"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+                : "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300"
             }
           `}
         >
           {feedback.type === "success" ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           )}
@@ -352,8 +352,8 @@ export default function ExperienceCMS() {
       {/* Timeline List */}
       {experiences.length === 0 ? (
         <TerminalBox title="experience_empty.log">
-          <div className="p-8 text-center space-y-3 font-mono text-xs text-zinc-400">
-            <History className="w-8 h-8 text-zinc-600 mx-auto" />
+          <div className="p-8 text-center space-y-3 font-mono text-xs text-[#4b5e53] dark:text-zinc-400">
+            <History className="w-8 h-8 text-[#6e8276] dark:text-zinc-600 mx-auto" />
             <p>No work experience or career milestones recorded yet.</p>
             <BrutalButton
               variant="terminal"
@@ -370,24 +370,24 @@ export default function ExperienceCMS() {
           {experiences.map((exp, index) => (
             <div
               key={exp.id}
-              className="p-5 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors shadow-brutal space-y-4"
+              className="p-5 bg-white dark:bg-zinc-950 border-2 border-[#1b2e23] dark:border-zinc-800 hover:border-emerald-600 dark:hover:border-zinc-700 transition-colors shadow-brutal-forest dark:shadow-brutal space-y-4"
             >
               {/* Header row: Role, Period, Order, and Controls */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-zinc-800/80 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#cbdad0] dark:border-zinc-800/80 pb-3">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-terminal-green" />
-                    <h2 className="font-mono text-base font-bold text-zinc-100">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-terminal-green" />
+                    <h2 className="font-mono text-base font-bold text-[#0f1a14] dark:text-zinc-100">
                       {exp.role}
                     </h2>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-zinc-400">
-                    <span className="flex items-center gap-1.5 text-zinc-300 font-semibold">
-                      <Building className="w-3.5 h-3.5 text-zinc-500" />
+                  <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-[#4b5e53] dark:text-zinc-400">
+                    <span className="flex items-center gap-1.5 text-[#0f1a14] dark:text-zinc-300 font-semibold">
+                      <Building className="w-3.5 h-3.5 text-[#6e8276] dark:text-zinc-500" />
                       {exp.company}
                     </span>
                     {exp.location && (
-                      <span className="flex items-center gap-1 text-zinc-500">
+                      <span className="flex items-center gap-1 text-[#6e8276] dark:text-zinc-500">
                         <MapPin className="w-3 h-3" />
                         {exp.location}
                       </span>
@@ -400,7 +400,7 @@ export default function ExperienceCMS() {
                     <Calendar className="w-3 h-3 mr-1 inline" />
                     {exp.period}
                   </TagBadge>
-                  <span className="font-mono text-xs text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5">
+                  <span className="font-mono text-xs text-[#4b5e53] dark:text-zinc-500 bg-[#e9f0ea] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 px-2 py-0.5">
                     #{exp.order}
                   </span>
                 </div>
@@ -408,16 +408,16 @@ export default function ExperienceCMS() {
 
               {/* Description */}
               {exp.description && (
-                <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+                <p className="font-mono text-xs text-[#2c3e34] dark:text-zinc-300 leading-relaxed">
                   {exp.description}
                 </p>
               )}
 
               {/* Footer: Skills Used & Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800/80 font-mono text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#cbdad0] dark:border-zinc-800/80 font-mono text-xs">
                 {/* Skills tags */}
                 <div className="flex flex-wrap gap-1.5 items-center">
-                  <span className="text-[11px] text-zinc-500 mr-1">Tech:</span>
+                  <span className="text-[11px] text-[#4b5e53] dark:text-zinc-500 mr-1">Tech:</span>
                   {Array.isArray(exp.skills_used) && exp.skills_used.length > 0 ? (
                     exp.skills_used.map((sk) => (
                       <TagBadge key={sk} variant="default" size="sm">
@@ -425,7 +425,7 @@ export default function ExperienceCMS() {
                       </TagBadge>
                     ))
                   ) : (
-                    <span className="text-[11px] text-zinc-600">None specified</span>
+                    <span className="text-[11px] text-[#6e8276] dark:text-zinc-600">None specified</span>
                   )}
                 </div>
 
@@ -436,7 +436,7 @@ export default function ExperienceCMS() {
                     onClick={() => handleMoveExperience(index, -1)}
                     disabled={index === 0}
                     aria-label={`Move ${exp.role} up`}
-                    className="p-1 text-zinc-500 hover:text-zinc-200 disabled:opacity-20"
+                    className="p-1 text-[#6e8276] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
                   >
                     <ChevronUp className="w-4 h-4" />
                   </button>
@@ -445,7 +445,7 @@ export default function ExperienceCMS() {
                     onClick={() => handleMoveExperience(index, 1)}
                     disabled={index === experiences.length - 1}
                     aria-label={`Move ${exp.role} down`}
-                    className="p-1 text-zinc-500 hover:text-zinc-200 disabled:opacity-20"
+                    className="p-1 text-[#6e8276] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
                   >
                     <ChevronDown className="w-4 h-4" />
                   </button>

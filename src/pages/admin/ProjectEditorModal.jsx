@@ -38,6 +38,7 @@ function slugify(text) {
 export default function ProjectEditorModal({
   isOpen,
   project = null,
+  nextOrder = 1,
   onClose,
   onSave,
   saving = false,
@@ -54,7 +55,7 @@ export default function ProjectEditorModal({
   const [imagePublicId, setImagePublicId] = useState(project?.image_public_id || "");
   const [featured, setFeatured] = useState(project?.featured ?? false);
   const [date, setDate] = useState(project?.date || new Date().getFullYear().toString());
-  const [order, setOrder] = useState(project?.order ?? 1);
+  const [order, setOrder] = useState(project?.order ?? nextOrder);
   const [caseStudy, setCaseStudy] = useState(
     project?.case_study || {
       enabled: false,
@@ -79,7 +80,7 @@ export default function ProjectEditorModal({
       setImagePublicId(project.image_public_id || "");
       setFeatured(project.featured ?? false);
       setDate(project.date || "");
-      setOrder(project.order ?? 1);
+      setOrder(project.order ?? nextOrder);
       setCaseStudy(
         project.case_study || {
           enabled: false,
@@ -101,7 +102,7 @@ export default function ProjectEditorModal({
       setImagePublicId("");
       setFeatured(false);
       setDate(new Date().getFullYear().toString());
-      setOrder(1);
+      setOrder(nextOrder);
       setCaseStudy({
         enabled: false,
         why: "",
@@ -112,7 +113,7 @@ export default function ProjectEditorModal({
     }
     setTagInput("");
     setValidationError("");
-  }, [project, isOpen]);
+  }, [project, isOpen, nextOrder]);
 
   if (!isOpen) return null;
 
@@ -185,13 +186,13 @@ export default function ProjectEditorModal({
       <div className="w-full max-w-2xl max-h-[92vh] flex flex-col">
         <TerminalBox
           title={project ? "edit_project.sh" : "new_project.sh"}
-          className="shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-zinc-800 flex flex-col overflow-hidden"
+          className="shadow-brutal-forest dark:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-[#1b2e23] dark:border-zinc-800 flex flex-col overflow-hidden"
           actions={
             <button
               type="button"
               onClick={onClose}
               aria-label="Close dialog"
-              className="text-zinc-400 hover:text-zinc-100 p-1"
+              className="text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-100 p-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -202,16 +203,16 @@ export default function ProjectEditorModal({
             className="p-6 space-y-4 font-mono text-xs overflow-y-auto max-h-[78vh]"
           >
             {/* Modal Header */}
-            <div className="border-b border-zinc-800 pb-3 flex items-center justify-between">
+            <div className="border-b border-[#cbdad0] dark:border-zinc-800 pb-3 flex items-center justify-between">
               <div>
                 <h2
                   id="project-modal-title"
-                  className="text-base font-bold text-zinc-100 flex items-center gap-2"
+                  className="text-base font-bold text-[#0f1a14] dark:text-zinc-100 flex items-center gap-2"
                 >
-                  <FolderKanban className="w-4 h-4 text-terminal-cyan" />
+                  <FolderKanban className="w-4 h-4 text-emerald-700 dark:text-terminal-cyan" />
                   {project ? "Edit Project Record" : "Add New Project"}
                 </h2>
-                <p className="text-[11px] text-zinc-400 mt-0.5">
+                <p className="text-[11px] text-[#4b5e53] dark:text-zinc-400 mt-0.5">
                   Configure project metadata, repository URLs, cover banner, and tags.
                 </p>
               </div>
@@ -219,7 +220,7 @@ export default function ProjectEditorModal({
 
             {/* Validation alert */}
             {validationError && (
-              <div className="p-2.5 bg-rose-950/40 border border-rose-800 text-rose-300">
+              <div className="p-2.5 bg-rose-100 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-300">
                 [ERROR] {validationError}
               </div>
             )}
@@ -227,7 +228,7 @@ export default function ProjectEditorModal({
             {/* Title & Slug */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label htmlFor="project-title" className="block text-zinc-300 font-medium">
+                <label htmlFor="project-title" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                   Project Title *
                 </label>
                 <input
@@ -237,13 +238,13 @@ export default function ProjectEditorModal({
                   value={title}
                   onChange={handleTitleChange}
                   placeholder="e.g. Notes Pool"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="project-slug" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <LinkIcon className="w-3.5 h-3.5 text-zinc-400" />
+                <label htmlFor="project-slug" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <LinkIcon className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Slug (URL-safe) *
                 </label>
                 <input
@@ -257,14 +258,14 @@ export default function ProjectEditorModal({
                     setValidationError("");
                   }}
                   placeholder="e.g. notes-pool"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
             </div>
 
             {/* Description */}
             <div className="space-y-1.5">
-              <label htmlFor="project-desc" className="block text-zinc-300 font-medium">
+              <label htmlFor="project-desc" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                 Short Description *
               </label>
               <textarea
@@ -277,15 +278,15 @@ export default function ProjectEditorModal({
                   setValidationError("");
                 }}
                 placeholder="High-level summary of the application, architecture, and purpose..."
-                className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan p-2.5 text-zinc-100 font-mono focus:outline-none resize-y"
+                className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan p-2.5 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none resize-y"
               />
             </div>
 
             {/* URLs: Live Demo & GitHub */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label htmlFor="project-live-url" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                <label htmlFor="project-live-url" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <ExternalLink className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Live Demo URL
                 </label>
                 <input
@@ -294,13 +295,13 @@ export default function ProjectEditorModal({
                   value={liveUrl}
                   onChange={(e) => setLiveUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="project-github-url" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <GitBranch className="w-3.5 h-3.5 text-zinc-400" />
+                <label htmlFor="project-github-url" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <GitBranch className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   GitHub Repository URL
                 </label>
                 <input
@@ -309,7 +310,7 @@ export default function ProjectEditorModal({
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
                   placeholder="https://github.com/..."
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
             </div>
@@ -317,8 +318,8 @@ export default function ProjectEditorModal({
             {/* Date, Order & Featured */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
               <div className="space-y-1.5">
-                <label htmlFor="project-date" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                <label htmlFor="project-date" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Release Year / Date
                 </label>
                 <input
@@ -327,14 +328,19 @@ export default function ProjectEditorModal({
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   placeholder="e.g. 2024"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="project-order" className="block text-zinc-300 font-medium flex items-center gap-1">
-                  <Hash className="w-3.5 h-3.5 text-zinc-400" />
-                  Display Order
+                <label htmlFor="project-order" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Hash className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
+                    Display Order
+                  </span>
+                  <span className="text-[10px] text-[#6e8276] dark:text-zinc-500 font-normal">
+                    (Auto-shifts others)
+                  </span>
                 </label>
                 <input
                   id="project-order"
@@ -342,20 +348,20 @@ export default function ProjectEditorModal({
                   min="1"
                   value={order}
                   onChange={(e) => setOrder(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-2 text-[#0f1a14] dark:text-zinc-100 font-mono focus:outline-none"
                 />
               </div>
 
-              <div className="p-2.5 bg-zinc-950 border border-zinc-800 flex items-center gap-2 cursor-pointer h-[38px]">
+              <div className="p-2.5 bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 flex items-center gap-2 cursor-pointer h-[38px]">
                 <input
                   id="project-featured"
                   type="checkbox"
                   checked={featured}
                   onChange={(e) => setFeatured(e.target.checked)}
-                  className="w-4 h-4 text-terminal-cyan bg-zinc-900 border-zinc-700 rounded-none focus:ring-0"
+                  className="w-4 h-4 text-emerald-600 dark:text-terminal-cyan bg-white dark:bg-zinc-900 border-[#cbdad0] dark:border-zinc-700 rounded-none focus:ring-0"
                 />
-                <label htmlFor="project-featured" className="text-zinc-200 cursor-pointer flex items-center gap-1">
-                  <Star className="w-3.5 h-3.5 text-amber-400" />
+                <label htmlFor="project-featured" className="text-[#0f1a14] dark:text-zinc-200 cursor-pointer flex items-center gap-1">
+                  <Star className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   Featured (Bento)
                 </label>
               </div>
@@ -363,7 +369,7 @@ export default function ProjectEditorModal({
 
             {/* Tech Stack Tags */}
             <div className="space-y-2">
-              <label htmlFor="project-tag-input" className="block text-zinc-300 font-medium">
+              <label htmlFor="project-tag-input" className="block text-[#0f1a14] dark:text-zinc-300 font-medium">
                 Tech Stack &amp; Categories
               </label>
               <div className="flex gap-2">
@@ -374,7 +380,7 @@ export default function ProjectEditorModal({
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleKeyDownTag}
                   placeholder="Type a tag and press Enter (e.g. React, Firebase, Tailwind)"
-                  className="flex-1 bg-zinc-950 border border-zinc-700 focus:border-terminal-cyan px-3 py-2 text-zinc-100 font-mono focus:outline-none"
+                  className="flex-1 bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-cyan px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono focus:outline-none"
                 />
                 <BrutalButton
                   type="button"
@@ -404,9 +410,9 @@ export default function ProjectEditorModal({
             </div>
 
             {/* Cover Banner / Media Pipeline */}
-            <div className="space-y-2 pt-2 border-t border-zinc-800">
-              <label className="block text-zinc-300 font-medium flex items-center gap-1.5">
-                <ImageIcon className="w-3.5 h-3.5 text-terminal-cyan" />
+            <div className="space-y-2 pt-2 border-t border-[#cbdad0] dark:border-zinc-800">
+              <label className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-cyan" />
                 Cover Image / Banner (Cloudinary)
               </label>
 
@@ -425,7 +431,7 @@ export default function ProjectEditorModal({
               />
 
               <div className="space-y-1 pt-1">
-                <label htmlFor="project-manual-img" className="block text-[11px] text-zinc-500">
+                <label htmlFor="project-manual-img" className="block text-[11px] text-[#4b5e53] dark:text-zinc-500">
                   Or provide image URL directly:
                 </label>
                 <input
@@ -434,7 +440,7 @@ export default function ProjectEditorModal({
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-300 text-[11px] focus:outline-none focus:border-zinc-600 font-mono"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 px-2.5 py-1.5 text-[#0f1a14] dark:text-zinc-300 placeholder-[#6e8276] dark:placeholder-zinc-600 text-[11px] focus:outline-none focus:border-emerald-600 dark:focus:border-zinc-600 font-mono"
                 />
               </div>
             </div>
@@ -443,7 +449,7 @@ export default function ProjectEditorModal({
             <CaseStudyFields value={caseStudy} onChange={setCaseStudy} />
 
             {/* Actions */}
-            <div className="pt-3 border-t border-zinc-800 flex justify-end gap-2.5">
+            <div className="pt-3 border-t border-[#cbdad0] dark:border-zinc-800 flex justify-end gap-2.5">
               <BrutalButton
                 variant="outline"
                 size="sm"
@@ -488,6 +494,7 @@ ProjectEditorModal.propTypes = {
     order: PropTypes.number,
     case_study: PropTypes.object,
   }),
+  nextOrder: PropTypes.number,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
   saving: PropTypes.bool,

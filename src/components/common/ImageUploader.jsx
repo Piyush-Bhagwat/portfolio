@@ -203,10 +203,10 @@ export default function ImageUploader({
   return (
     <div className={`space-y-3 font-mono ${className}`}>
       {label && (
-        <div className="flex items-center justify-between text-xs text-zinc-300 font-semibold tracking-wide">
+        <div className="flex items-center justify-between text-xs text-[#0f1a14] dark:text-zinc-300 font-semibold tracking-wide">
           <span>{label}</span>
           {folder && (
-            <span className="text-[11px] text-zinc-500 font-normal">
+            <span className="text-[11px] text-[#6e8276] dark:text-zinc-500 font-normal">
               folder: {folder}
             </span>
           )}
@@ -223,8 +223,8 @@ export default function ImageUploader({
           relative border-2 border-dashed p-6 transition-colors duration-150 rounded-none
           ${
             dragActive
-              ? "border-emerald-400 bg-emerald-950/20"
-              : "border-zinc-800 bg-[#121215] hover:border-zinc-700"
+              ? "border-emerald-600 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20"
+              : "border-[#cbdad0] dark:border-zinc-800 bg-[#f4f7f4] dark:bg-[#121215] hover:border-emerald-600 dark:hover:border-zinc-700"
           }
         `.trim()}
       >
@@ -243,7 +243,7 @@ export default function ImageUploader({
           /* Preview Mode */
           <div className="space-y-4">
             <div
-              className={`relative group bg-zinc-950 border border-zinc-800 overflow-hidden flex items-center justify-center ${
+              className={`relative group bg-[#e9f0ea] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 overflow-hidden flex items-center justify-center ${
                 aspectRatio === "square"
                   ? "w-40 h-40 mx-auto aspect-square"
                   : "w-full aspect-video md:aspect-[21/9] max-h-64"
@@ -269,7 +269,7 @@ export default function ImageUploader({
               <button
                 type="button"
                 onClick={handleReset}
-                className="absolute top-2 right-2 p-1.5 bg-zinc-900/90 hover:bg-rose-900 text-zinc-300 hover:text-white border border-zinc-700 transition-colors"
+                className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-rose-900 dark:bg-zinc-900/90 text-[#0f1a14] hover:text-white dark:text-zinc-300 border border-[#cbdad0] dark:border-zinc-700 transition-colors"
                 title="Remove image"
                 aria-label="Remove image"
               >
@@ -278,11 +278,11 @@ export default function ImageUploader({
             </div>
 
             {/* Change / Replace or Remove Action Bar */}
-            <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-900">
+            <div className="flex items-center justify-between text-xs pt-1 border-t border-[#cbdad0] dark:border-zinc-900">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-terminal-cyan hover:underline flex items-center gap-1.5 font-mono cursor-pointer"
+                className="text-emerald-700 dark:text-terminal-cyan hover:underline flex items-center gap-1.5 font-mono cursor-pointer"
               >
                 <UploadCloud className="w-3.5 h-3.5" />
                 Change / Replace Image
@@ -290,7 +290,7 @@ export default function ImageUploader({
               <button
                 type="button"
                 onClick={handleReset}
-                className="text-rose-400 hover:underline flex items-center gap-1.5 font-mono cursor-pointer"
+                className="text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1.5 font-mono cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
                 Remove
@@ -300,15 +300,15 @@ export default function ImageUploader({
             {/* Upload Progress Bar */}
             {isUploading && (
               <div className="space-y-1.5">
-                <div className="flex justify-between text-xs text-zinc-400">
-                  <span className="flex items-center gap-1.5 text-emerald-400">
+                <div className="flex justify-between text-xs text-[#4b5e53] dark:text-zinc-400">
+                  <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Uploading to Cloudinary...
                   </span>
                   <span>{progress}%</span>
                 </div>
-                <div className="w-full h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">
+                <div className="w-full h-2 bg-[#cbdad0] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 overflow-hidden">
                   <div
-                    className="h-full bg-terminal-green transition-all duration-150"
+                    className="h-full bg-emerald-600 dark:bg-terminal-green transition-all duration-150"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -317,10 +317,10 @@ export default function ImageUploader({
 
             {/* Upload Succeeded Metadata & Actions */}
             {uploadResult && !isUploading && (
-              <div className="p-3 bg-zinc-900/70 border border-emerald-500/40 space-y-2">
-                <div className="flex items-center justify-between text-xs text-emerald-400">
+              <div className="p-3 bg-emerald-50 dark:bg-zinc-900/70 border border-emerald-300 dark:border-emerald-500/40 space-y-2">
+                <div className="flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-400">
                   <span className="flex items-center gap-1.5 font-semibold">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     Uploaded Successfully
                   </span>
                   <div className="flex gap-1.5">
@@ -340,13 +340,13 @@ export default function ImageUploader({
                     type="text"
                     readOnly
                     value={uploadResult.secure_url}
-                    className="w-full text-xs bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 text-zinc-300 font-mono select-all focus:outline-none"
+                    className="w-full text-xs bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 px-2.5 py-1.5 text-[#0f1a14] dark:text-zinc-300 font-mono select-all focus:outline-none"
                   />
                   <BrutalButton
                     size="sm"
                     variant="outline"
                     onClick={handleCopyUrl}
-                    icon={copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    icon={copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   >
                     {copied ? "Copied" : "Copy"}
                   </BrutalButton>
@@ -357,22 +357,22 @@ export default function ImageUploader({
         ) : (
           /* Empty / Drop Target State */
           <div className="flex flex-col items-center justify-center text-center py-4 space-y-3">
-            <div className="p-3 bg-zinc-900 border border-zinc-800 text-zinc-400">
-              <UploadCloud className="w-6 h-6 text-zinc-300" />
+            <div className="p-3 bg-[#e9f0ea] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 text-[#4b5e53] dark:text-zinc-400">
+              <UploadCloud className="w-6 h-6 text-[#2c3e34] dark:text-zinc-300" />
             </div>
 
             <div className="space-y-1">
-              <p className="text-sm font-medium text-zinc-200">
+              <p className="text-sm font-medium text-[#0f1a14] dark:text-zinc-200">
                 Drag and drop your image here, or{" "}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-emerald-400 underline hover:text-emerald-300 focus:outline-none"
+                  className="text-emerald-700 dark:text-emerald-400 underline hover:text-emerald-800 dark:hover:text-emerald-300 focus:outline-none"
                 >
                   browse files
                 </button>
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-[#6e8276] dark:text-zinc-500">
                 Supports JPG, PNG, WEBP, GIF, SVG (up to 5MB)
               </p>
             </div>
@@ -391,9 +391,9 @@ export default function ImageUploader({
 
       {/* Error Feedback with Retry */}
       {errorMessage && (
-        <div className="flex items-start justify-between gap-3 p-3 bg-rose-950/40 border border-rose-600/50 text-rose-300 text-xs">
+        <div className="flex items-start justify-between gap-3 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-600/50 text-rose-700 dark:text-rose-300 text-xs">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
             <span>{errorMessage}</span>
           </div>
           {selectedFile && !isUploading && (

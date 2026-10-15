@@ -31,10 +31,10 @@ export default function MarkdownEditorToolbar({
   onToggleSyncScroll,
 }) {
   const btnClass =
-    "p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors border border-transparent hover:border-zinc-700 active:scale-95";
+    "p-1.5 text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-100 hover:bg-[#e9f0ea] dark:hover:bg-zinc-800 transition-colors border border-transparent hover:border-[#cbdad0] dark:hover:border-zinc-700 active:scale-95";
 
   return (
-    <div className="bg-zinc-950 border-b border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 font-mono text-xs select-none">
+    <div className="bg-[#f4f7f4] dark:bg-zinc-950 border-b border-[#cbdad0] dark:border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 font-mono text-xs select-none">
       {/* Left formatting buttons */}
       <div className="flex flex-wrap items-center gap-1">
         {/* Headings */}
@@ -57,7 +57,7 @@ export default function MarkdownEditorToolbar({
           <Heading2 className="w-4 h-4" />
         </button>
 
-        <span className="w-px h-4 bg-zinc-800 mx-1" />
+        <span className="w-px h-4 bg-[#cbdad0] dark:bg-zinc-800 mx-1" />
 
         {/* Inline styles */}
         <button
@@ -88,7 +88,7 @@ export default function MarkdownEditorToolbar({
           <Strikethrough className="w-4 h-4" />
         </button>
 
-        <span className="w-px h-4 bg-zinc-800 mx-1" />
+        <span className="w-px h-4 bg-[#cbdad0] dark:bg-zinc-800 mx-1" />
 
         {/* Code */}
         <button
@@ -110,7 +110,7 @@ export default function MarkdownEditorToolbar({
           <span className="font-bold text-[11px] px-1">{"{ }"}</span>
         </button>
 
-        <span className="w-px h-4 bg-zinc-800 mx-1" />
+        <span className="w-px h-4 bg-[#cbdad0] dark:bg-zinc-800 mx-1" />
 
         {/* Lists & Quotes */}
         <button
@@ -141,7 +141,7 @@ export default function MarkdownEditorToolbar({
           <ListOrdered className="w-4 h-4" />
         </button>
 
-        <span className="w-px h-4 bg-zinc-800 mx-1" />
+        <span className="w-px h-4 bg-[#cbdad0] dark:bg-zinc-800 mx-1" />
 
         {/* Inserts: Links, Media, Tables */}
         <button
@@ -164,7 +164,7 @@ export default function MarkdownEditorToolbar({
           }}
           title="Insert Image (Cloudinary or URL)"
           aria-label="Insert image"
-          className={`${btnClass} text-terminal-cyan hover:text-terminal-cyan`}
+          className={`${btnClass} text-emerald-700 dark:text-terminal-cyan hover:text-emerald-800 dark:hover:text-terminal-cyan`}
         >
           <ImageIcon className="w-4 h-4" />
         </button>
@@ -204,8 +204,8 @@ export default function MarkdownEditorToolbar({
             aria-label="Toggle sync scroll"
             className={`px-2 py-1 flex items-center gap-1 text-[11px] border transition-colors ${
               syncScroll
-                ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
-                : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                ? "bg-emerald-100 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300 font-bold"
+                : "bg-[#e9f0ea] dark:bg-zinc-900 border-[#cbdad0] dark:border-zinc-800 text-[#6e8276] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-300"
             }`}
           >
             <ScrollText className="w-3.5 h-3.5" />
@@ -214,7 +214,7 @@ export default function MarkdownEditorToolbar({
         )}
 
         {onViewModeChange && (
-          <div className="flex items-center border border-zinc-800 bg-zinc-900">
+          <div className="flex items-center border border-[#cbdad0] dark:border-zinc-800 bg-[#e9f0ea] dark:bg-zinc-900">
             <button
               type="button"
               onClick={() => onViewModeChange("edit")}
@@ -222,8 +222,8 @@ export default function MarkdownEditorToolbar({
               aria-label="Editor only view"
               className={`p-1.5 transition-colors ${
                 viewMode === "edit"
-                  ? "bg-terminal-cyan text-black"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-emerald-500 dark:bg-terminal-cyan text-black"
+                  : "text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200"
               }`}
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -235,8 +235,8 @@ export default function MarkdownEditorToolbar({
               aria-label="Split screen view"
               className={`p-1.5 transition-colors ${
                 viewMode === "split"
-                  ? "bg-terminal-cyan text-black"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-emerald-500 dark:bg-terminal-cyan text-black"
+                  : "text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200"
               }`}
             >
               <Columns className="w-3.5 h-3.5" />
@@ -248,8 +248,8 @@ export default function MarkdownEditorToolbar({
               aria-label="Preview only view"
               className={`p-1.5 transition-colors ${
                 viewMode === "preview"
-                  ? "bg-terminal-cyan text-black"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-emerald-500 dark:bg-terminal-cyan text-black"
+                  : "text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200"
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
