@@ -42,17 +42,17 @@ export default function BrutalButton({
 
   const variantStyles = {
     primary:
-      "bg-zinc-100 text-zinc-950 border-zinc-100 hover:bg-white active:bg-zinc-200",
+      "bg-[#0f1a14] text-white border-[#0f1a14] hover:bg-[#1b2e23] active:bg-[#23342a] dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200",
     secondary:
-      "bg-[#18181b] text-zinc-100 border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800",
+      "bg-[#e9f0ea] text-[#0f1a14] border-[#1b2e23] hover:border-[#0f1a14] hover:bg-[#d8e5da] dark:bg-[#18181b] dark:text-zinc-100 dark:border-zinc-700 dark:hover:border-zinc-500 dark:hover:bg-zinc-800",
     terminal:
-      "bg-terminal-green text-zinc-950 border-emerald-400 hover:bg-emerald-400 font-semibold",
+      "bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700 dark:bg-terminal-green dark:text-zinc-950 dark:border-emerald-400 dark:hover:bg-emerald-400 font-semibold",
     cyan:
-      "bg-terminal-cyan text-zinc-950 border-cyan-400 hover:bg-cyan-400 font-semibold",
+      "bg-cyan-600 text-white border-cyan-700 hover:bg-cyan-700 dark:bg-terminal-cyan dark:text-zinc-950 dark:border-cyan-400 dark:hover:bg-cyan-400 font-semibold",
     danger:
       "bg-rose-600 text-white border-rose-500 hover:bg-rose-500",
     outline:
-      "bg-transparent text-zinc-200 border-zinc-700 hover:bg-zinc-900 hover:border-zinc-500",
+      "bg-transparent text-[#0f1a14] border-[#1b2e23] hover:bg-[#e9f0ea] dark:text-zinc-200 dark:border-zinc-700 dark:hover:bg-zinc-900 dark:hover:border-zinc-500",
   };
 
   const disabledStyles = disabled || loading

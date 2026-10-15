@@ -6,17 +6,38 @@
 
 @layer base {
   :root {
+    --bg-base: #f4f7f4;
+    --card-surface: #ffffff;
+    --card-surface-subtle: #e9f0ea;
+    --border-subtle: #1b2e23;
+    --border-divider: #cbdad0;
+    --text-primary: #0f1a14;
+    --text-muted: #4b5e53;
+    --accent-primary: #059669;
+    --accent-secondary: #0891b2;
+    --shadow-brutal-color: #1b2e23;
+  }
+
+  .dark {
     --bg-base: #09090b;
     --card-surface: #121215;
+    --card-surface-subtle: #18181b;
     --border-subtle: #27272a;
+    --border-divider: #1f1f23;
+    --text-primary: #fafafa;
+    --text-muted: #a1a1aa;
+    --accent-primary: #10b981;
+    --accent-secondary: #06b6d4;
+    --shadow-brutal-color: #000000;
   }
 
   body {
-    background-color: #09090b;
-    color: #f4f4f5;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   code, pre, kbd {

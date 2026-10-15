@@ -114,11 +114,11 @@ export default function TableOfContents({
   return (
     <nav
       aria-label="Table of Contents"
-      className={`border-2 border-zinc-800 bg-zinc-950 p-4 font-mono text-xs shadow-brutal-sm ${className}`}
+      className={`border-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 font-mono text-xs shadow-brutal-forest dark:shadow-brutal-sm ${className}`}
     >
-      <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-zinc-800 text-zinc-300 font-bold select-none">
-        <ListTree className="w-4 h-4 text-terminal-green" />
-        <span className="text-[11px] uppercase tracking-wider text-terminal-cyan">
+      <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-[#cbdad0] dark:border-zinc-800 text-[#0f1a14] dark:text-zinc-300 font-bold select-none">
+        <ListTree className="w-4 h-4 text-emerald-700 dark:text-terminal-green" />
+        <span className="text-[11px] uppercase tracking-wider text-teal-700 dark:text-terminal-cyan">
           Table of Contents
         </span>
       </div>
@@ -138,14 +138,14 @@ export default function TableOfContents({
                   flex items-center gap-1.5 py-1 text-[11px] transition-colors leading-relaxed block
                   ${
                     isActive
-                      ? "text-terminal-green font-bold"
-                      : "text-zinc-400 hover:text-zinc-200"
+                      ? "text-emerald-700 dark:text-terminal-green font-bold"
+                      : "text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200"
                   }
                 `}
               >
                 <ChevronRight
                   className={`w-3 h-3 shrink-0 transition-transform ${
-                    isActive ? "text-terminal-green translate-x-0.5" : "text-zinc-600"
+                    isActive ? "text-emerald-700 dark:text-terminal-green translate-x-0.5" : "text-[#cbdad0] dark:text-zinc-600"
                   }`}
                 />
                 <span className="line-clamp-1">{title}</span>

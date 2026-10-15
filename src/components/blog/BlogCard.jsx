@@ -53,10 +53,10 @@ export default function BlogCard({
     <article
       className={`
         group relative flex flex-col justify-between
-        bg-zinc-950 border-2 border-zinc-800
-        hover:border-terminal-green
-        shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-        hover:shadow-[6px_6px_0px_0px_rgba(16,185,129,0.7)]
+        bg-white dark:bg-zinc-950 border-2 border-[#1b2e23] dark:border-zinc-800
+        hover:border-emerald-700 dark:hover:border-terminal-green
+        shadow-brutal-forest dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+        hover:shadow-[6px_6px_0px_0px_#1b2e23] dark:hover:shadow-[6px_6px_0px_0px_rgba(16,185,129,0.7)]
         hover:-translate-x-0.5 hover:-translate-y-0.5
         transition-all duration-200 overflow-hidden font-mono
         ${featured ? "md:col-span-2 lg:col-span-2" : ""}
@@ -66,7 +66,7 @@ export default function BlogCard({
       <div>
         {/* Cover Banner or Terminal Placeholder */}
         {post.cover_image_url ? (
-          <div className="relative w-full aspect-video md:aspect-[21/9] max-h-56 bg-zinc-900 border-b-2 border-zinc-800 overflow-hidden">
+          <div className="relative w-full aspect-video md:aspect-[21/9] max-h-56 bg-[#e9f0ea] dark:bg-zinc-900 border-b-2 border-[#cbdad0] dark:border-zinc-800 overflow-hidden">
             <img
               src={getOptimizedImageUrl(post.cover_image_url, {
                 width: 800,
@@ -77,20 +77,20 @@ export default function BlogCard({
               loading="lazy"
             />
             {featured && (
-              <div className="absolute top-3 left-3 bg-terminal-green text-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="absolute top-3 left-3 bg-emerald-600 dark:bg-terminal-green text-white dark:text-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 Featured Article
               </div>
             )}
           </div>
         ) : (
-          <div className="relative w-full h-24 sm:h-32 bg-zinc-900 border-b-2 border-zinc-800 flex items-center justify-between px-5 select-none overflow-hidden">
-            <div className="flex items-center gap-2 text-zinc-600">
-              <BookOpen className="w-6 h-6 text-zinc-500" />
-              <span className="text-xs font-bold text-zinc-400">
+          <div className="relative w-full h-24 sm:h-32 bg-[#e9f0ea] dark:bg-zinc-900 border-b-2 border-[#cbdad0] dark:border-zinc-800 flex items-center justify-between px-5 select-none overflow-hidden">
+            <div className="flex items-center gap-2 text-[#4b5e53] dark:text-zinc-600">
+              <BookOpen className="w-6 h-6 text-[#4b5e53] dark:text-zinc-500" />
+              <span className="text-xs font-bold text-[#0f1a14] dark:text-zinc-400">
                 technical_publication.md
               </span>
             </div>
-            <span className="text-[10px] text-zinc-600 uppercase tracking-widest">
+            <span className="text-[10px] text-[#4b5e53] dark:text-zinc-600 uppercase tracking-widest">
               sys.pub.v2
             </span>
           </div>
@@ -99,20 +99,20 @@ export default function BlogCard({
         {/* Card Body */}
         <div className="p-5 space-y-3">
           {/* Metadata: Date & Reading Time */}
-          <div className="flex items-center justify-between text-[11px] text-zinc-400">
+          <div className="flex items-center justify-between text-[11px] text-[#4b5e53] dark:text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+              <Calendar className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-500" />
               <span>{displayDate}</span>
             </span>
 
-            <span className="flex items-center gap-1 text-terminal-cyan">
+            <span className="flex items-center gap-1 text-teal-700 dark:text-terminal-cyan">
               <Clock className="w-3.5 h-3.5" />
               <span>{`${readTime} min read`}</span>
             </span>
           </div>
 
           {/* Title */}
-          <h2 className="text-base sm:text-lg font-bold text-zinc-100 group-hover:text-terminal-green transition-colors leading-snug line-clamp-2">
+          <h2 className="text-base sm:text-lg font-bold text-[#0f1a14] dark:text-zinc-100 group-hover:text-emerald-700 dark:group-hover:text-terminal-green transition-colors leading-snug line-clamp-2">
             <Link to={postUrl} className="focus:outline-none">
               {post.title}
             </Link>
@@ -120,7 +120,7 @@ export default function BlogCard({
 
           {/* Excerpt */}
           {post.excerpt && (
-            <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3 font-sans">
+            <p className="text-xs text-[#4b5e53] dark:text-zinc-400 leading-relaxed line-clamp-3 font-sans">
               {post.excerpt}
             </p>
           )}
@@ -152,15 +152,15 @@ export default function BlogCard({
       </div>
 
       {/* Card Footer Link */}
-      <div className="px-5 pb-5 pt-2 border-t border-zinc-900 flex items-center justify-between">
+      <div className="px-5 pb-5 pt-2 border-t border-[#cbdad0] dark:border-zinc-900 flex items-center justify-between">
         <Link
           to={postUrl}
-          className="inline-flex items-center gap-2 text-xs font-bold text-terminal-green hover:underline focus:outline-none group/link"
+          className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-terminal-green hover:underline focus:outline-none group/link"
         >
           <span>Read Article</span>
           <ArrowRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform" />
         </Link>
-        <span className="text-[10px] text-zinc-600 font-mono">
+        <span className="text-[10px] text-[#4b5e53] dark:text-zinc-600 font-mono">
           /{post.slug || post.id}
         </span>
       </div>

@@ -15,6 +15,22 @@
             src="https://kit.fontawesome.com/50889841b5.js"
             crossorigin="anonymous"
         ></script>
+        <!-- Pre-hydration Theme Initializer (Zero-FOUC) -->
+        <script>
+            (function() {
+                try {
+                    var stored = localStorage.getItem('portfolio-theme');
+                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (stored === 'dark' || (!stored && prefersDark)) {
+                        document.documentElement.classList.add('dark');
+                        document.documentElement.classList.remove('light');
+                    } else if (stored === 'light' || (!stored && !prefersDark)) {
+                        document.documentElement.classList.remove('dark');
+                        document.documentElement.classList.add('light');
+                    }
+                } catch (e) {}
+            })();
+        </script>
         <title>Piyush Bhagwat | Portfolio</title>
     </head>
     <body>

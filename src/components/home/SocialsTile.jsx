@@ -44,20 +44,20 @@ export default function SocialsTile({ profile = DEFAULT_PROFILE, className = "" 
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-4 sm:p-5 shadow-brutal-sm
-        flex flex-col justify-between font-mono hover:border-terminal-cyan
+        border-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 sm:p-5 shadow-brutal-forest dark:shadow-brutal-sm
+        flex flex-col justify-between font-mono hover:border-teal-700 dark:hover:border-terminal-cyan
         transition-colors ${className}
       `}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2.5 text-xs select-none">
-        <div className="flex items-center gap-1.5 text-terminal-cyan">
+      <div className="flex items-center justify-between border-b border-[#cbdad0] dark:border-zinc-800/80 pb-2.5 text-xs select-none">
+        <div className="flex items-center gap-1.5 text-teal-700 dark:text-terminal-cyan">
           <Terminal className="w-3.5 h-3.5" />
           <span className="text-[11px] font-bold uppercase tracking-wider">
             Links &amp; Dock
           </span>
         </div>
-        <span className="text-[10px] text-zinc-500 bg-zinc-900 px-1.5 py-0.5 border border-zinc-800">
+        <span className="text-[10px] text-[#4b5e53] dark:text-zinc-500 bg-[#e9f0ea] dark:bg-zinc-900 px-1.5 py-0.5 border border-[#cbdad0] dark:border-zinc-800">
           CHANNELS
         </span>
       </div>
@@ -69,9 +69,9 @@ export default function SocialsTile({ profile = DEFAULT_PROFILE, className = "" 
           href={githubUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-terminal-green text-zinc-300 hover:text-terminal-green shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group"
+          className="flex items-center gap-2 p-2.5 bg-[#f4f7f4] dark:bg-zinc-900 hover:bg-[#e9f0ea] dark:hover:bg-zinc-800 border border-[#cbdad0] dark:border-zinc-800 hover:border-emerald-600 dark:hover:border-terminal-green text-[#0f1a14] dark:text-zinc-300 hover:text-emerald-700 dark:hover:text-terminal-green shadow-[2px_2px_0px_0px_#1b2e23] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group"
         >
-          <GitBranch className="w-4 h-4 text-terminal-green shrink-0 group-hover:scale-110 transition-transform" />
+          <GitBranch className="w-4 h-4 text-emerald-700 dark:text-terminal-green shrink-0 group-hover:scale-110 transition-transform" />
           <span className="text-xs font-bold truncate">GitHub</span>
         </a>
 
@@ -80,9 +80,9 @@ export default function SocialsTile({ profile = DEFAULT_PROFILE, className = "" 
           href={linkedinUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-terminal-cyan text-zinc-300 hover:text-terminal-cyan shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group"
+          className="flex items-center gap-2 p-2.5 bg-[#f4f7f4] dark:bg-zinc-900 hover:bg-[#e9f0ea] dark:hover:bg-zinc-800 border border-[#cbdad0] dark:border-zinc-800 hover:border-teal-600 dark:hover:border-terminal-cyan text-[#0f1a14] dark:text-zinc-300 hover:text-teal-700 dark:hover:text-terminal-cyan shadow-[2px_2px_0px_0px_#1b2e23] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group"
         >
-          <LinkedInIcon className="w-4 h-4 text-terminal-cyan shrink-0 group-hover:scale-110 transition-transform" />
+          <LinkedInIcon className="w-4 h-4 text-teal-700 dark:text-terminal-cyan shrink-0 group-hover:scale-110 transition-transform" />
           <span className="text-xs font-bold truncate">LinkedIn</span>
         </a>
 
@@ -91,9 +91,9 @@ export default function SocialsTile({ profile = DEFAULT_PROFILE, className = "" 
           href={xUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-500 text-zinc-300 hover:text-zinc-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group"
+          className="flex items-center gap-2 p-2.5 bg-[#f4f7f4] dark:bg-zinc-900 hover:bg-[#e9f0ea] dark:hover:bg-zinc-800 border border-[#cbdad0] dark:border-zinc-800 hover:border-[#1b2e23] dark:hover:border-zinc-500 text-[#0f1a14] dark:text-zinc-300 hover:text-[#0f1a14] dark:hover:text-zinc-100 shadow-[2px_2px_0px_0px_#1b2e23] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group"
         >
-          <XIcon className="w-4 h-4 text-zinc-400 shrink-0 group-hover:scale-110 transition-transform" />
+          <XIcon className="w-4 h-4 text-[#4b5e53] dark:text-zinc-400 shrink-0 group-hover:scale-110 transition-transform" />
           <span className="text-xs font-bold truncate">X / Twitter</span>
         </a>
 
@@ -102,17 +102,17 @@ export default function SocialsTile({ profile = DEFAULT_PROFILE, className = "" 
           href={resumeUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-400 text-zinc-300 hover:text-amber-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group"
+          className="flex items-center gap-2 p-2.5 bg-[#f4f7f4] dark:bg-zinc-900 hover:bg-[#e9f0ea] dark:hover:bg-zinc-800 border border-[#cbdad0] dark:border-zinc-800 hover:border-amber-600 dark:hover:border-amber-400 text-[#0f1a14] dark:text-zinc-300 hover:text-amber-700 dark:hover:text-amber-400 shadow-[2px_2px_0px_0px_#1b2e23] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group"
         >
-          <FileText className="w-4 h-4 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
+          <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
           <span className="text-xs font-bold truncate">Resume</span>
         </a>
       </div>
 
       {/* Dock Footer */}
-      <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
+      <div className="pt-2 border-t border-[#cbdad0] dark:border-zinc-800/80 flex items-center justify-between text-[11px] text-[#4b5e53] dark:text-zinc-500">
         <span>Verified Accounts</span>
-        <ExternalLink className="w-3 h-3 text-zinc-600" />
+        <ExternalLink className="w-3 h-3 text-[#4b5e53] dark:text-zinc-600" />
       </div>
     </div>
   );

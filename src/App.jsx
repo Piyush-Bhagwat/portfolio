@@ -46,7 +46,7 @@ const MainContent = () => {
     }
 
     return (
-        <div className="app min-h-screen bg-black text-zinc-100 font-mono flex flex-col justify-between selection:bg-terminal-green selection:text-black">
+        <div className="app min-h-screen bg-[#f4f7f4] dark:bg-black text-[#0f1a14] dark:text-zinc-100 font-mono flex flex-col justify-between selection:bg-emerald-600 dark:selection:bg-terminal-green selection:text-white dark:selection:text-black transition-colors duration-150">
             <PublicNavbar />
 
             <main className="flex-1">

@@ -169,7 +169,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-mono py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f4f7f4] dark:bg-black text-[#0f1a14] dark:text-zinc-100 font-mono py-8 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Bento Grid Layout (1-col mobile, 2-col tablet, 4-col desktop) */}
         <motion.div

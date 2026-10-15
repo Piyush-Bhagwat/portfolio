@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
-import { StatusPill, BrutalButton } from "../components/brutalist";
+import { StatusPill, BrutalButton, ThemeToggle } from "../components/brutalist";
 import {
   LayoutDashboard,
   User,
@@ -81,15 +81,15 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-terminal-bg text-zinc-100 flex flex-col antialiased selection:bg-terminal-green selection:text-zinc-950">
+    <div className="min-h-screen bg-[#f4f7f4] dark:bg-terminal-bg text-[#0f1a14] dark:text-zinc-100 flex flex-col antialiased selection:bg-emerald-600 dark:selection:bg-terminal-green selection:text-white dark:selection:text-zinc-950 transition-colors">
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-sm border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#f4f7f4]/90 dark:bg-zinc-950/90 backdrop-blur-sm border-b border-[#1b2e23] dark:border-zinc-800 px-4 py-3 flex items-center justify-between">
         {/* Left: Mobile hamburger + breadcrumbs */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 text-zinc-400 hover:text-zinc-100 border border-zinc-800 bg-zinc-900 active:bg-zinc-800"
+            className="md:hidden p-2 text-[#0f1a14] dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-zinc-100 border border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800"
             aria-label="Toggle admin navigation"
           >
             {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -98,20 +98,22 @@ export default function AdminLayout() {
           <div className="flex items-center gap-2 font-mono text-xs">
             <Link
               to="/admin/overview"
-              className="text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1.5 font-bold"
+              className="text-[#4b5e53] dark:text-zinc-500 hover:text-emerald-700 dark:hover:text-zinc-300 transition-colors flex items-center gap-1.5 font-bold"
             >
-              <Terminal className="w-3.5 h-3.5 text-terminal-green" />
+              <Terminal className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-green" />
               <span>ADMIN_CMS</span>
             </Link>
-            <ChevronRight className="w-3 h-3 text-zinc-700" />
-            <span className="text-zinc-300 font-semibold tracking-wide">
+            <ChevronRight className="w-3 h-3 text-[#cbdad0] dark:text-zinc-700" />
+            <span className="text-[#0f1a14] dark:text-zinc-300 font-semibold tracking-wide">
               {currentNav.label}
             </span>
           </div>
         </div>
 
-        {/* Right: Status pill, quick public link, admin identity */}
+        {/* Right: Theme Toggle, Status pill, quick public link, admin identity */}
         <div className="flex items-center gap-3">
+          <ThemeToggle size="sm" />
+
           <div className="hidden sm:block">
             <StatusPill status="ADMIN ACTIVE" variant="available" />
           </div>
@@ -120,15 +122,15 @@ export default function AdminLayout() {
             to="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-xs text-zinc-400 hover:text-terminal-cyan flex items-center gap-1.5 px-2.5 py-1.5 border border-zinc-800 bg-zinc-900 hover:border-zinc-700 transition-colors"
+            className="font-mono text-xs text-[#0f1a14] dark:text-zinc-400 hover:text-cyan-700 dark:hover:text-terminal-cyan flex items-center gap-1.5 px-2.5 py-1.5 border border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-700 transition-colors shadow-brutal-sm"
           >
             <span className="hidden sm:inline">Public Site</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </Link>
 
-          <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-zinc-800">
-            <span className="w-2 h-2 rounded-full bg-terminal-green" />
-            <span className="font-mono text-xs text-zinc-400 truncate max-w-[180px]">
+          <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-[#cbdad0] dark:border-zinc-800">
+            <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-terminal-green" />
+            <span className="font-mono text-xs text-[#4b5e53] dark:text-zinc-400 truncate max-w-[180px]">
               {user?.email || adminEmail}
             </span>
           </div>
@@ -149,7 +151,7 @@ export default function AdminLayout() {
         <aside
           className={`
             fixed md:sticky top-[53px] left-0 h-[calc(100vh-53px)] z-40
-            w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col justify-between
+            w-64 bg-white dark:bg-zinc-950 border-r border-[#1b2e23] dark:border-zinc-800 flex flex-col justify-between
             transition-transform duration-200 ease-in-out
             ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           `}
@@ -157,22 +159,22 @@ export default function AdminLayout() {
           {/* Sidebar Nav Links */}
           <div className="p-4 space-y-6 overflow-y-auto">
             {/* Identity Badge */}
-            <div className="p-3 bg-zinc-900/60 border border-zinc-800 font-mono space-y-1">
-              <div className="flex items-center justify-between text-[11px] text-zinc-500">
+            <div className="p-3 bg-[#e9f0ea] dark:bg-zinc-900/60 border border-[#1b2e23] dark:border-zinc-800 font-mono space-y-1">
+              <div className="flex items-center justify-between text-[11px] text-[#4b5e53] dark:text-zinc-500">
                 <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-terminal-green" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-green" />
                   AUTHENTICATED
                 </span>
-                <span className="text-zinc-600">v2.0</span>
+                <span className="text-[#6e8276] dark:text-zinc-600">v2.0</span>
               </div>
-              <p className="text-xs font-semibold text-zinc-200 truncate">
+              <p className="text-xs font-semibold text-[#0f1a14] dark:text-zinc-200 truncate">
                 {user?.email || adminEmail}
               </p>
             </div>
 
             {/* Navigation List */}
             <nav className="space-y-1">
-              <p className="px-2 font-mono text-[10px] uppercase tracking-wider text-zinc-500 font-bold mb-2">
+              <p className="px-2 font-mono text-[10px] uppercase tracking-wider text-[#4b5e53] dark:text-zinc-500 font-bold mb-2">
                 Core Modules
               </p>
               {NAV_ITEMS.map((item) => {
@@ -187,8 +189,8 @@ export default function AdminLayout() {
                       border border-transparent transition-all
                       ${
                         isActive
-                          ? "bg-zinc-900 border-zinc-700 text-terminal-green font-bold shadow-brutal-sm border-r-2 border-r-terminal-green"
-                          : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50"
+                          ? "bg-[#e9f0ea] dark:bg-zinc-900 border-[#1b2e23] dark:border-zinc-700 text-emerald-700 dark:text-terminal-green font-bold shadow-brutal-sm border-r-2 border-r-emerald-600 dark:border-r-terminal-green"
+                          : "text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-100 hover:bg-[#e9f0ea]/50 dark:hover:bg-zinc-900/50"
                       }
                     `}
                   >
@@ -208,7 +210,7 @@ export default function AdminLayout() {
           </div>
 
           {/* Sidebar Footer with Logout Action */}
-          <div className="p-4 border-t border-zinc-800 space-y-3 bg-zinc-950">
+          <div className="p-4 border-t border-[#1b2e23] dark:border-zinc-800 space-y-3 bg-[#f4f7f4] dark:bg-zinc-950">
             <BrutalButton
               variant="danger"
               size="sm"
@@ -220,7 +222,7 @@ export default function AdminLayout() {
             >
               {loggingOut ? "Signing out..." : "Sign Out"}
             </BrutalButton>
-            <div className="text-center font-mono text-[10px] text-zinc-600">
+            <div className="text-center font-mono text-[10px] text-[#6e8276] dark:text-zinc-600">
               Portfolio V2 Admin Suite
             </div>
           </div>

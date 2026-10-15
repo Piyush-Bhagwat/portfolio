@@ -28,17 +28,17 @@ export default function SkillsTile({ skills = DEFAULT_SKILLS, className = "" }) 
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-4 sm:p-6 shadow-brutal-sm
-        flex flex-col justify-between font-mono hover:border-zinc-700
+        border-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 sm:p-6 shadow-brutal-forest dark:shadow-brutal-sm
+        flex flex-col justify-between font-mono hover:border-emerald-700 dark:hover:border-zinc-700
         transition-colors ${className}
       `}
     >
       <div className="space-y-4">
         {/* Header Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 pb-2.5 text-xs select-none">
-          <div className="flex items-center gap-1.5 text-terminal-green">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#cbdad0] dark:border-zinc-800/80 pb-2.5 text-xs select-none">
+          <div className="flex items-center gap-1.5 text-emerald-700 dark:text-terminal-green">
             <Cpu className="w-3.5 h-3.5" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-terminal-cyan">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-terminal-cyan">
               Tech Stack &amp; Skills
             </span>
           </div>
@@ -52,8 +52,8 @@ export default function SkillsTile({ skills = DEFAULT_SKILLS, className = "" }) 
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-2 py-0.5 border transition-all active:translate-x-[1px] active:translate-y-[1px] ${
                   selectedCategory === cat.id
-                    ? "bg-terminal-green text-black font-bold border-terminal-green shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
-                    : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 border-zinc-800"
+                    ? "bg-emerald-600 dark:bg-terminal-green text-white dark:text-black font-bold border-[#1b2e23] dark:border-terminal-green shadow-[2px_2px_0px_0px_#1b2e23] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
+                    : "bg-[#f4f7f4] dark:bg-zinc-900 text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200 border-[#cbdad0] dark:border-zinc-800"
                 }`}
               >
                 {cat.label}
@@ -67,7 +67,7 @@ export default function SkillsTile({ skills = DEFAULT_SKILLS, className = "" }) 
           {filteredSkills.map((skill) => (
             <div
               key={skill.id || skill.name}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-terminal-green text-zinc-200 text-xs transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none select-none cursor-default"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 hover:border-emerald-600 dark:hover:border-terminal-green text-[#0f1a14] dark:text-zinc-200 text-xs transition-all shadow-[2px_2px_0px_0px_#1b2e23] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none select-none cursor-default"
             >
               {skill.icon_url ? (
                 <img
@@ -79,7 +79,7 @@ export default function SkillsTile({ skills = DEFAULT_SKILLS, className = "" }) 
                   }}
                 />
               ) : (
-                <Code2 className="w-3.5 h-3.5 text-terminal-cyan shrink-0" />
+                <Code2 className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-cyan shrink-0" />
               )}
               <span className="font-bold">{skill.name}</span>
             </div>
@@ -88,9 +88,9 @@ export default function SkillsTile({ skills = DEFAULT_SKILLS, className = "" }) 
       </div>
 
       {/* Footer Info */}
-      <div className="pt-3 mt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500">
+      <div className="pt-3 mt-3 border-t border-[#cbdad0] dark:border-zinc-800/80 flex items-center justify-between text-[11px] text-[#4b5e53] dark:text-zinc-500">
         <span>{`${skillList.length} Integrated Technologies`}</span>
-        <span className="text-terminal-green font-bold">READY TO SCALE</span>
+        <span className="text-emerald-700 dark:text-terminal-green font-bold">READY TO SCALE</span>
       </div>
     </div>
   );

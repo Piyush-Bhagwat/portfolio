@@ -23,24 +23,24 @@ export default function FeaturedProjectsTile({
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-5 sm:p-8 shadow-brutal
-        flex flex-col justify-between font-mono hover:border-zinc-700
+        border-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-8 shadow-brutal-forest dark:shadow-brutal
+        flex flex-col justify-between font-mono hover:border-emerald-700 dark:hover:border-zinc-700
         transition-colors ${className}
       `}
     >
       <div className="space-y-5 sm:space-y-6">
         {/* Terminal Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-3 text-xs select-none">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#cbdad0] dark:border-zinc-800/80 pb-3 text-xs select-none">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-terminal-green animate-pulse" />
-            <FolderKanban className="w-4 h-4 text-terminal-green" />
-            <span className="text-xs font-bold uppercase tracking-wider text-zinc-100">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-terminal-green animate-pulse" />
+            <FolderKanban className="w-4 h-4 text-emerald-700 dark:text-terminal-green" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0f1a14] dark:text-zinc-100">
               Featured Systems &amp; Deployments
             </span>
           </div>
           <Link
             to="/projects"
-            className="text-terminal-cyan hover:underline inline-flex items-center gap-1 text-xs self-start sm:self-auto"
+            className="text-teal-700 dark:text-terminal-cyan hover:underline inline-flex items-center gap-1 text-xs self-start sm:self-auto"
           >
             <span>Browse All {`${projectList.length} Projects`}</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -60,7 +60,7 @@ export default function FeaturedProjectsTile({
             return (
               <div
                 key={project.id || project.slug}
-                className="border-2 border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-5 flex flex-col justify-between hover:border-terminal-green hover:-translate-y-0.5 hover:shadow-brutal transition-all shadow-brutal-sm group"
+                className="border-2 border-[#cbdad0] dark:border-zinc-800/80 bg-[#f4f7f4] dark:bg-zinc-900/50 p-4 sm:p-5 flex flex-col justify-between hover:border-emerald-600 dark:hover:border-terminal-green hover:-translate-y-0.5 hover:shadow-brutal transition-all shadow-brutal-forest dark:shadow-brutal-sm group"
               >
                 <div className="space-y-3">
                   {/* Top Badges */}
@@ -70,7 +70,7 @@ export default function FeaturedProjectsTile({
                       <span>Featured</span>
                     </span>
                     {project.date && (
-                      <span className="text-zinc-500 font-mono">
+                      <span className="text-[#4b5e53] dark:text-zinc-500 font-mono">
                         {project.date}
                       </span>
                     )}
@@ -78,10 +78,10 @@ export default function FeaturedProjectsTile({
 
                   {/* Title & Description */}
                   <div className="space-y-1">
-                    <h3 className="text-base font-bold text-zinc-100 group-hover:text-terminal-green transition-colors leading-snug">
+                    <h3 className="text-base font-bold text-[#0f1a14] dark:text-zinc-100 group-hover:text-emerald-700 dark:group-hover:text-terminal-green transition-colors leading-snug">
                       {project.title}
                     </h3>
-                    <p className="text-xs text-zinc-400 font-sans line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-[#4b5e53] dark:text-zinc-400 font-sans line-clamp-2 leading-relaxed">
                       {project.description || project.disc}
                     </p>
                   </div>
@@ -99,18 +99,18 @@ export default function FeaturedProjectsTile({
                 </div>
 
                 {/* Actions */}
-                <div className="pt-4 mt-3 border-t border-zinc-800/70 flex items-center justify-between gap-2 text-xs">
+                <div className="pt-4 mt-3 border-t border-[#cbdad0] dark:border-zinc-800/70 flex items-center justify-between gap-2 text-xs">
                   {hasCaseStudy && onOpenCaseStudy ? (
                     <button
                       type="button"
                       onClick={() => onOpenCaseStudy(project)}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-terminal-cyan hover:underline active:translate-x-[1px] active:translate-y-[1px] transition-transform"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-700 dark:text-terminal-cyan hover:underline active:translate-x-[1px] active:translate-y-[1px] transition-transform"
                     >
                       <BookOpen className="w-3 h-3" />
                       <span>Case Study</span>
                     </button>
                   ) : (
-                    <span className="text-[11px] text-zinc-600">Production</span>
+                    <span className="text-[11px] text-[#4b5e53] dark:text-zinc-600">Production</span>
                   )}
 
                   <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export default function FeaturedProjectsTile({
                         href={project.github_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1 hover:text-zinc-100 text-zinc-500 hover:scale-110 active:scale-95 transition-transform"
+                        className="p-1 hover:text-[#0f1a14] dark:hover:text-zinc-100 text-[#4b5e53] dark:text-zinc-500 hover:scale-110 active:scale-95 transition-transform"
                         title="GitHub Repo"
                       >
                         <GitBranch className="w-3.5 h-3.5" />
@@ -130,7 +130,7 @@ export default function FeaturedProjectsTile({
                         href={project.live_url || project.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1 text-terminal-green hover:text-emerald-300 hover:scale-110 active:scale-95 transition-transform"
+                        className="p-1 text-emerald-700 dark:text-terminal-green hover:text-emerald-800 dark:hover:text-emerald-300 hover:scale-110 active:scale-95 transition-transform"
                         title="Live Demo"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -145,7 +145,7 @@ export default function FeaturedProjectsTile({
       </div>
 
       {/* Footer CTA */}
-      <div className="pt-4 mt-6 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
+      <div className="pt-4 mt-6 border-t border-[#cbdad0] dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#4b5e53] dark:text-zinc-400">
         <span>Ready to inspect the source architecture?</span>
         <Link to="/projects">
           <BrutalButton

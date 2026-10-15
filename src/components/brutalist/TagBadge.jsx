@@ -34,21 +34,21 @@ export default function TagBadge({
   };
 
   const variantStyles = {
-    default: "bg-[#18181b] border-zinc-700 text-zinc-300 hover:border-zinc-500",
-    terminal: "bg-emerald-950/40 border-emerald-500/60 text-emerald-400",
-    cyan: "bg-cyan-950/40 border-cyan-500/60 text-cyan-400",
-    amber: "bg-amber-950/40 border-amber-500/60 text-amber-400",
-    purple: "bg-purple-950/40 border-purple-500/60 text-purple-400",
-    white: "bg-zinc-900 border-zinc-200 text-zinc-100",
+    default: "bg-[#e9f0ea] border-[#cbdad0] text-[#1b2e23] hover:border-[#1b2e23] dark:bg-[#18181b] dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500",
+    terminal: "bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-500/60 dark:text-emerald-400",
+    cyan: "bg-cyan-50 border-cyan-300 text-cyan-800 dark:bg-cyan-950/40 dark:border-cyan-500/60 dark:text-cyan-400",
+    amber: "bg-amber-50 border-amber-300 text-amber-800 dark:bg-amber-950/40 dark:border-amber-500/60 dark:text-amber-400",
+    purple: "bg-purple-50 border-purple-300 text-purple-800 dark:bg-purple-950/40 dark:border-purple-500/60 dark:text-purple-400",
+    white: "bg-white border-[#1b2e23] text-[#0f1a14] dark:bg-zinc-900 dark:border-zinc-200 dark:text-zinc-100",
   };
 
   const dotColors = {
-    default: "bg-zinc-400",
-    terminal: "bg-emerald-400",
-    cyan: "bg-cyan-400",
-    amber: "bg-amber-400",
-    purple: "bg-purple-400",
-    white: "bg-zinc-100",
+    default: "bg-zinc-500 dark:bg-zinc-400",
+    terminal: "bg-emerald-600 dark:bg-emerald-400",
+    cyan: "bg-cyan-600 dark:bg-cyan-400",
+    amber: "bg-amber-600 dark:bg-amber-400",
+    purple: "bg-purple-600 dark:bg-purple-400",
+    white: "bg-[#0f1a14] dark:bg-zinc-100",
   };
 
   return (
@@ -61,7 +61,7 @@ export default function TagBadge({
         select-none whitespace-nowrap transition-colors duration-150
         ${sizeStyles[size] || sizeStyles.md}
         ${variantStyles[variant] || variantStyles.default}
-        ${isClickable ? "cursor-pointer hover:bg-zinc-800" : ""}
+        ${isClickable ? "cursor-pointer hover:bg-[#d8e5da] dark:hover:bg-zinc-800" : ""}
         ${className}
       `.trim()}
       {...props}

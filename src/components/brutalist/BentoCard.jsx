@@ -31,13 +31,13 @@ export default function BentoCard({
   const isClickable = Boolean(onClick);
 
   const variantStyles = {
-    default: "bg-[#121215] border-zinc-800 text-zinc-100",
-    terminal: "bg-[#09090b] border-zinc-800 text-zinc-100 font-mono",
-    bordered: "bg-transparent border-zinc-700 text-zinc-100",
+    default: "bg-white dark:bg-[#121215] border-[#1b2e23] dark:border-zinc-800 text-[#0f1a14] dark:text-zinc-100",
+    terminal: "bg-[#f4f7f4] dark:bg-[#09090b] border-[#1b2e23] dark:border-zinc-800 text-[#0f1a14] dark:text-zinc-100 font-mono",
+    bordered: "bg-transparent border-[#1b2e23] dark:border-zinc-700 text-[#0f1a14] dark:text-zinc-100",
   };
 
   const hoverStyles = hover
-    ? "transition-all duration-200 hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal hover:border-zinc-700"
+    ? "transition-all duration-200 hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal hover:border-[#0f1a14] dark:hover:border-zinc-700"
     : "";
 
   return (
@@ -57,7 +57,7 @@ export default function BentoCard({
       }
       className={`
         relative rounded-none border shadow-brutal-sm p-5 md:p-6
-        break-words [overflow-wrap:anywhere] overflow-hidden
+        break-words [overflow-wrap:anywhere] overflow-hidden transition-colors
         ${variantStyles[variant] || variantStyles.default}
         ${hoverStyles}
         ${dotPattern ? "bg-grid-dots" : ""}
@@ -67,15 +67,15 @@ export default function BentoCard({
       {...props}
     >
       {(title || badge || action) && (
-        <div className="flex items-start justify-between gap-3 mb-4 border-b border-zinc-800/80 pb-3">
+        <div className="flex items-start justify-between gap-3 mb-4 border-b border-[#cbdad0] dark:border-zinc-800/80 pb-3">
           <div className="min-w-0">
             {title && (
-              <h3 className="font-mono text-base md:text-lg font-semibold tracking-tight text-zinc-100 truncate">
+              <h3 className="font-mono text-base md:text-lg font-semibold tracking-tight text-[#0f1a14] dark:text-zinc-100 truncate">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-xs text-zinc-400 mt-0.5 line-clamp-1">
+              <p className="text-xs text-[#4b5e53] dark:text-zinc-400 mt-0.5 line-clamp-1">
                 {subtitle}
               </p>
             )}

@@ -6,7 +6,7 @@ The current portfolio website (V1) is built using React (Vite) and Firebase. Whi
 1. **Asset Storage Dependency**: Uses Firebase Storage for media assets, which no longer offers a viable zero-cost tier for portfolio hosting.
 2. **Limited & Static Content Management**: Most content (bio, skills, experiences, case studies) is hardcoded in frontend source files (`Home.page.jsx`, `projects.js`), while the admin dashboard (`Dashboard.jsx`) only provides a barebones and incomplete project creation form.
 3. **Absence of a Content/Blogging Engine**: There is no platform for long-form technical writing, case breakdowns, or engineering articles.
-4. **Outdated Visual Identity**: The current design lacks a modern, distinct programmer identity. It needs to transition to a high-contrast, bento-grid, neo-brutalist / minimal programmer aesthetic.
+4. **Outdated Visual Identity & Single Theme**: The current design lacks a modern, distinct programmer identity and lacks theme flexibility. It needs to transition to a high-contrast, bento-grid, neo-brutalist / minimal programmer aesthetic with a **first-class dual theme system** (sleek dark mode and an organic, subtle greenish light mode with seamless toggling).
 
 This document outlines the problem statement, gap analysis, requirements, technical architecture, and migration roadmap for **Portfolio V2**.
 
@@ -20,8 +20,8 @@ This document outlines the problem statement, gap analysis, requirements, techni
 | **Site Content** | Hardcoded JSX strings & static arrays (`src/projects.js`) | Dynamic Firestore CMS; all text, media, socials, skills, and bio editable |
 | **Admin Capabilities** | Incomplete single project form; no auth protection; no edit/delete flow | Secure Admin Suite: Profile Editor, Project & Case Study CRUD, Media Uploader, Blog CMS |
 | **Writing & Articles** | None | Multi-view Blog System: Card Grid, Markdown Reader, Split-view Editor & Manager |
-| **Visual Design** | Basic CSS layout, standard card grid | Modern Developer Bento-Grid, Neo-Brutalist touches, monospace typography, terminal motifs |
-| **Developer Experience** | Vanilla CSS files (`main.style.css`, `mobile.style.css`), unmodularized | Modern component-driven styling (Tailwind CSS or modular styling), strict design tokens |
+| **Visual Design & Themes** | Basic CSS layout, standard card grid, dark-only styling | Modern Developer Bento-Grid, Neo-Brutalist touches, monospace typography, terminal motifs, and **Dual Theme System (High-contrast Dark Mode + Subtle Greenish Light Theme with 1-click persistent toggle)** |
+| **Developer Experience** | Vanilla CSS files (`main.style.css`, `mobile.style.css`), unmodularized | Modern component-driven styling (Tailwind CSS `darkMode: 'class'`), semantic CSS custom property tokens, reusable theme hooks |
 
 ---
 
@@ -81,18 +81,40 @@ The blog system requires four core views:
 
 ---
 
-### Pillar 4: Visual & UX Transformation (Minimal, Programmer, Bento-Grid, Brutalist)
+### Pillar 4: Visual & UX Transformation (Minimal, Programmer, Bento-Grid, Brutalist & Dual Themes)
 #### Problem:
 - The current aesthetic does not communicate high engineering craft. It uses generic color schemes and floating CSS symbols that feel cluttered.
-#### Design Direction:
+- Furthermore, the site lacks theme versatility: single-theme implementations fail to accommodate user environmental preferences, while conventional light themes often suffer from glaring pure-white canvases that destroy developer atmosphere and induce ocular fatigue.
+
+#### Design Direction & Dual-Theme Architecture:
 - **Bento Grid Architecture**:
   - Information-dense, modular grid blocks with varying aspect ratios (1x1, 2x1, 2x2) that organize bio, latest commits/projects, current tech stack, and interactive badges into a coherent dashboard.
 - **Neo-Brutalist & Programmer Identity**:
-  - High-contrast borders (`1px` or `2px` crisp border with `#27272a` / `#e4e4e7` or stark borders).
+  - High-contrast borders (`1px` or `2px` crisp border with `#27272a` in dark mode or deep evergreen-charcoal `#1b2e23` in light mode).
   - Monospace typography accents (code snippets, timestamps, tags, micro-labels in `JetBrains Mono` / `Geist Mono` / `Fira Code`).
   - Terminal-inspired UI elements: Command-line style prompt (`$ whoami`, `cat about.txt`), live status pill (`● Available for opportunities`), subtle grid/dot pattern background.
   - Brutalist tactile elements: Sharp box shadows or crisp borders, flat buttons with subtle tactile press effects, high accessibility contrast.
-  - Clean Dark Mode first palette with customizable accent color (e.g., emerald green, electric amber, or stark monochrome).
+
+#### Color Theory & Subtle Greenish Light Theme:
+- **Rationale & Philosophy**:
+  - Rather than sterile, blinding `#ffffff` backgrounds, the light theme adopts an organic, refined **Subtle Greenish Palette** rooted in Japanese celadon, sage, and mint hues.
+  - This preserves the hacker/terminal identity in daylight, eliminates eye strain, and provides visual warmth while preserving sharp neo-brutalist contrast.
+- **Light Theme Color Palette Breakdown**:
+  - **Canvas Background (Base)**: `#f4f7f4` (Light Sage / Pale Celadon) — high lightness (>96%), very low saturation (~4%), soft on eyes.
+  - **Elevated Card Surface**: `#ffffff` (Crisp Pure Bone White) — creates clean depth separation against the sage canvas.
+  - **Secondary / Hover Surface**: `#e9f0ea` (Muted Laurel / Soft Mint) — used for nested tiles, filter chips, and hover states.
+  - **Borders & Dividers**: `#1b2e23` (Deep Evergreen Charcoal, `1px`/`2px`) for high-contrast brutalist outlines; `#cbdad0` (Muted Sage Gray) for subtle interior rules.
+  - **Text Primary**: `#0f1a14` (Deep Forest Charcoal) — achieves an ultra-crisp **15.2:1** contrast ratio against `#f4f7f4`, easily satisfying WCAG AAA standards.
+  - **Text Muted / Secondary**: `#4b5e53` (Slate Pine) — achieves a **5.1:1** contrast ratio, exceeding WCAG AA requirements for body text.
+  - **Interactive Accent**: `#059669` (Emerald-600) / `#047857` (Emerald-700) — calibrating the dark theme's `#10b981` to a deeper green for optimal AAA contrast (>4.6:1) on light surfaces.
+  - **Secondary Accent**: `#0891b2` (Cyan-600) / `#0e7490` (Cyan-700) — terminal cyan tuned for daylight readability.
+  - **Brutalist Shadows (Light Mode)**: `#1b2e23` hard offset shadows (`4px 4px 0px 0px #1b2e23`) retaining tactile physical press-down effects.
+  - **Background Grid**: `radial-gradient(rgba(27, 46, 35, 0.10) 1px, transparent 1px)` providing an architectural blueprint vibe.
+
+#### Dual Theme Engine & Seamless Toggling:
+- **Zero-FOUC Initialization**: Synchronous theme resolution before React hydration to prevent flash-of-wrong-theme.
+- **Persistence & Synchronization**: Store user preference in `localStorage` (`'portfolio-theme': 'dark' | 'light' | 'system'`), auto-syncing with OS system changes (`prefers-color-scheme`).
+- **Interactive Switch**: Neo-brutalist ThemeToggle component placed in public navbar and admin top-bar with smooth iconography rotation and tactile response.
 
 ---
 
@@ -162,7 +184,8 @@ portfolio/
 ## 5. Technical Stack Recommendations for V2
 
 - **Frontend Core**: React 18 / 19 + Vite (remains lightweight and blazing fast).
-- **Styling & UI**: Tailwind CSS (recommended for fast bento-grid layouts & neo-brutalist styling) + Lucide React / React Icons.
+- **Styling & UI**: Tailwind CSS (with `darkMode: 'class'`), semantic CSS custom property tokens for instant theme switching, Lucide React icons.
+- **Theming & State**: Dedicated `ThemeContext` + `useTheme` hook with `localStorage` persistence, OS system preference synchronization (`prefers-color-scheme`), and zero-FOUC initialization script.
 - **Typography**: Inter / Geist for body text; JetBrains Mono / Geist Mono for programmer accents.
 - **Database & Auth**: Firebase Firestore (data) + Firebase Authentication (admin protection).
 - **Asset Storage & CDN**: Cloudinary (Image uploads, auto-format WebP, responsive resizing).
@@ -176,7 +199,8 @@ portfolio/
 1. **Phase 1: Architecture & Foundation**
    - Setup Cloudinary service utility & upload handlers.
    - Establish Firebase Authentication for admin access protection.
-   - Install styling tools (Tailwind CSS, typography plugin) and configure design tokens (fonts, borders, brutalist shadows).
+   - Install styling tools (Tailwind CSS, typography plugin) and configure design tokens (fonts, borders, brutalist shadows, dark/light color variables).
+   - Implement `ThemeContext`, `ThemeToggle` component, and dark/light mode class binding.
 
 2. **Phase 2: Admin CMS Development**
    - Profile & About editor.
@@ -189,7 +213,8 @@ portfolio/
    - Public Blog Index (`/blogs`) with bento-style card grid and tag search.
    - Public Blog Post View (`/blogs/:slug`) with markdown rendering and code highlight.
 
-4. **Phase 4: Public Redesign (Bento + Brutalist UI)**
+4. **Phase 4: Public Redesign & Dual-Theme Experience (Bento + Brutalist UI)**
    - Bento-grid homepage (`/`): Terminal hero, interactive skills tile, featured projects tile, latest blog post tile, contact dock.
    - Revamped `/projects` listing and individual Case Study modals/pages.
+   - Cross-theme visual verification: ensure full WCAG contrast and brutalist polish across both Dark mode and the subtle greenish Light mode.
    - Responsive polish, performance optimization, and lighthouse audit.

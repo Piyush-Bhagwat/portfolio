@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
 import { resetAdminPassword } from "../../services/firebase.js";
-import { TerminalBox, BrutalButton, StatusPill } from "../../components/brutalist";
+import { TerminalBox, BrutalButton, StatusPill, ThemeToggle } from "../../components/brutalist";
 import {
   Lock,
   Mail,
@@ -98,46 +98,49 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-terminal-bg flex flex-col items-center justify-center p-4 selection:bg-terminal-green selection:text-zinc-950">
+    <div className="min-h-screen bg-[#f4f7f4] dark:bg-terminal-bg flex flex-col items-center justify-center p-4 selection:bg-emerald-600 dark:selection:bg-terminal-green selection:text-white dark:selection:text-zinc-950">
       {/* Background dot grid pattern */}
-      <div className="fixed inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]" />
+      <div className="fixed inset-0 pointer-events-none opacity-25 dark:opacity-20 bg-[radial-gradient(#cbdad0_1px,transparent_1px)] dark:bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]" />
 
       <div className="w-full max-w-lg z-10 space-y-4">
         {/* Top Header Badge */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs uppercase tracking-widest text-zinc-500 font-bold">
+            <span className="font-mono text-xs uppercase tracking-widest text-[#4b5e53] dark:text-zinc-500 font-bold">
               SYS // AUTH
             </span>
-            <span className="text-zinc-700">/</span>
+            <span className="text-[#cbdad0] dark:text-zinc-700">/</span>
             <StatusPill status="GATEWAY LOCKED" variant="terminal" />
           </div>
-          <Link
-            to="/"
-            className="font-mono text-xs text-zinc-400 hover:text-zinc-100 flex items-center gap-1.5 transition-colors"
-          >
-            <CornerDownLeft className="w-3.5 h-3.5" />
-            <span>Public Site</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle size="sm" />
+            <Link
+              to="/"
+              className="font-mono text-xs text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-100 flex items-center gap-1.5 transition-colors"
+            >
+              <CornerDownLeft className="w-3.5 h-3.5" />
+              <span>Public Site</span>
+            </Link>
+          </div>
         </div>
 
         {/* Terminal Login Window */}
         <TerminalBox
           title="auth-gateway.sh"
-          className="shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-zinc-800"
+          className="shadow-brutal-forest dark:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-2 border-[#1b2e23] dark:border-zinc-800"
           bodyClassName="p-6 md:p-8 space-y-6"
         >
           {/* Welcome Prompt */}
-          <div className="border-b border-zinc-800/80 pb-4 space-y-1">
-            <div className="flex items-center gap-2 text-xs font-mono text-terminal-green">
+          <div className="border-b border-[#cbdad0] dark:border-zinc-800/80 pb-4 space-y-1">
+            <div className="flex items-center gap-2 text-xs font-mono text-emerald-700 dark:text-terminal-green">
               <span>$</span>
               <span>sudo access-admin-cms --authenticate</span>
             </div>
-            <h1 className="text-xl font-mono font-bold text-zinc-100 tracking-tight">
+            <h1 className="text-xl font-mono font-bold text-[#0f1a14] dark:text-zinc-100 tracking-tight">
               Administrative Gateway
             </h1>
-            <p className="text-xs text-zinc-400 font-mono">
-              Restricted to authorized administrator (<code className="text-terminal-cyan">{adminEmail}</code>).
+            <p className="text-xs text-[#4b5e53] dark:text-zinc-400 font-mono">
+              Restricted to authorized administrator (<code className="text-teal-700 dark:text-terminal-cyan">{adminEmail}</code>).
             </p>
           </div>
 
@@ -175,13 +178,13 @@ export default function Login() {
             <div className="space-y-1.5">
               <label
                 htmlFor="admin-email"
-                className="block font-mono text-xs text-zinc-300 font-medium flex items-center justify-between"
+                className="block font-mono text-xs text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center justify-between"
               >
                 <span className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-zinc-400" />
+                  <Mail className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Admin Email
                 </span>
-                <span className="text-[10px] text-zinc-500 uppercase">whitelisted</span>
+                <span className="text-[10px] text-[#4b5e53] dark:text-zinc-500 uppercase">whitelisted</span>
               </label>
               <div className="relative">
                 <input
@@ -193,7 +196,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@example.com"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3.5 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-terminal-green transition-colors"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3.5 py-2.5 text-sm font-mono text-[#0f1a14] dark:text-zinc-100 placeholder:text-[#4b5e53] dark:placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 dark:focus:ring-terminal-green transition-colors"
                 />
               </div>
             </div>
@@ -203,16 +206,16 @@ export default function Login() {
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="admin-password"
-                  className="block font-mono text-xs text-zinc-300 font-medium flex items-center gap-1.5"
+                  className="block font-mono text-xs text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1.5"
                 >
-                  <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                  <Lock className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
                   Password
                 </label>
                 <button
                   type="button"
                   onClick={handlePasswordReset}
                   disabled={resettingPassword}
-                  className="text-[11px] font-mono text-terminal-cyan hover:underline disabled:opacity-50"
+                  className="text-[11px] font-mono text-teal-700 dark:text-terminal-cyan hover:underline disabled:opacity-50"
                 >
                   {resettingPassword ? "Sending reset..." : "Forgot password?"}
                 </button>
@@ -227,13 +230,13 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-zinc-950 border border-zinc-700 focus:border-terminal-green px-3.5 py-2.5 pr-10 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-terminal-green transition-colors"
+                  className="w-full bg-[#f4f7f4] dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3.5 py-2.5 pr-10 text-sm font-mono text-[#0f1a14] dark:text-zinc-100 placeholder:text-[#4b5e53] dark:placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 dark:focus:ring-terminal-green transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-200 transition-colors"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-200 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -258,13 +261,13 @@ export default function Login() {
           </form>
 
           {/* Footer Security Note */}
-          <div className="pt-4 border-t border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+          <div className="pt-4 border-t border-[#cbdad0] dark:border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-[#4b5e53] dark:text-zinc-500">
             <span className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-terminal-green" />
+              <Shield className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-green" />
               Firebase Auth Security
             </span>
             <span className="flex items-center gap-1">
-              <KeyRound className="w-3 h-3 text-zinc-600" />
+              <KeyRound className="w-3 h-3 text-[#4b5e53] dark:text-zinc-600" />
               Session Guard Active
             </span>
           </div>

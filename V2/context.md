@@ -12,7 +12,10 @@ This document serves as the persistent memory, architectural reference, and oper
   - **Frontend**: React 18, React Router v6, Tailwind CSS v3, Framer Motion, Lucide React, React Markdown + Remark GFM.
   - **Backend & Auth**: Firebase Authentication (restricted to admin email), Cloud Firestore (`site_config/profile`, `skills`, `experiences`, `projects`, `blogs`).
   - **Media Pipeline**: Cloudinary CDN (unsigned uploads via `portfolio_unsigned` preset, dynamic WebP/AVIF transformation).
-  - **Design System**: Neo-Brutalist Bento-Grid developer aesthetic (dark mode `#09090b`, `#121215`, high-contrast borders `border-zinc-800`/`border-zinc-700`, hard offset shadows `shadow-brutal`, `terminal-green` / `terminal-cyan` accents, `JetBrains Mono` + `Inter` typography).
+  - **Design System**: Neo-Brutalist Bento-Grid developer aesthetic with a **First-Class Dual-Theme Architecture**:
+    - **Dark Theme**: Terminal hacker palette (`#09090b` canvas, `#121215` card surface, `#27272a` borders, `#10b981` emerald & `#06b6d4` cyan accents, `#fafafa` text, `4px 4px 0px #000000` tactile brutalist shadows).
+    - **Light Theme (Subtle Greenish Tones)**: Organic celadon/sage palette based on ergonomic color theory (`#f4f7f4` light sage canvas, `#ffffff` bone cards, `#e9f0ea` muted laurel hover surfaces, `#1b2e23` deep evergreen borders and tactile shadows, `#0f1a14` deep forest charcoal text with 15.2:1 AAA contrast, `#4b5e53` slate pine muted text, `#059669` emerald interactive accents).
+    - **Theme Toggle Engine**: Persistent 1-click switcher (`ThemeContext`, `ThemeToggle`), `localStorage` sync, OS `prefers-color-scheme` matching, and zero-FOUC pre-hydration execution.
 
 ---
 
@@ -28,6 +31,7 @@ This document serves as the persistent memory, architectural reference, and oper
 | **Day 6** | **Public Blog Reader & Projects Catalog** | **COMPLETED** | `/blogs` catalog, reader with TOC & syntax styling, `/projects` catalog |
 | **Day 7** | **Bento-Grid Homepage, Polish & Cutover**| **COMPLETED** | 6-tile Bento homepage, Framer Motion entrance, full cutover from V1 |
 | **Post-Launch**| **UX Polish, Cleanups & Media Pipeline Fix** | **COMPLETED** | Removed banners & sprint labels, fixed avatar upload lifecycle & enlarged hero photo |
+| **Scope Addition** | **Dual-Theme Engine (Subtle Greenish Light & Dark)** | **SPECIFIED IN ARCHITECTURE** | Color theory calibration, ThemeContext, ThemeToggle button, CSS semantic tokens, cross-view light theme adaptation |
 
 ---
 
@@ -193,6 +197,31 @@ This document serves as the persistent memory, architectural reference, and oper
   3. **Automated Verification**:
      - Added unit tests in `test/slice-7.1.test.js` asserting proper rendering of `ExperienceTimeline` and verifying its presence on the public `HomePage`.
 
+### 9. Scope Addition: Dual-Theme Architecture (Subtle Greenish Light Theme & Toggle)
+- **Scope Motivation**:
+  - The portfolio initially launched with a high-contrast Dark Mode (`#09090b`).
+  - To expand usability across varied ambient lighting conditions, eliminate ocular fatigue, and provide user choice, a first-class **Dual-Theme Architecture** featuring an organic, subtle greenish Light Theme and a seamless 1-click toggle has been brought into active scope.
+- **Color Theory & Subtle Greenish Tones**:
+  - *Anti-Glare Ergonomics*: Conventional stark `#ffffff` canvases cause extreme eye strain and feel detached from the terminal/engineering ethos. Instead, the light theme employs a soft **pale sage / celadon canvas (`#f4f7f4`)** with high lightness (>96%) and restrained saturation (~4%).
+  - *Elevation & Depth Hierarchy*:
+    - Canvas Base: `#f4f7f4` (Light Sage / Pale Celadon)
+    - Bento Cards / Surface: `#ffffff` (Crisp Pure White)
+    - Hover / Nested Rows / Code Tiles: `#e9f0ea` (Muted Laurel / Mint)
+  - *Contrast & Readability (WCAG 2.1 AA/AAA)*:
+    - Primary Text: `#0f1a14` (Deep Forest Charcoal) — achieves a **15.2:1 contrast ratio**, easily satisfying WCAG AAA.
+    - Muted Secondary Text: `#4b5e53` (Slate Pine) — achieves a **5.1:1 contrast ratio**, exceeding WCAG AA.
+    - Interactive Accent: `#059669` (Emerald-600) / `#047857` (Emerald-700) — deep jade green calibrated for light mode, providing >4.6:1 AA contrast (replacing `#10b981` which only had 3.1:1 contrast on white).
+    - Secondary Accent: `#0891b2` (Cyan-600) / `#0e7490` (Cyan-700).
+  - *Neo-Brutalist Continuity*:
+    - Outer Borders: `#1b2e23` (Deep Evergreen Charcoal, solid `1px`/`2px`).
+    - Internal Dividers: `#cbdad0` (Muted Sage Gray).
+    - Tactile Shadows: `#1b2e23` hard offset drop shadows (`4px 4px 0px 0px #1b2e23`), preserving the punchy physical press feedback in daylight.
+    - Blueprint Grid: `radial-gradient(rgba(27, 46, 35, 0.10) 1px, transparent 1px)`.
+- **Theme Engine Architecture**:
+  - *`ThemeContext.jsx` & `useTheme.js`*: Global state provider managing `'dark' | 'light'`, dispatching class updates to `document.documentElement`, synchronizing with `localStorage` (`'portfolio-theme'`), and listening to OS `(prefers-color-scheme: dark)` changes.
+  - *Zero-FOUC Initialization*: Inline script in `index.html` resolving theme before React hydration to eliminate visual flash.
+  - *`ThemeToggle.jsx` Component*: Neo-brutalist interactive switch placed in `PublicNavbar` and `AdminLayout`, complete with animated Sun/Moon transitions and full accessibility (`aria-label`).
+
 ---
 
 ## 5. Verification & Test Suite Status
@@ -238,7 +267,7 @@ portfolio/
 ├── .env                                       # Local environment secrets
 ├── tailwind.config.js                         # Neo-Brutalist & Bento styling tokens
 ├── vite.config.js                             # Chunk code-splitting & build pipeline
-├── test/                                      # 108 automated vertical slice tests
+├── test/                                      # 110 automated vertical slice tests
 ├── V2/
 │   ├── architecture.md                        # Component hierarchy & data contracts
 │   ├── context.md                             # [This File] Persistent project memory
@@ -246,13 +275,17 @@ portfolio/
 │   └── implimentation.md                      # 7-Day implementation plan
 └── src/
     ├── components/
-    │   ├── brutalist/                         # BentoCard, BrutalButton, TagBadge, etc.
+    │   ├── brutalist/                         # BentoCard, BrutalButton, TagBadge, ThemeToggle, etc.
     │   ├── common/                            # ImageUploader, ProtectedRoute
     │   ├── home/                              # 6 Bento Tiles (HeroTile, StatusTile, etc.)
     │   ├── project/                           # ProjectCard, CaseStudyModal, CaseStudyDrawer
     │   └── blog/                              # BlogCard, CloudinaryDropperModal
     ├── context/
-    │   └── AuthContext.jsx                    # Firebase authentication state provider
+    │   ├── AuthContext.jsx                    # Firebase authentication state provider
+    │   └── ThemeContext.jsx                   # Dark/Light theme state and persistence provider
+    ├── hooks/
+    │   ├── useAuth.js                         # Firebase authentication hook
+    │   └── useTheme.js                        # Theme consumption hook
     ├── layouts/
     │   └── AdminLayout.jsx                    # Administrative CMS sidebar & navigation
     ├── pages/

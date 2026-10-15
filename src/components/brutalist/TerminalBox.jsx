@@ -40,13 +40,13 @@ export default function TerminalBox({
   return (
     <div
       className={`
-        border border-zinc-800 bg-terminal-bg shadow-brutal rounded-none overflow-hidden
+        border border-[#1b2e23] dark:border-zinc-800 bg-[#f4f7f4] dark:bg-terminal-bg shadow-brutal rounded-none overflow-hidden transition-colors
         ${className}
       `.trim()}
       {...props}
     >
       {/* Terminal Title Bar */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#121215] border-b border-zinc-800 select-none">
+      <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#e9f0ea] dark:bg-[#121215] border-b border-[#cbdad0] dark:border-zinc-800 select-none">
         <div className="flex items-center gap-2">
           {dotControls && (
             <div className="flex items-center gap-1.5" aria-hidden="true">
@@ -55,7 +55,7 @@ export default function TerminalBox({
               <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]/90 inline-block border border-emerald-600/40" />
             </div>
           )}
-          <span className="font-mono text-xs text-zinc-400 font-medium tracking-wide ml-1 truncate">
+          <span className="font-mono text-xs text-[#0f1a14] dark:text-zinc-400 font-medium tracking-wide ml-1 truncate">
             {title}
           </span>
         </div>
@@ -66,14 +66,14 @@ export default function TerminalBox({
             <button
               type="button"
               onClick={handleCopy}
-              className="inline-flex items-center gap-1 text-xs font-mono text-zinc-400 hover:text-zinc-100 transition-colors p-1"
+              className="inline-flex items-center gap-1 text-xs font-mono text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-100 transition-colors p-1"
               title="Copy code"
               aria-label="Copy code"
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-[11px] text-emerald-400">copied</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">copied</span>
                 </>
               ) : (
                 <Copy className="w-3.5 h-3.5" />
@@ -86,7 +86,7 @@ export default function TerminalBox({
       {/* Terminal Body */}
       <div
         className={`
-          p-4 md:p-5 font-mono text-sm text-zinc-200 overflow-x-auto
+          p-4 md:p-5 font-mono text-sm text-[#0f1a14] dark:text-zinc-200 overflow-x-auto
           break-words [overflow-wrap:anywhere] leading-relaxed
           ${bodyClassName}
         `.trim()}

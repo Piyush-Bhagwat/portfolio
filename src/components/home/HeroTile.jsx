@@ -23,25 +23,25 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-5 sm:p-8 shadow-brutal
+        border-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-8 shadow-brutal
         flex flex-col justify-between font-mono relative overflow-hidden group
-        hover:border-zinc-700 hover:-translate-y-0.5 transition-all ${className}
+        hover:border-[#0f1a14] dark:hover:border-zinc-700 hover:-translate-y-0.5 transition-all ${className}
       `}
     >
       {/* Background terminal watermark accent */}
-      <div className="absolute right-3 -bottom-6 text-zinc-900/40 text-8xl font-black select-none pointer-events-none font-mono">
+      <div className="absolute right-3 -bottom-6 text-[#1b2e23]/5 dark:text-zinc-900/40 text-8xl font-black select-none pointer-events-none font-mono">
         &gt;_
       </div>
 
       <div className="space-y-5 sm:space-y-8 relative z-10">
         {/* Terminal Header Bar */}
-        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 text-xs text-zinc-400 select-none">
+        <div className="flex items-center justify-between border-b border-[#cbdad0] dark:border-zinc-800/80 pb-3 text-xs text-[#4b5e53] dark:text-zinc-400 select-none">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-terminal-green animate-pulse" />
-            <span className="text-zinc-500 font-mono">user@portfolio:~$</span>
-            <span className="text-terminal-green font-bold">whoami</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-terminal-green animate-pulse" />
+            <span className="text-[#6e8276] dark:text-zinc-500 font-mono">user@portfolio:~$</span>
+            <span className="text-emerald-700 dark:text-terminal-green font-bold">whoami</span>
           </div>
-          <span className="text-[10px] sm:text-xs text-terminal-cyan bg-zinc-900 px-2 py-0.5 border border-zinc-800">
+          <span className="text-[10px] sm:text-xs text-cyan-700 dark:text-terminal-cyan bg-[#e9f0ea] dark:bg-zinc-900 px-2 py-0.5 border border-[#cbdad0] dark:border-zinc-800 font-bold">
             sys.prod.active
           </span>
         </div>
@@ -53,24 +53,24 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
               <img
                 src={getOptimizedImageUrl(avatarUrl, { width: 400, height: 400, crop: "fill" })}
                 alt={name}
-                className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 lg:w-44 lg:h-44 object-cover border-2 border-zinc-700 shadow-brutal bg-zinc-900"
+                className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 lg:w-44 lg:h-44 object-cover border-2 border-[#1b2e23] dark:border-zinc-700 shadow-brutal bg-[#e9f0ea] dark:bg-zinc-900"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = DEFAULT_PROFILE.avatar_url;
                 }}
               />
-              <span className="absolute -bottom-1.5 -right-1.5 w-5 h-5 bg-terminal-green border-2 border-zinc-950 rounded-full shadow-xs" />
+              <span className="absolute -bottom-1.5 -right-1.5 w-5 h-5 bg-emerald-600 dark:bg-terminal-green border-2 border-white dark:border-zinc-950 rounded-full shadow-xs" />
             </div>
           )}
 
           <div className="space-y-1.5">
-            <span className="text-xs text-terminal-cyan uppercase tracking-wider font-bold">
+            <span className="text-xs text-cyan-700 dark:text-terminal-cyan uppercase tracking-wider font-bold">
               Engineering Profile
             </span>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0f1a14] dark:text-zinc-100 tracking-tight leading-tight">
               {name}
             </h1>
-            <p className="text-xs sm:text-sm md:text-base text-terminal-green font-bold tracking-wide">
+            <p className="text-xs sm:text-sm md:text-base text-emerald-700 dark:text-terminal-green font-bold tracking-wide">
               {role}
             </p>
           </div>
@@ -79,11 +79,11 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
         {/* Tagline & Bio Description */}
         <div className="space-y-3.5">
           {tagline && (
-            <p className="text-base sm:text-lg font-bold text-zinc-200 border-l-2 border-terminal-green pl-3.5 leading-snug">
+            <p className="text-base sm:text-lg font-bold text-[#1b2e23] dark:text-zinc-200 border-l-2 border-emerald-600 dark:border-terminal-green pl-3.5 leading-snug">
               {tagline}
             </p>
           )}
-          <div className="space-y-2.5 text-xs sm:text-sm md:text-[15px] text-zinc-400 font-sans leading-relaxed">
+          <div className="space-y-2.5 text-xs sm:text-sm md:text-[15px] text-[#4b5e53] dark:text-zinc-400 font-sans leading-relaxed">
             {bioList.map((paragraph, idx) => (
               <p key={idx}>{paragraph}</p>
             ))}
@@ -92,7 +92,7 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
       </div>
 
       {/* CTA Action Buttons */}
-      <div className="pt-5 mt-5 sm:pt-6 sm:mt-6 border-t border-zinc-800/80 flex flex-wrap items-center gap-2.5 sm:gap-3 relative z-10">
+      <div className="pt-5 mt-5 sm:pt-6 sm:mt-6 border-t border-[#cbdad0] dark:border-zinc-800/80 flex flex-wrap items-center gap-2.5 sm:gap-3 relative z-10">
         <Link to="/projects">
           <BrutalButton
             variant="primary"
@@ -106,7 +106,7 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
           <BrutalButton
             variant="outline"
             size="sm"
-            icon={<BookOpen className="w-4 h-4 text-terminal-cyan" />}
+            icon={<BookOpen className="w-4 h-4 text-cyan-700 dark:text-terminal-cyan" />}
           >
             Read Articles
           </BrutalButton>
@@ -115,7 +115,7 @@ export default function HeroTile({ profile = DEFAULT_PROFILE, className = "" }) 
           <BrutalButton
             variant="secondary"
             size="sm"
-            icon={<Mail className="w-4 h-4 text-terminal-green" />}
+            icon={<Mail className="w-4 h-4 text-emerald-700 dark:text-terminal-green" />}
           >
             Say Hello
           </BrutalButton>

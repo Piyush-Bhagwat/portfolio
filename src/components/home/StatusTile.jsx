@@ -38,20 +38,20 @@ export default function StatusTile({ profile = DEFAULT_PROFILE, className = "" }
   return (
     <div
       className={`
-        border-2 border-zinc-800 bg-zinc-950 p-4 sm:p-5 shadow-brutal-sm
-        flex flex-col justify-between font-mono hover:border-terminal-green
+        border-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 sm:p-5 shadow-brutal-forest dark:shadow-brutal-sm
+        flex flex-col justify-between font-mono hover:border-emerald-700 dark:hover:border-terminal-green
         hover:-translate-y-0.5 hover:shadow-brutal transition-all ${className}
       `}
     >
       {/* Tile Header */}
-      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2.5 text-xs select-none">
-        <div className="flex items-center gap-1.5 text-terminal-green">
+      <div className="flex items-center justify-between border-b border-[#cbdad0] dark:border-zinc-800/80 pb-2.5 text-xs select-none">
+        <div className="flex items-center gap-1.5 text-emerald-700 dark:text-terminal-green">
           <Radio className="w-3.5 h-3.5 animate-pulse" />
-          <span className="text-[11px] font-bold uppercase tracking-wider text-terminal-cyan">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-terminal-cyan">
             Metadata
           </span>
         </div>
-        <span className="text-[10px] text-zinc-500 bg-zinc-900 px-1.5 py-0.5 border border-zinc-800">
+        <span className="text-[10px] text-[#4b5e53] dark:text-zinc-500 bg-[#e9f0ea] dark:bg-zinc-900 px-1.5 py-0.5 border border-[#cbdad0] dark:border-zinc-800">
           NODE: IST
         </span>
       </div>
@@ -60,33 +60,33 @@ export default function StatusTile({ profile = DEFAULT_PROFILE, className = "" }
       <div className="space-y-4 my-2">
         {/* Availability Pill */}
         <div className="space-y-1.5">
-          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block font-bold">
+          <span className="text-[10px] text-[#4b5e53] dark:text-zinc-500 uppercase tracking-widest block font-bold">
             Availability:
           </span>
-          <div className="inline-flex items-center gap-2 bg-emerald-950/40 border border-emerald-600/60 px-2.5 py-1 text-xs text-terminal-green font-bold">
-            <span className="w-2 h-2 rounded-full bg-terminal-green animate-ping shrink-0" />
+          <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-600/60 px-2.5 py-1 text-xs text-emerald-800 dark:text-terminal-green font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-terminal-green animate-ping shrink-0" />
             <span className="truncate">{statusBadge}</span>
           </div>
         </div>
 
         {/* Live IST Clock */}
         <div className="space-y-1">
-          <span className="text-[10px] text-zinc-500 uppercase tracking-widest block font-bold">
+          <span className="text-[10px] text-[#4b5e53] dark:text-zinc-500 uppercase tracking-widest block font-bold">
             Local Time:
           </span>
-          <div className="flex items-center gap-2 text-zinc-100 font-bold text-xl sm:text-2xl tracking-wider">
-            <Clock className="w-4 h-4 text-terminal-cyan shrink-0" />
+          <div className="flex items-center gap-2 text-[#0f1a14] dark:text-zinc-100 font-bold text-xl sm:text-2xl tracking-wider">
+            <Clock className="w-4 h-4 text-emerald-700 dark:text-terminal-cyan shrink-0" />
             <span>{`${currentTime} IST`}</span>
           </div>
-          <span className="text-[10px] text-zinc-600 block">
+          <span className="text-[10px] text-[#4b5e53] dark:text-zinc-600 block">
             UTC+05:30 • Asia/Kolkata
           </span>
         </div>
       </div>
 
       {/* Location Footer */}
-      <div className="pt-2.5 border-t border-zinc-800/80 flex items-center gap-1.5 text-xs text-zinc-400">
-        <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+      <div className="pt-2.5 border-t border-[#cbdad0] dark:border-zinc-800/80 flex items-center gap-1.5 text-xs text-[#4b5e53] dark:text-zinc-400">
+        <MapPin className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
         <span className="truncate text-[11px]">{location}</span>
       </div>
     </div>
