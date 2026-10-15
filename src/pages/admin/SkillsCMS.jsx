@@ -33,6 +33,7 @@ import {
   Database,
   Terminal,
   Code2,
+  GripVertical,
 } from "lucide-react";
 
 export const DEFAULT_SKILLS = [
@@ -68,6 +69,9 @@ export default function SkillsCMS() {
   const [editingSkill, setEditingSkill] = useState(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState({ type: null, message: "" });
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   const fetchSkills = async () => {
     setSyncing(true);
@@ -106,6 +110,92 @@ export default function SkillsCMS() {
     return item.category === activeCategory;
   });
 
+  // Centralized sequence normalizer & batch Firestore synchronizer
+  const reorderAndPersist = async (newList) => {
+    setIsReordering(true);
+    // Normalize sequentially 1..N
+    const normalized = newList.map((item, idx) => ({
+      ...item,
+      order: idx + 1,
+    }));
+
+    const prevMap = new Map(skills.map((s) => [s.id, s.order]));
+    const changed = normalized.filter((s) => prevMap.get(s.id) !== s.order);
+
+    setSkills(normalized);
+
+    if (changed.length > 0) {
+      try {
+        const batch = writeBatch(db);
+        changed.forEach((s) => {
+          batch.update(doc(db, "skills", s.id), { order: s.order });
+        });
+        await batch.commit();
+      } catch (err) {
+        console.error("Failed to commit skill reorder:", err);
+        setFeedback({
+          type: "error",
+          message: "Failed to persist new sequence order to Firestore.",
+        });
+      }
+    }
+    setIsReordering(false);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e, skill) => {
+    e.dataTransfer.setData("text/plain", skill.id);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedId(skill.id);
+  };
+
+  const handleDragOver = (e, skill) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverId !== skill.id) {
+      setDragOverId(skill.id);
+    }
+  };
+
+  const handleDragEnter = (e, skill) => {
+    e.preventDefault();
+    if (dragOverId !== skill.id) {
+      setDragOverId(skill.id);
+    }
+  };
+
+  const handleDragLeave = (e, skill) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      if (dragOverId === skill.id) {
+        setDragOverId(null);
+      }
+    }
+  };
+
+  const handleDrop = async (e, targetSkill) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData("text/plain") || draggedId;
+    setDraggedId(null);
+    setDragOverId(null);
+
+    if (!sourceId || sourceId === targetSkill.id) return;
+
+    const sourceIdx = skills.findIndex((s) => s.id === sourceId);
+    const targetIdx = skills.findIndex((s) => s.id === targetSkill.id);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const updated = [...skills];
+    const [movedItem] = updated.splice(sourceIdx, 1);
+    updated.splice(targetIdx, 0, movedItem);
+
+    await reorderAndPersist(updated);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
   // Modal actions
   const handleOpenAdd = () => {
     setEditingSkill(null);
@@ -122,59 +212,78 @@ export default function SkillsCMS() {
     setEditingSkill(null);
   };
 
-  // Save or update skill in Firestore
+  // Save or update skill with auto-shifting display order
   const handleSaveSkill = async (skillData) => {
     setSaving(true);
     setFeedback({ type: null, message: "" });
 
     try {
-      if (editingSkill) {
-        // Update existing document
-        const docRef = doc(db, "skills", editingSkill.id);
-        const updated = {
-          ...skillData,
-          updated_at: serverTimestamp(),
-        };
-        await setDoc(docRef, updated, { merge: true });
+      const slugId = skillData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      const docId = editingSkill ? editingSkill.id : slugId || `skill-${Date.now()}`;
+      const docRef = doc(db, "skills", docId);
 
-        setSkills((prev) =>
-          prev
-            .map((item) => (item.id === editingSkill.id ? { ...item, ...updated } : item))
-            .sort((a, b) => (a.order || 0) - (b.order || 0))
-        );
+      const targetOrder = Math.max(
+        1,
+        parseInt(skillData.order, 10) || (editingSkill ? editingSkill.order : skills.length + 1)
+      );
 
-        setFeedback({
-          type: "success",
-          message: `Skill "${skillData.name}" updated successfully.`,
-        });
-      } else {
-        // Create new document with unique slug ID
-        const slugId = skillData.name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "");
-        const docId = slugId || `skill-${Date.now()}`;
-        const docRef = doc(db, "skills", docId);
+      const payload = {
+        ...skillData,
+        order: targetOrder,
+        updated_at: serverTimestamp(),
+      };
 
-        const newSkill = {
-          ...skillData,
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        };
-
-        await setDoc(docRef, newSkill);
-
-        setSkills((prev) =>
-          [...prev, { id: docId, ...newSkill }].sort(
-            (a, b) => (a.order || 0) - (b.order || 0)
-          )
-        );
-
-        setFeedback({
-          type: "success",
-          message: `Skill "${skillData.name}" created successfully.`,
-        });
+      if (!editingSkill) {
+        payload.created_at = serverTimestamp();
       }
+
+      // Re-sequence remaining skills around targetOrder
+      const withoutCurrent = skills.filter((s) => s.id !== docId);
+      const insertIndex = Math.min(targetOrder - 1, withoutCurrent.length);
+      const combined = [
+        ...withoutCurrent.slice(0, insertIndex),
+        { ...payload, id: docId },
+        ...withoutCurrent.slice(insertIndex),
+      ];
+
+      // Re-normalize all sequentially 1..N
+      const normalized = combined.map((item, idx) => ({
+        ...item,
+        order: idx + 1,
+      }));
+
+      const finalSelf = normalized.find((s) => s.id === docId);
+      payload.order = finalSelf ? finalSelf.order : targetOrder;
+
+      // Optimistic update
+      setSkills(normalized);
+
+      // Save main skill doc
+      await setDoc(docRef, payload, { merge: true });
+
+      // Batch update any other skill docs whose order shifted
+      const prevMap = new Map(skills.map((s) => [s.id, s.order]));
+      const batch = writeBatch(db);
+      let batchCount = 0;
+
+      normalized.forEach((s) => {
+        if (s.id !== docId && prevMap.get(s.id) !== s.order) {
+          batch.update(doc(db, "skills", s.id), { order: s.order });
+          batchCount++;
+        }
+      });
+
+      if (batchCount > 0) {
+        await batch.commit();
+      }
+
+      setFeedback({
+        type: "success",
+        message: `Skill "${skillData.name}" saved successfully with sequence #${payload.order}.`,
+      });
 
       handleCloseModal();
     } catch (err) {
@@ -188,16 +297,33 @@ export default function SkillsCMS() {
     }
   };
 
-  // Delete skill
+  // Delete skill and collapse sequence numbers without gaps
   const handleDeleteSkill = async (skill) => {
     if (!window.confirm(`Are you sure you want to delete "${skill.name}"?`)) return;
 
     try {
       await deleteDoc(doc(db, "skills", skill.id));
-      setSkills((prev) => prev.filter((item) => item.id !== skill.id));
+      const remaining = skills
+        .filter((item) => item.id !== skill.id)
+        .map((s, idx) => ({ ...s, order: idx + 1 }));
+
+      setSkills(remaining);
+
+      // Check if any shifted order
+      const prevMap = new Map(skills.map((s) => [s.id, s.order]));
+      const shifted = remaining.filter((s) => prevMap.get(s.id) !== s.order);
+
+      if (shifted.length > 0) {
+        const batch = writeBatch(db);
+        shifted.forEach((s) => {
+          batch.update(doc(db, "skills", s.id), { order: s.order });
+        });
+        await batch.commit();
+      }
+
       setFeedback({
         type: "success",
-        message: `Skill "${skill.name}" removed from Firestore.`,
+        message: `Skill "${skill.name}" removed and remaining sequence re-indexed.`,
       });
     } catch (err) {
       console.error("Delete skill error:", err);
@@ -209,35 +335,17 @@ export default function SkillsCMS() {
   };
 
   // Move skill up or down and persist orders
-  const handleMoveSkill = async (index, direction) => {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= filteredSkills.length) return;
+  const handleMoveSkill = async (skillId, direction) => {
+    const currentIndex = skills.findIndex((s) => s.id === skillId);
+    if (currentIndex === -1) return;
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= skills.length) return;
 
-    const sourceSkill = filteredSkills[index];
-    const targetSkill = filteredSkills[targetIndex];
+    const updated = [...skills];
+    const [movedItem] = updated.splice(currentIndex, 1);
+    updated.splice(targetIndex, 0, movedItem);
 
-    const sourceOrder = sourceSkill.order;
-    const targetOrder = targetSkill.order;
-
-    // Swap orders
-    const updatedSkills = skills.map((item) => {
-      if (item.id === sourceSkill.id) return { ...item, order: targetOrder };
-      if (item.id === targetSkill.id) return { ...item, order: sourceOrder };
-      return item;
-    });
-
-    updatedSkills.sort((a, b) => (a.order || 0) - (b.order || 0));
-    setSkills(updatedSkills);
-
-    // Persist new orders to Firestore via batch
-    try {
-      const batch = writeBatch(db);
-      batch.update(doc(db, "skills", sourceSkill.id), { order: targetOrder });
-      batch.update(doc(db, "skills", targetSkill.id), { order: sourceOrder });
-      await batch.commit();
-    } catch (err) {
-      console.error("Failed to persist reorder batch:", err);
-    }
+    await reorderAndPersist(updated);
   };
 
   // Seed default skills to Firestore
@@ -303,6 +411,7 @@ export default function SkillsCMS() {
         {/* Action Controls */}
         <div className="flex items-center gap-2.5">
           {syncing && <StatusPill status="SYNCING..." variant="terminal" />}
+          {isReordering && <StatusPill status="REORDERING..." variant="terminal" />}
           <BrutalButton
             variant="outline"
             size="sm"
@@ -391,6 +500,14 @@ export default function SkillsCMS() {
         </div>
       </div>
 
+      {/* Sequence reordering hint */}
+      <div className="flex items-center justify-between font-mono text-[11px] text-[#4b5e53] dark:text-zinc-400 px-0.5">
+        <span className="flex items-center gap-1.5">
+          <GripVertical className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-green shrink-0" />
+          Drag cards by the handle or use chevrons to reorder skills. Gaps auto-collapse.
+        </span>
+      </div>
+
       {/* Skills Grid */}
       {filteredSkills.length === 0 ? (
         <TerminalBox title="skills_empty.log">
@@ -409,106 +526,134 @@ export default function SkillsCMS() {
         </TerminalBox>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-          {filteredSkills.map((skill, index) => (
-            <div
-              key={skill.id}
-              className="p-3.5 bg-white dark:bg-zinc-950 border-2 border-[#1b2e23] dark:border-zinc-800 hover:border-[#1b2e23] dark:hover:border-zinc-700 transition-colors shadow-brutal-forest dark:shadow-brutal-sm flex flex-col justify-between space-y-3 group"
-            >
-              <div className="flex items-start justify-between gap-3">
-                {/* Icon & Title */}
-                <div className="flex items-center gap-3">
-                  {skill.icon_url ? (
-                    <img
-                      src={skill.icon_url}
-                      alt={skill.name}
-                      className="w-10 h-10 object-contain p-1.5 bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 shrink-0"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/assets/placeholders/terminal-placeholder.png";
-                      }}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 flex items-center justify-center font-mono text-xs font-bold text-[#0f1a14] dark:text-zinc-400 shrink-0">
-                      {skill.name.slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
+          {filteredSkills.map((skill) => {
+            const fullIndex = skills.findIndex((s) => s.id === skill.id);
+            const isFirst = fullIndex === 0;
+            const isLast = fullIndex === skills.length - 1;
+            const isDragging = draggedId === skill.id;
+            const isDragOver = dragOverId === skill.id && !isDragging;
 
-                  <div>
-                    <h2 className="font-mono text-sm font-bold text-[#0f1a14] dark:text-zinc-100 flex items-center gap-1.5">
-                      <span>{skill.name}</span>
-                      {skill.featured && (
-                        <Star className="w-3 h-3 text-amber-500 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
-                      )}
-                    </h2>
-                    <span className="font-mono text-[10px] text-[#6e8276] dark:text-zinc-500 uppercase tracking-wider">
-                      {skill.category}
-                    </span>
+            return (
+              <div
+                key={skill.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, skill)}
+                onDragOver={(e) => handleDragOver(e, skill)}
+                onDragEnter={(e) => handleDragEnter(e, skill)}
+                onDragLeave={(e) => handleDragLeave(e, skill)}
+                onDrop={(e) => handleDrop(e, skill)}
+                onDragEnd={handleDragEnd}
+                className={`p-3.5 bg-white dark:bg-zinc-950 border-2 transition-all flex flex-col justify-between space-y-3 group ${
+                  isDragging
+                    ? "opacity-40 border-dashed border-emerald-600 dark:border-terminal-green scale-[0.99] shadow-none"
+                    : isDragOver
+                    ? "border-emerald-600 dark:border-terminal-green ring-2 ring-emerald-500 dark:ring-terminal-green shadow-lg"
+                    : "border-[#1b2e23] dark:border-zinc-800 hover:border-[#1b2e23] dark:hover:border-zinc-700 shadow-brutal-forest dark:shadow-brutal-sm"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  {/* Grip & Icon & Title */}
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="cursor-grab active:cursor-grabbing text-[#4b5e53] dark:text-zinc-500 hover:text-emerald-700 dark:hover:text-terminal-green transition-colors p-0.5"
+                      title="Drag to reorder skill sequence"
+                      aria-label="Drag handle to reorder"
+                    >
+                      <GripVertical className="w-4 h-4" />
+                    </div>
+                    {skill.icon_url ? (
+                      <img
+                        src={skill.icon_url}
+                        alt={skill.name}
+                        className="w-10 h-10 object-contain p-1.5 bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "/assets/placeholders/terminal-placeholder.png";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 flex items-center justify-center font-mono text-xs font-bold text-[#0f1a14] dark:text-zinc-400 shrink-0">
+                        {skill.name.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div>
+                      <h2 className="font-mono text-sm font-bold text-[#0f1a14] dark:text-zinc-100 flex items-center gap-1.5">
+                        <span>{skill.name}</span>
+                        {skill.featured && (
+                          <Star className="w-3 h-3 text-amber-500 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
+                        )}
+                      </h2>
+                      <span className="font-mono text-[10px] text-[#6e8276] dark:text-zinc-500 uppercase tracking-wider">
+                        {skill.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sort Order Badge */}
+                  <span className="font-mono text-[11px] text-[#0f1a14] dark:text-zinc-500 bg-[#e9f0ea] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 px-2 py-0.5 font-bold">
+                    #{skill.order}
+                  </span>
+                </div>
+
+                {/* Card Footer: Category tag & Action controls */}
+                <div className="flex items-center justify-between pt-2 border-t border-[#cbdad0] dark:border-zinc-800/80 font-mono text-xs">
+                  <TagBadge
+                    variant={
+                      skill.category === "frontend"
+                        ? "cyan"
+                        : skill.category === "backend"
+                        ? "terminal"
+                        : skill.category === "database"
+                        ? "amber"
+                        : "default"
+                    }
+                    size="sm"
+                  >
+                    {skill.category}
+                  </TagBadge>
+
+                  {/* Actions: Move Up / Down, Edit, Delete */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveSkill(skill.id, -1)}
+                      disabled={isFirst || isReordering}
+                      aria-label={`Move ${skill.name} up`}
+                      className="p-1 text-[#4b5e53] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveSkill(skill.id, 1)}
+                      disabled={isLast || isReordering}
+                      aria-label={`Move ${skill.name} down`}
+                      className="p-1 text-[#4b5e53] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(skill)}
+                      aria-label={`Edit ${skill.name}`}
+                      className="p-1 text-[#4b5e53] dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-terminal-cyan ml-1"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSkill(skill)}
+                      aria-label={`Delete ${skill.name}`}
+                      className="p-1 text-[#4b5e53] dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
-
-                {/* Sort Order Badge */}
-                <span className="font-mono text-[11px] text-[#0f1a14] dark:text-zinc-500 bg-[#e9f0ea] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 px-2 py-0.5">
-                  #{skill.order}
-                </span>
               </div>
-
-              {/* Card Footer: Category tag & Action controls */}
-              <div className="flex items-center justify-between pt-2 border-t border-[#cbdad0] dark:border-zinc-800/80 font-mono text-xs">
-                <TagBadge
-                  variant={
-                    skill.category === "frontend"
-                      ? "cyan"
-                      : skill.category === "backend"
-                      ? "terminal"
-                      : skill.category === "database"
-                      ? "amber"
-                      : "default"
-                  }
-                  size="sm"
-                >
-                  {skill.category}
-                </TagBadge>
-
-                {/* Actions: Move Up / Down, Edit, Delete */}
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleMoveSkill(index, -1)}
-                    disabled={index === 0}
-                    aria-label={`Move ${skill.name} up`}
-                    className="p-1 text-[#4b5e53] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
-                  >
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveSkill(index, 1)}
-                    disabled={index === filteredSkills.length - 1}
-                    aria-label={`Move ${skill.name} down`}
-                    className="p-1 text-[#4b5e53] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
-                  >
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(skill)}
-                    aria-label={`Edit ${skill.name}`}
-                    className="p-1 text-[#4b5e53] dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-terminal-cyan ml-1"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteSkill(skill)}
-                    aria-label={`Delete ${skill.name}`}
-                    className="p-1 text-[#4b5e53] dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -519,6 +664,7 @@ export default function SkillsCMS() {
         onClose={handleCloseModal}
         onSave={handleSaveSkill}
         saving={saving}
+        nextOrder={skills.length + 1}
       />
     </div>
   );

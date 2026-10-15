@@ -25,13 +25,14 @@ const CATEGORIES = [
 export default function SkillEditorModal({
   isOpen,
   skill = null,
+  nextOrder = 1,
   onClose,
   onSave,
   saving = false,
 }) {
   const [name, setName] = useState(skill?.name || "");
   const [category, setCategory] = useState(skill?.category || "frontend");
-  const [order, setOrder] = useState(skill?.order ?? 1);
+  const [order, setOrder] = useState(skill?.order ?? nextOrder);
   const [featured, setFeatured] = useState(skill?.featured ?? true);
   const [iconUrl, setIconUrl] = useState(skill?.icon_url || "");
   const [iconPublicId, setIconPublicId] = useState(skill?.icon_public_id || "");
@@ -42,20 +43,20 @@ export default function SkillEditorModal({
     if (skill) {
       setName(skill.name || "");
       setCategory(skill.category || "frontend");
-      setOrder(skill.order ?? 1);
+      setOrder(skill.order ?? nextOrder);
       setFeatured(skill.featured ?? true);
       setIconUrl(skill.icon_url || "");
       setIconPublicId(skill.icon_public_id || "");
     } else {
       setName("");
       setCategory("frontend");
-      setOrder(1);
+      setOrder(nextOrder);
       setFeatured(true);
       setIconUrl("");
       setIconPublicId("");
     }
     setValidationError("");
-  }, [skill, isOpen]);
+  }, [skill, isOpen, nextOrder]);
 
   if (!isOpen) return null;
 
@@ -169,9 +170,14 @@ export default function SkillEditorModal({
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="skill-order" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
-                  <Hash className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
-                  Sort Order
+                <label htmlFor="skill-order" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Hash className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
+                    Sort Order
+                  </span>
+                  <span className="text-[10px] text-[#6e8276] dark:text-zinc-500 font-normal">
+                    (Auto-shifts others)
+                  </span>
                 </label>
                 <input
                   id="skill-order"
@@ -267,6 +273,7 @@ SkillEditorModal.propTypes = {
     icon_url: PropTypes.string,
     icon_public_id: PropTypes.string,
   }),
+  nextOrder: PropTypes.number,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
   saving: PropTypes.bool,

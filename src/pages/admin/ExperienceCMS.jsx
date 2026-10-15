@@ -31,6 +31,7 @@ import {
   AlertCircle,
   CheckCircle2,
   History,
+  GripVertical,
 } from "lucide-react";
 
 export const DEFAULT_EXPERIENCES = [
@@ -80,6 +81,9 @@ export default function ExperienceCMS() {
   const [editingExperience, setEditingExperience] = useState(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState({ type: null, message: "" });
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   const fetchExperiences = async () => {
     setSyncing(true);
@@ -112,6 +116,92 @@ export default function ExperienceCMS() {
     fetchExperiences();
   }, []);
 
+  // Centralized sequence normalizer & batch Firestore synchronizer
+  const reorderAndPersist = async (newList) => {
+    setIsReordering(true);
+    // Normalize sequentially 1..N
+    const normalized = newList.map((item, idx) => ({
+      ...item,
+      order: idx + 1,
+    }));
+
+    const prevMap = new Map(experiences.map((e) => [e.id, e.order]));
+    const changed = normalized.filter((e) => prevMap.get(e.id) !== e.order);
+
+    setExperiences(normalized);
+
+    if (changed.length > 0) {
+      try {
+        const batch = writeBatch(db);
+        changed.forEach((e) => {
+          batch.update(doc(db, "experiences", e.id), { order: e.order });
+        });
+        await batch.commit();
+      } catch (err) {
+        console.error("Failed to commit milestone reorder:", err);
+        setFeedback({
+          type: "error",
+          message: "Failed to persist new sequence order to Firestore.",
+        });
+      }
+    }
+    setIsReordering(false);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e, exp) => {
+    e.dataTransfer.setData("text/plain", exp.id);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedId(exp.id);
+  };
+
+  const handleDragOver = (e, exp) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverId !== exp.id) {
+      setDragOverId(exp.id);
+    }
+  };
+
+  const handleDragEnter = (e, exp) => {
+    e.preventDefault();
+    if (dragOverId !== exp.id) {
+      setDragOverId(exp.id);
+    }
+  };
+
+  const handleDragLeave = (e, exp) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      if (dragOverId === exp.id) {
+        setDragOverId(null);
+      }
+    }
+  };
+
+  const handleDrop = async (e, targetExp) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData("text/plain") || draggedId;
+    setDraggedId(null);
+    setDragOverId(null);
+
+    if (!sourceId || sourceId === targetExp.id) return;
+
+    const sourceIdx = experiences.findIndex((e) => e.id === sourceId);
+    const targetIdx = experiences.findIndex((e) => e.id === targetExp.id);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const updated = [...experiences];
+    const [movedItem] = updated.splice(sourceIdx, 1);
+    updated.splice(targetIdx, 0, movedItem);
+
+    await reorderAndPersist(updated);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
   // Modal actions
   const handleOpenAdd = () => {
     setEditingExperience(null);
@@ -128,57 +218,78 @@ export default function ExperienceCMS() {
     setEditingExperience(null);
   };
 
-  // Save or update milestone
+  // Save or update milestone with auto-shifting display order
   const handleSaveExperience = async (expData) => {
     setSaving(true);
     setFeedback({ type: null, message: "" });
 
     try {
-      if (editingExperience) {
-        const docRef = doc(db, "experiences", editingExperience.id);
-        const updated = {
-          ...expData,
-          updated_at: serverTimestamp(),
-        };
-        await setDoc(docRef, updated, { merge: true });
+      const slugId = `${expData.company}-${expData.role}`
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      const docId = editingExperience ? editingExperience.id : slugId || `exp-${Date.now()}`;
+      const docRef = doc(db, "experiences", docId);
 
-        setExperiences((prev) =>
-          prev
-            .map((item) => (item.id === editingExperience.id ? { ...item, ...updated } : item))
-            .sort((a, b) => (a.order || 0) - (b.order || 0))
-        );
+      const targetOrder = Math.max(
+        1,
+        parseInt(expData.order, 10) || (editingExperience ? editingExperience.order : experiences.length + 1)
+      );
 
-        setFeedback({
-          type: "success",
-          message: `Milestone "${expData.role}" at ${expData.company} updated successfully.`,
-        });
-      } else {
-        const slugId = `${expData.company}-${expData.role}`
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "");
-        const docId = slugId || `exp-${Date.now()}`;
-        const docRef = doc(db, "experiences", docId);
+      const payload = {
+        ...expData,
+        order: targetOrder,
+        updated_at: serverTimestamp(),
+      };
 
-        const newExp = {
-          ...expData,
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        };
-
-        await setDoc(docRef, newExp);
-
-        setExperiences((prev) =>
-          [...prev, { id: docId, ...newExp }].sort(
-            (a, b) => (a.order || 0) - (b.order || 0)
-          )
-        );
-
-        setFeedback({
-          type: "success",
-          message: `Milestone "${expData.role}" added successfully.`,
-        });
+      if (!editingExperience) {
+        payload.created_at = serverTimestamp();
       }
+
+      // Re-sequence remaining experiences around targetOrder
+      const withoutCurrent = experiences.filter((e) => e.id !== docId);
+      const insertIndex = Math.min(targetOrder - 1, withoutCurrent.length);
+      const combined = [
+        ...withoutCurrent.slice(0, insertIndex),
+        { ...payload, id: docId },
+        ...withoutCurrent.slice(insertIndex),
+      ];
+
+      // Re-normalize all sequentially 1..N
+      const normalized = combined.map((item, idx) => ({
+        ...item,
+        order: idx + 1,
+      }));
+
+      const finalSelf = normalized.find((e) => e.id === docId);
+      payload.order = finalSelf ? finalSelf.order : targetOrder;
+
+      // Optimistic update
+      setExperiences(normalized);
+
+      // Save main milestone doc
+      await setDoc(docRef, payload, { merge: true });
+
+      // Batch update any other milestone docs whose order shifted
+      const prevMap = new Map(experiences.map((e) => [e.id, e.order]));
+      const batch = writeBatch(db);
+      let batchCount = 0;
+
+      normalized.forEach((e) => {
+        if (e.id !== docId && prevMap.get(e.id) !== e.order) {
+          batch.update(doc(db, "experiences", e.id), { order: e.order });
+          batchCount++;
+        }
+      });
+
+      if (batchCount > 0) {
+        await batch.commit();
+      }
+
+      setFeedback({
+        type: "success",
+        message: `Milestone "${expData.role}" saved successfully with sequence #${payload.order}.`,
+      });
 
       handleCloseModal();
     } catch (err) {
@@ -192,16 +303,33 @@ export default function ExperienceCMS() {
     }
   };
 
-  // Delete milestone
+  // Delete milestone and collapse sequence numbers without gaps
   const handleDeleteExperience = async (exp) => {
     if (!window.confirm(`Delete milestone "${exp.role} at ${exp.company}"?`)) return;
 
     try {
       await deleteDoc(doc(db, "experiences", exp.id));
-      setExperiences((prev) => prev.filter((item) => item.id !== exp.id));
+      const remaining = experiences
+        .filter((item) => item.id !== exp.id)
+        .map((e, idx) => ({ ...e, order: idx + 1 }));
+
+      setExperiences(remaining);
+
+      // Check if any shifted order
+      const prevMap = new Map(experiences.map((e) => [e.id, e.order]));
+      const shifted = remaining.filter((e) => prevMap.get(e.id) !== e.order);
+
+      if (shifted.length > 0) {
+        const batch = writeBatch(db);
+        shifted.forEach((e) => {
+          batch.update(doc(db, "experiences", e.id), { order: e.order });
+        });
+        await batch.commit();
+      }
+
       setFeedback({
         type: "success",
-        message: `Milestone "${exp.role}" deleted.`,
+        message: `Milestone "${exp.role}" deleted and remaining sequence re-indexed.`,
       });
     } catch (err) {
       console.error("Delete experience error:", err);
@@ -212,34 +340,18 @@ export default function ExperienceCMS() {
     }
   };
 
-  // Reorder milestones
-  const handleMoveExperience = async (index, direction) => {
-    const targetIndex = index + direction;
+  // Reorder milestones with chevron buttons
+  const handleMoveExperience = async (expId, direction) => {
+    const currentIndex = experiences.findIndex((e) => e.id === expId);
+    if (currentIndex === -1) return;
+    const targetIndex = currentIndex + direction;
     if (targetIndex < 0 || targetIndex >= experiences.length) return;
 
-    const source = experiences[index];
-    const target = experiences[targetIndex];
+    const updated = [...experiences];
+    const [movedItem] = updated.splice(currentIndex, 1);
+    updated.splice(targetIndex, 0, movedItem);
 
-    const sourceOrder = source.order;
-    const targetOrder = target.order;
-
-    const updated = experiences.map((item) => {
-      if (item.id === source.id) return { ...item, order: targetOrder };
-      if (item.id === target.id) return { ...item, order: sourceOrder };
-      return item;
-    });
-
-    updated.sort((a, b) => (a.order || 0) - (b.order || 0));
-    setExperiences(updated);
-
-    try {
-      const batch = writeBatch(db);
-      batch.update(doc(db, "experiences", source.id), { order: targetOrder });
-      batch.update(doc(db, "experiences", target.id), { order: sourceOrder });
-      await batch.commit();
-    } catch (err) {
-      console.error("Failed to persist reorder batch:", err);
-    }
+    await reorderAndPersist(updated);
   };
 
   // Seed default milestones to Firestore
@@ -306,6 +418,7 @@ export default function ExperienceCMS() {
         {/* Action Controls */}
         <div className="flex items-center gap-2.5">
           {syncing && <StatusPill status="SYNCING..." variant="terminal" />}
+          {isReordering && <StatusPill status="REORDERING..." variant="terminal" />}
           <BrutalButton
             variant="outline"
             size="sm"
@@ -349,6 +462,14 @@ export default function ExperienceCMS() {
         </div>
       )}
 
+      {/* Sequence reordering hint */}
+      <div className="flex items-center justify-between font-mono text-[11px] text-[#4b5e53] dark:text-zinc-400 px-0.5">
+        <span className="flex items-center gap-1.5">
+          <GripVertical className="w-3.5 h-3.5 text-emerald-700 dark:text-terminal-green shrink-0" />
+          Drag milestones by the handle or use chevrons to reorder career progression. Gaps auto-collapse.
+        </span>
+      </div>
+
       {/* Timeline List */}
       {experiences.length === 0 ? (
         <TerminalBox title="experience_empty.log">
@@ -367,108 +488,136 @@ export default function ExperienceCMS() {
         </TerminalBox>
       ) : (
         <div className="space-y-4 max-w-4xl">
-          {experiences.map((exp, index) => (
-            <div
-              key={exp.id}
-              className="p-5 bg-white dark:bg-zinc-950 border-2 border-[#1b2e23] dark:border-zinc-800 hover:border-emerald-600 dark:hover:border-zinc-700 transition-colors shadow-brutal-forest dark:shadow-brutal space-y-4"
-            >
-              {/* Header row: Role, Period, Order, and Controls */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#cbdad0] dark:border-zinc-800/80 pb-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-terminal-green" />
-                    <h2 className="font-mono text-base font-bold text-[#0f1a14] dark:text-zinc-100">
-                      {exp.role}
-                    </h2>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-[#4b5e53] dark:text-zinc-400">
-                    <span className="flex items-center gap-1.5 text-[#0f1a14] dark:text-zinc-300 font-semibold">
-                      <Building className="w-3.5 h-3.5 text-[#6e8276] dark:text-zinc-500" />
-                      {exp.company}
-                    </span>
-                    {exp.location && (
-                      <span className="flex items-center gap-1 text-[#6e8276] dark:text-zinc-500">
-                        <MapPin className="w-3 h-3" />
-                        {exp.location}
+          {experiences.map((exp) => {
+            const fullIndex = experiences.findIndex((e) => e.id === exp.id);
+            const isFirst = fullIndex === 0;
+            const isLast = fullIndex === experiences.length - 1;
+            const isDragging = draggedId === exp.id;
+            const isDragOver = dragOverId === exp.id && !isDragging;
+
+            return (
+              <div
+                key={exp.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, exp)}
+                onDragOver={(e) => handleDragOver(e, exp)}
+                onDragEnter={(e) => handleDragEnter(e, exp)}
+                onDragLeave={(e) => handleDragLeave(e, exp)}
+                onDrop={(e) => handleDrop(e, exp)}
+                onDragEnd={handleDragEnd}
+                className={`p-5 bg-white dark:bg-zinc-950 border-2 transition-all space-y-4 ${
+                  isDragging
+                    ? "opacity-40 border-dashed border-emerald-600 dark:border-terminal-green scale-[0.99] shadow-none"
+                    : isDragOver
+                    ? "border-emerald-600 dark:border-terminal-green ring-2 ring-emerald-500 dark:ring-terminal-green shadow-lg"
+                    : "border-[#1b2e23] dark:border-zinc-800 hover:border-emerald-600 dark:hover:border-zinc-700 shadow-brutal-forest dark:shadow-brutal"
+                }`}
+              >
+                {/* Header row: Role, Period, Order, and Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#cbdad0] dark:border-zinc-800/80 pb-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="cursor-grab active:cursor-grabbing text-[#4b5e53] dark:text-zinc-500 hover:text-emerald-700 dark:hover:text-terminal-green transition-colors p-0.5"
+                        title="Drag to reorder milestone sequence"
+                        aria-label="Drag handle to reorder"
+                      >
+                        <GripVertical className="w-4 h-4" />
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-terminal-green" />
+                      <h2 className="font-mono text-base font-bold text-[#0f1a14] dark:text-zinc-100">
+                        {exp.role}
+                      </h2>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-[#4b5e53] dark:text-zinc-400">
+                      <span className="flex items-center gap-1.5 text-[#0f1a14] dark:text-zinc-300 font-semibold">
+                        <Building className="w-3.5 h-3.5 text-[#6e8276] dark:text-zinc-500" />
+                        {exp.company}
                       </span>
+                      {exp.location && (
+                        <span className="flex items-center gap-1 text-[#6e8276] dark:text-zinc-500">
+                          <MapPin className="w-3 h-3" />
+                          {exp.location}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <TagBadge variant="terminal" size="sm">
+                      <Calendar className="w-3 h-3 mr-1 inline" />
+                      {exp.period}
+                    </TagBadge>
+                    <span className="font-mono text-xs text-[#4b5e53] dark:text-zinc-500 bg-[#e9f0ea] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 px-2 py-0.5 font-bold">
+                      #{exp.order}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {exp.description && (
+                  <p className="font-mono text-xs text-[#2c3e34] dark:text-zinc-300 leading-relaxed">
+                    {exp.description}
+                  </p>
+                )}
+
+                {/* Footer: Skills Used & Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#cbdad0] dark:border-zinc-800/80 font-mono text-xs">
+                  {/* Skills tags */}
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    <span className="text-[11px] text-[#4b5e53] dark:text-zinc-500 mr-1">Tech:</span>
+                    {Array.isArray(exp.skills_used) && exp.skills_used.length > 0 ? (
+                      exp.skills_used.map((sk) => (
+                        <TagBadge key={sk} variant="default" size="sm">
+                          {sk}
+                        </TagBadge>
+                      ))
+                    ) : (
+                      <span className="text-[11px] text-[#6e8276] dark:text-zinc-600">None specified</span>
                     )}
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <TagBadge variant="terminal" size="sm">
-                    <Calendar className="w-3 h-3 mr-1 inline" />
-                    {exp.period}
-                  </TagBadge>
-                  <span className="font-mono text-xs text-[#4b5e53] dark:text-zinc-500 bg-[#e9f0ea] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 px-2 py-0.5">
-                    #{exp.order}
-                  </span>
-                </div>
-              </div>
-
-              {/* Description */}
-              {exp.description && (
-                <p className="font-mono text-xs text-[#2c3e34] dark:text-zinc-300 leading-relaxed">
-                  {exp.description}
-                </p>
-              )}
-
-              {/* Footer: Skills Used & Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#cbdad0] dark:border-zinc-800/80 font-mono text-xs">
-                {/* Skills tags */}
-                <div className="flex flex-wrap gap-1.5 items-center">
-                  <span className="text-[11px] text-[#4b5e53] dark:text-zinc-500 mr-1">Tech:</span>
-                  {Array.isArray(exp.skills_used) && exp.skills_used.length > 0 ? (
-                    exp.skills_used.map((sk) => (
-                      <TagBadge key={sk} variant="default" size="sm">
-                        {sk}
-                      </TagBadge>
-                    ))
-                  ) : (
-                    <span className="text-[11px] text-[#6e8276] dark:text-zinc-600">None specified</span>
-                  )}
-                </div>
-
-                {/* Move Up/Down, Edit, Delete */}
-                <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => handleMoveExperience(index, -1)}
-                    disabled={index === 0}
-                    aria-label={`Move ${exp.role} up`}
-                    className="p-1 text-[#6e8276] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveExperience(index, 1)}
-                    disabled={index === experiences.length - 1}
-                    aria-label={`Move ${exp.role} down`}
-                    className="p-1 text-[#6e8276] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                  <BrutalButton
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleOpenEdit(exp)}
-                    icon={<Edit2 className="w-3.5 h-3.5" />}
-                  >
-                    Edit
-                  </BrutalButton>
-                  <BrutalButton
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDeleteExperience(exp)}
-                    icon={<Trash2 className="w-3.5 h-3.5" />}
-                  >
-                    Delete
-                  </BrutalButton>
+                  {/* Move Up/Down, Edit, Delete */}
+                  <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveExperience(exp.id, -1)}
+                      disabled={isFirst || isReordering}
+                      aria-label={`Move ${exp.role} up`}
+                      className="p-1 text-[#6e8276] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveExperience(exp.id, 1)}
+                      disabled={isLast || isReordering}
+                      aria-label={`Move ${exp.role} down`}
+                      className="p-1 text-[#6e8276] dark:text-zinc-500 hover:text-[#0f1a14] dark:hover:text-zinc-200 disabled:opacity-20"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <BrutalButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleOpenEdit(exp)}
+                      icon={<Edit2 className="w-3.5 h-3.5" />}
+                    >
+                      Edit
+                    </BrutalButton>
+                    <BrutalButton
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDeleteExperience(exp)}
+                      icon={<Trash2 className="w-3.5 h-3.5" />}
+                    >
+                      Delete
+                    </BrutalButton>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -479,6 +628,7 @@ export default function ExperienceCMS() {
         onClose={handleCloseModal}
         onSave={handleSaveExperience}
         saving={saving}
+        nextOrder={experiences.length + 1}
       />
     </div>
   );

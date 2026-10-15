@@ -18,6 +18,7 @@ import {
 export default function ExperienceEditorModal({
   isOpen,
   experience = null,
+  nextOrder = 1,
   onClose,
   onSave,
   saving = false,
@@ -31,7 +32,7 @@ export default function ExperienceEditorModal({
     Array.isArray(experience?.skills_used) ? experience.skills_used : []
   );
   const [skillInput, setSkillInput] = useState("");
-  const [order, setOrder] = useState(experience?.order ?? 1);
+  const [order, setOrder] = useState(experience?.order ?? nextOrder);
   const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function ExperienceEditorModal({
       setLocation(experience.location || "");
       setDescription(experience.description || "");
       setSkillsUsed(Array.isArray(experience.skills_used) ? experience.skills_used : []);
-      setOrder(experience.order ?? 1);
+      setOrder(experience.order ?? nextOrder);
     } else {
       setRole("");
       setCompany("");
@@ -50,11 +51,11 @@ export default function ExperienceEditorModal({
       setLocation("");
       setDescription("");
       setSkillsUsed([]);
-      setOrder(1);
+      setOrder(nextOrder);
     }
     setSkillInput("");
     setValidationError("");
-  }, [experience, isOpen]);
+  }, [experience, isOpen, nextOrder]);
 
   if (!isOpen) return null;
 
@@ -224,9 +225,14 @@ export default function ExperienceEditorModal({
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="exp-order" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center gap-1">
-                  <Hash className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
-                  Sort Order
+                <label htmlFor="exp-order" className="block text-[#0f1a14] dark:text-zinc-300 font-medium flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Hash className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
+                    Sort Order
+                  </span>
+                  <span className="text-[10px] text-[#6e8276] dark:text-zinc-500 font-normal">
+                    (Auto-shifts others)
+                  </span>
                 </label>
                 <input
                   id="exp-order"
@@ -337,6 +343,7 @@ ExperienceEditorModal.propTypes = {
     skills_used: PropTypes.arrayOf(PropTypes.string),
     order: PropTypes.number,
   }),
+  nextOrder: PropTypes.number,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
   saving: PropTypes.bool,

@@ -228,25 +228,26 @@ This document serves as the persistent memory, architectural reference, and oper
   - Aligned all admin cards, forms, inputs, table rows, and modals to the Neo-Brutalist sage/forest theme system (`bg-white dark:bg-zinc-950`, border `border-[#1b2e23] dark:border-zinc-800`, text `text-[#0f1a14] dark:text-zinc-100`, muted text `text-[#4b5e53] dark:text-zinc-400`, drop shadows `shadow-brutal-forest dark:shadow-brutal`).
   - Calibrated status badges, empty logs, and action bars across all CMS sub-views.
 
-### 11. Drag-and-Drop Project Sequence Reordering & Automatic Normalization Engine
-- **Problem**: In project management (`src/pages/admin/ProjectsCMS.jsx`), sequence numbers required updating all projects manually whenever an order position changed. There was no visual drag-and-drop capability, and creating or editing a project with a specific order caused duplicate sequence numbers or required manual re-indexing of every subsequent item.
+### 11. Unified Drag-and-Drop CMS Sequence Reordering & Automatic Normalization Engine
+- **Scope & Problem**: Originally, reordering records in `ProjectsCMS`, `SkillsCMS`, and `ExperienceCMS` required manually calculating and re-entering sequence numbers for all items or suffering sequence collisions and gaps. There was no direct tactile drag-and-drop capability, creating friction during portfolio curation.
 - **Implementation & Architecture**:
-  1. **Native HTML5 Drag-and-Drop System**:
-     - Integrated `GripVertical` tactile drag handle on each project card header.
-     - Handlers implemented: `handleDragStart`, `handleDragOver`, `handleDragEnter`, `handleDragLeave`, `handleDrop`, and `handleDragEnd`.
-     - Visual states: Active drag item shows dimmed dashed border (`opacity-40 border-dashed border-emerald-600 dark:border-terminal-cyan scale-[0.99]`), while drop target highlights with emerald focus ring (`ring-2 ring-emerald-500 dark:ring-terminal-cyan shadow-lg`).
+  1. **Native HTML5 Drag-and-Drop Across All Content Modules**:
+     - **Projects CMS** (`ProjectsCMS.jsx`): Tactile `GripVertical` handle on each project card header, reordering both catalog display and homepage Bento presentation.
+     - **Skills CMS** (`SkillsCMS.jsx`): Tactile `GripVertical` handle on skill cards, reordering tech stack cards and homepage marquee while maintaining category filtering compatibility.
+     - **Experience CMS** (`ExperienceCMS.jsx`): Tactile `GripVertical` handle on career milestone cards, directly governing the chronological order rendered on the homepage `ExperienceTimeline.jsx`.
+     - **Visual States**: Active drag item dims with dashed emerald border (`opacity-40 border-dashed border-emerald-600 scale-[0.99]`), while drop target highlights with emerald focus ring (`ring-2 ring-emerald-500 shadow-lg`).
   2. **Centralized Sequence Normalizer & Firestore Batch Sync (`reorderAndPersist`)**:
-     - Accepts reordered array of projects and strictly normalizes order to $1..N$ (`order: index + 1`).
-     - Differential write optimization: Computes shifted documents (`prevOrder !== newOrder`) and executes an atomic Firestore `writeBatch` containing only the modified documents.
-     - Centralizes state for both drag-and-drop and the accessible Up/Down chevron controls.
+     - Enforces strict sequential indexing ($1..N$) without gaps or duplicates.
+     - **Write Optimization**: Computes delta (`prevOrder !== newOrder`) and writes an atomic Firestore `writeBatch` including only the documents whose order actually changed.
+     - Centralizes state for both drag-and-drop and accessible Up/Down chevron controls.
   3. **Auto-Shifting Display Order on Create / Edit**:
-     - In `handleSaveProject`: When a project is assigned order $k$, the remaining projects are split and re-indexed around index $k - 1$, and all subsequent items auto-shift by $+1$.
-     - `ProjectEditorModal` receives `nextOrder={projects.length + 1}` to automatically default new projects to the next available sequence number.
-     - UI microcopy added on `Display Order`: `(Auto-shifts others)`.
+     - In `handleSaveProject`, `handleSaveSkill`, and `handleSaveExperience`: When an item is assigned sequence order $k$, existing items from $k$ onwards automatically shift $+1$ via atomic batch write.
+     - `ProjectEditorModal`, `SkillEditorModal`, and `ExperienceEditorModal` receive `nextOrder={items.length + 1}` to default new items to the next sequential position.
+     - Display order input fields display microcopy: `(Auto-shifts others)`.
   4. **Gapless Sequence Collapse on Deletion**:
-     - When deleting a project in `handleDeleteProject`, remaining projects are automatically re-indexed to $1..(N-1)$ without leaving sequence gaps, committing shifted order numbers atomically in Firestore.
+     - Deleting any item in `handleDeleteProject`, `handleDeleteSkill`, or `handleDeleteExperience` immediately collapses subsequent items from $1..(N-1)$ without leaving sequence voids.
   5. **Live Status Feedback**:
-     - Added `isReordering` state rendering a `REORDERING...` terminal status pill and success notification confirming the exact assigned sequence number.
+     - Added `isReordering` state rendering a `REORDERING...` terminal status pill and feedback banners confirming the assigned sequence number.
 
 ---
 
