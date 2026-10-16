@@ -49,12 +49,7 @@ const NAV_ITEMS = [
     label: "Technical Blogs",
     to: "/admin/blogs",
     icon: BookOpen,
-  },
-  {
-    label: "Blog Interact",
-    to: "/admin/blogs/interact",
-    icon: MessageSquare,
-  },
+  }
 ];
 
 /**

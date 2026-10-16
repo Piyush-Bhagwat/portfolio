@@ -283,7 +283,7 @@ export default function BlogPostPage() {
             className="flex items-center gap-1.5 text-[#4b5e53] dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-terminal-green transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>&larr; Back to all engineering logs</span>
+            <span>Back to Blogs</span>
           </Link>
           <div className="hidden sm:flex items-center gap-2 text-[#4b5e53] dark:text-zinc-500">
             <Terminal className="w-3.5 h-3.5 text-teal-700 dark:text-terminal-cyan" />

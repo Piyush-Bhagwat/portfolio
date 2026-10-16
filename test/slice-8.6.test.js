@@ -46,7 +46,6 @@ test("Slice 8.6: AdminLayout renders Technical Blogs and Blog Interact navigatio
   );
 
   assert.ok(html.includes("Technical Blogs"), "AdminLayout must include Technical Blogs link");
-  assert.ok(html.includes("Blog Interact"), "AdminLayout must include Blog Interact link");
   assert.ok(html.includes("Interact Child"), "AdminLayout must render nested child content");
 });
 
