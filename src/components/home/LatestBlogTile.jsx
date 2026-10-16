@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { BookOpen, ArrowRight, Clock, Calendar, Sparkles } from "lucide-react";
+import { BookOpen, ArrowRight, Clock, Calendar, Sparkles, Star, MessageSquare } from "lucide-react";
 import { formatCardDate } from "../blog/BlogCard.jsx";
 import { SAMPLE_INITIAL_POST } from "../../pages/admin/BlogsCMS.jsx";
 
@@ -14,6 +14,10 @@ export default function LatestBlogTile({ post = SAMPLE_INITIAL_POST, className =
   const formattedDate = formatCardDate(rawDate);
   const readTime = currentPost.read_time_minutes || 3;
   const slug = currentPost.slug || currentPost.id || "building-resilient-web-interfaces";
+
+  const ratingAverage = Number(currentPost.rating_average) || 0;
+  const ratingCount = Number(currentPost.rating_count) || 0;
+  const commentCount = Number(currentPost.comment_count) || 0;
 
   return (
     <div
@@ -51,6 +55,35 @@ export default function LatestBlogTile({ post = SAMPLE_INITIAL_POST, className =
               {currentPost.excerpt}
             </p>
           )}
+        </div>
+
+        {/* Engagement Badges: Rating & Comments */}
+        <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] font-mono">
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#e9f0ea] dark:bg-[#18181b] border border-[#cbdad0] dark:border-zinc-800 text-amber-700 dark:text-amber-400 font-bold"
+            title={
+              ratingCount > 0
+                ? `Average Rating: ${ratingAverage.toFixed(1)} / 5 from ${ratingCount} review${ratingCount === 1 ? "" : "s"}`
+                : "No reviews yet"
+            }
+          >
+            <Star
+              className={`w-3 h-3 ${
+                ratingCount > 0
+                  ? "fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400"
+                  : "text-[#4b5e53] dark:text-zinc-500"
+              }`}
+            />
+            <span>{ratingCount > 0 ? `${ratingAverage.toFixed(1)} (${ratingCount})` : "New"}</span>
+          </span>
+
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#e9f0ea] dark:bg-[#18181b] border border-[#cbdad0] dark:border-zinc-800 text-emerald-800 dark:text-emerald-400 font-bold"
+            title={`${commentCount} comment${commentCount === 1 ? "" : "s"}`}
+          >
+            <MessageSquare className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
+            <span>{commentCount === 1 ? "1 comment" : `${commentCount} comments`}</span>
+          </span>
         </div>
 
         {/* Metadata (Date & Read Time) */}
@@ -94,6 +127,9 @@ LatestBlogTile.propTypes = {
     slug: PropTypes.string,
     excerpt: PropTypes.string,
     read_time_minutes: PropTypes.number,
+    rating_average: PropTypes.number,
+    rating_count: PropTypes.number,
+    comment_count: PropTypes.number,
     published_at: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
     updated_at: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
     created_at: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),

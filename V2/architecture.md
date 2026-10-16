@@ -9,6 +9,7 @@ Portfolio V2 transitions the application from a largely static, hardcoded portfo
 - **100% Dynamic Content**: Eliminate hardcoded JSX text, bio details, skills, and case studies; manage everything via an authenticated Admin Suite.
 - **Robust Media Delivery**: Offload all asset storage and on-the-fly transformations to Cloudinary CDN.
 - **Full Markdown Editorial Pipeline**: Provide an end-to-end authoring and reading experience for engineering articles with code highlighting and media embedding.
+- **Scalable Post Interaction & Comments**: Decoupled commenting and rating architecture capable of handling unbounded community discussions with zero read-quota exhaustion via cursor pagination (initial 3, next 10), soft-delete moderation, and denormalized aggregates.
 - **Strict Separation of Concerns**: Clean modularization across UI Primitives, Feature Views, Service Adapters, and Context Providers.
 - **Dual-Theme Design Architecture**: Deliver an uncompromising aesthetic in both high-contrast Dark Mode and an organic, subtle greenish Light Mode (pale sage, celadon, deep evergreen charcoal) with zero-flash switching and persistent state.
 
@@ -23,7 +24,7 @@ flowchart TD
             Home["Bento-Grid Home ('/')"]
             ProjectsView["Projects & Case Studies ('/projects')"]
             BlogIndex["Blog Index ('/blogs')"]
-            BlogPost["Blog Post Detail ('/blogs/:slug')"]
+            BlogPost["Blog Post Detail ('/blogs/:slug') + Comments Dock"]
             ThemeSwitch["Theme Toggle (Dark / Light)"]
         end
 
@@ -33,6 +34,7 @@ flowchart TD
             ProjectsCMS["Project & Case Study CRUD"]
             SkillsExpCMS["Skills & Timeline CRUD"]
             BlogCMS["Markdown Editor & Post Manager"]
+            InteractCMS["Interact CMS: Comments & Rating Moderation"]
         end
 
         StateLayer["Data & Theme Layer: ThemeContext + AuthContext + Service Hooks"]
@@ -40,7 +42,7 @@ flowchart TD
 
     subgraph BackendServices["Backend Services"]
         FirebaseAuth["Firebase Authentication (Admin Whitelist)"]
-        Firestore["Firebase Firestore (NoSQL Document Store)"]
+        Firestore["Firebase Firestore (NoSQL: Posts, Comments, Profile)"]
         CloudinaryCDN["Cloudinary CDN (Asset Ingestion & Transformations)"]
     end
 
@@ -65,8 +67,8 @@ flowchart TD
 ├── /                     --> Public Bento-Grid Homepage
 ├── /projects             --> Filterable Projects Grid
 ├── /projects/:slug       --> Deep Project Case Study View (or interactive drawer/modal)
-├── /blogs                --> Technical Blog Index (Search, Tag Filter, Bento Cards)
-├── /blogs/:slug          --> Long-form Article Reader (Markdown, TOC, Code Highlights)
+├── /blogs                --> Technical Blog Index (Search, Tag Filter, Bento Cards with Ratings/Comments)
+├── /blogs/:slug          --> Long-form Article Reader (Markdown, TOC, 3-Tier Right Sidebar with Comment Box)
 │
 └── /admin                --> Admin Gateway
     ├── /admin/login      --> Admin Authentication (Email/Password or OAuth)
@@ -78,8 +80,9 @@ flowchart TD
         ├── /admin/skills     --> Skills category manager & reordering
         ├── /admin/experience --> Work timeline & milestone editor
         ├── /admin/blogs      --> Blog Management (Drafts, Published, Delete)
-        └── /admin/blogs/new  --> Split-pane Markdown Editor & Cloudinary Uploader
-        └── /admin/blogs/edit/:id
+        ├── /admin/blogs/new  --> Split-pane Markdown Editor & Cloudinary Uploader
+        ├── /admin/blogs/edit/:id
+        └── /admin/blogs/interact --> Cross-post Comment & Review Moderation (Reply, Soft-Hide, Filter)
 ```
 
 ### 3.2 Target Directory Structure (`src/`)
@@ -97,6 +100,10 @@ src/
 │   │   └── ThemeToggle.jsx  # Neo-Brutalist Dark/Light theme switch
 │   ├── common/              # Global Navbar, Footer, Modal, Skeleton loaders
 │   ├── blog/                # BlogCard, MarkdownRenderer, CodeBlock, TableOfContents
+│   │   ├── CommentBox.jsx   # Right-rail expandable comment container (initial 3 + load next 10)
+│   │   ├── CommentItem.jsx  # Neo-brutalist comment row with rating stars & admin reply pill
+│   │   ├── CommentForm.jsx  # Interactive star rating, author name & comment submission
+│   │   └── RatingStars.jsx  # Reusable brutalist star rating input & badge
 │   └── project/             # ProjectCard, CaseStudyDrawer, TechStackBadges
 │
 ├── context/
@@ -109,7 +116,8 @@ src/
 │   ├── useTheme.js          # Theme consumption hook
 │   ├── useCloudinary.js     # Upload helper with progress tracking
 │   ├── useFirestore.js      # CRUD operations wrapper with error boundaries
-│   └── useReadingTime.js    # Word count and read-time calculator
+│   ├── useReadingTime.js    # Word count and read-time calculator
+│   └── useComments.js       # Paginated cursor fetching (3 -> +10), rating submission & soft-delete
 │
 ├── layouts/
 │   ├── PublicLayout.jsx     # Header, Main Content, Footer, Contact Dock
@@ -117,7 +125,7 @@ src/
 │
 ├── pages/
 │   ├── public/              # Home, Projects, ProjectDetail, Blogs, BlogDetail
-│   └── admin/               # Login, Overview, ProfileCMS, ProjectsCMS, BlogEditor
+│   └── admin/               # Login, Overview, ProfileCMS, ProjectsCMS, BlogEditor, BlogInteractCMS
 │
 ├── services/
 │   ├── firebase.js          # App initialization, Firestore references, Auth instance
@@ -336,6 +344,10 @@ interface BlogPost {
   read_time_minutes: number;   // Calculated on save
   published: boolean;          // Draft vs. Live
   published_at: Timestamp | null;
+  // Denormalized Engagement Aggregates (Zero query cost for public lists & cards)
+  comment_count: number;       // Total visible comments (incremented/decremented atomically)
+  rating_average: number;      // Calculated average rating score (e.g., 4.88)
+  rating_count: number;        // Total submitted ratings count
   created_at: Timestamp;
   updated_at: Timestamp;
 }
@@ -365,6 +377,37 @@ interface ExperienceItem {
   order: number;
 }
 ```
+
+### 5.6 Blog Comments & Ratings (`comments/{commentId}`)
+
+To prevent unbounded document growth (safeguarding against Firestore's 1MB per-document limit when post discussions cross hundreds or thousands of entries), comments are strictly decoupled into an independent top-level `comments` collection rather than embedded in `BlogPost`. A top-level collection also enables frictionless, performant cross-post querying for the Admin "Interact" moderation inbox without requiring collection-group index overhead.
+
+```typescript
+interface BlogComment {
+  id: string;
+  post_id: string;             // Foreign key referencing blogs/{blogId} (Indexed)
+  post_slug: string;           // Slug of target post for instant routing
+  post_title: string;          // Denormalized article title for admin inbox display
+  author_name: string;         // Visitor display name (max 50 chars)
+  rating: number;              // Numeric rating (1 to 5 stars)
+  content: string;             // Comment text / review body (max 2000 chars)
+  status: "visible" | "hidden";// Soft-delete flag (Never hard deleted; preserves audit trail & ID anchors)
+  admin_reply: {               // Official author response
+    content: string;           // Admin reply text
+    replied_at: Timestamp;     // Timestamp of author response
+    author: string;            // "Piyush Bhagwat" (displayed with Verified Author badge)
+  } | null;
+  created_at: Timestamp;       // Submission timestamp (Indexed for pagination: order by created_at desc)
+  updated_at: Timestamp;
+}
+```
+
+#### Soft-Delete Architecture & Lifecycle Policy:
+- **No Hard Deletes**: Comments are **never permanently purged** from Firestore (`allow delete: if false;` enforced in security rules). This prevents broken thread anchors, preserves administrative audit logs, and prevents historical rating data corruption.
+- **State Transition**: Admins toggle `status` between `'visible'` and `'hidden'` in the Admin Interact CMS.
+- **Atomic Aggregate Pipeline**: Whenever a comment is created or its visibility status toggled, a batched write / transaction atomically updates `comment_count`, `rating_count`, and recalculates `rating_average` on the parent `blogs/{blogId}` document:
+  $$\text{new\_avg} = \frac{(\text{old\_avg} \times \text{old\_count}) + \text{new\_rating}}{\text{old\_count} + 1}$$
+- If an admin toggles a comment to `'hidden'`, it is deducted from the public aggregates and immediately filtered out of public queries (`where("status", "==", "visible")`).
 
 ---
 
@@ -409,11 +452,128 @@ The blog editor in `/admin/blogs/editor` operates as a split-pane, distraction-f
 - **Auto Read-Time Calculation**: `Math.ceil(wordCount / 200)` updated automatically on change.
 
 ### 7.2 Public Reading Architecture
-- **Blog Card View (`/blogs`)**: Bento-style grid with tag pills, cover banners, publication dates, and read-time badge. Instant client-side filtering by query and tag without extra Firestore reads.
+- **Blog Card View (`/blogs`)**: Bento-style grid with tag pills, cover banners, publication dates, read-time badge, real-time average star rating (`★ 4.9`), and comment count (`💬 12`). Instant client-side filtering by query and tag without extra Firestore reads.
 - **Article Reader (`/blogs/:slug`)**:
   - Responsive reading container with maximum line-width for optimal readability (`max-w-3xl prose prose-invert`).
   - Sticky/floating Table of Contents derived automatically from `#`, `##`, `###` headings.
   - Sticky progress bar tracking reading percentage.
+  - Interactive three-tier right sidebar featuring Table of Contents, Reading Metrics & Actions, and an expandable Comment & Rating Dock.
+
+### 7.3 Post Interaction, Rating & Comment System
+
+#### 7.3.1 Public Blog Card Enhancements (`/blogs` & Bento Previews)
+- **Aggregated Metric Pills**: Each blog card in `/blogs` and the homepage Bento preview displays real-time engagement badges:
+  - **Rating Pill**: High-contrast brutalist badge with star glyph and average score (e.g., `★ 4.9 (18)`).
+  - **Comment Count Pill**: Monospace pill with icon and count (e.g., `💬 12 comments`).
+- **Zero Query Overhead**: Sourced directly from denormalized `comment_count` and `rating_average` properties on `BlogPost`. Browsing the blog index triggers **zero** additional queries to the `comments` collection.
+
+#### 7.3.2 Reader Article Header & Metadata Row (`/blogs/:slug`)
+- Located immediately beneath the article H1 title and publication date:
+  - **Author & Date**: `Piyush Bhagwat · Oct 16, 2026`
+  - **Read Time**: `5 min read`
+  - **Review & Rating Summary**: Tactile pill displaying average score and count (`★ 4.9 · 18 reviews`).
+  - **Comment Count Anchor**: Direct jump link (`💬 18 comments`) that smoothly scrolls and focuses the 3rd Div Comment Box in the right sidebar.
+
+#### 7.3.3 Three-Tier Right Sidebar Layout (`/blogs/:slug`)
+On desktop screens (`lg:` and up), the reading view features a sticky three-tier right rail. On smaller viewports (mobile/tablet), these tiers stack cleanly beneath the main article body.
+
+```
++-------------------------------------------------------------+------------------------------------+
+| ARTICLE MAIN CANVAS (max-w-3xl prose)                       | RIGHT SIDEBAR (w-80 / w-96)        |
+|                                                             |                                    |
+| # Building a Scalable Portfolio with React & Firebase       | +--------------------------------+ |
+| By Piyush Bhagwat · Oct 16, 2026 · 5 min read               | | 1st DIV: TABLE OF CONTENTS     | |
+| ★ 4.9 (18 reviews) | 💬 12 comments                         | | ● System Overview              | |
+|                                                             | | ● Data Architecture            | |
+| [ Article Markdown Body ... ]                               | | ● Benchmark Results            | |
+| [ Code blocks, diagrams, deep-dives ... ]                   | +--------------------------------+ |
+|                                                             | | 2nd DIV: ACTIONS & PROGRESS    | |
+|                                                             | | Reading Progress: [===== ] 54% | |
+|                                                             | | [Share on X] [Copy Link]       | |
+|                                                             | +--------------------------------+ |
+|                                                             | | 3rd DIV: EXPANDABLE COMMENTS   | |
+|                                                             | | ★ ★ ★ ★ ★ (4.9 avg · 18 revs)  | |
+|                                                             | | [ Leave a Review / Comment ]   | |
+|                                                             | |                                | |
+|                                                             | | Recent 3 Comments Preview:     | |
+|                                                             | | ┌────────────────────────────┐ | |
+|                                                             | | │ Alex · ★★★★★               │ | |
+|                                                             | | │ "Brilliant breakdown!"     │ | |
+|                                                             | | ├────────────────────────────┤ | |
+|                                                             | | │ DevK · ★★★★☆               │ | |
+|                                                             | | │ "Clean architecture!"      │ | |
+|                                                             | | ├────────────────────────────┤ | |
+|                                                             | | │ Sara · ★★★★★               │ | |
+|                                                             | | │ "Loved the dark theme."    │ | |
+|                                                             | | └────────────────────────────┘ | |
+|                                                             | | [ ▼ Expand / View All (12) ]   | |
+|                                                             | | -> Cursor-fetches next 10      | |
+|                                                             | +--------------------------------+ |
++-------------------------------------------------------------+------------------------------------+
+```
+
+#### 7.3.4 Right-Rail Comment Box: Progressive Loading & Cursor Pagination
+- **Tier 1 (Initial Load — 3 Comments)**:
+  - On page mount, `useComments(postId)` executes a constrained query:
+    ```javascript
+    query(
+      collection(db, "comments"),
+      where("post_id", "==", blogId),
+      where("status", "==", "visible"),
+      orderBy("created_at", "desc"),
+      limit(3)
+    )
+    ```
+  - Displays the 3 newest reviews immediately with negligible latency and minimal Firestore read consumption.
+- **Tier 2 (Expansion & Cursor-Based Pagination — Next 10)**:
+  - Clicking `[ Expand / Load More Comments ]` expands the box into a scrollable comment stream.
+  - Queries the next 10 items using Firestore cursor pagination:
+    ```javascript
+    query(
+      collection(db, "comments"),
+      where("post_id", "==", blogId),
+      where("status", "==", "visible"),
+      orderBy("created_at", "desc"),
+      startAfter(lastVisibleDoc),
+      limit(10)
+    )
+    ```
+  - **Scale Protection**: Even if a post receives thousands of comments, the client only fetches 10 at a time on demand. Memory consumption and Firebase bandwidth stay bounded.
+- **Tier 3 (Review Submission & Rating Input)**:
+  - Form fields:
+    - **Star Rating Selector**: 1 to 5 interactive stars with hover states and brutalist outline.
+    - **Author Name**: Plain text input (stored in comment document; no login required for readers).
+    - **Comment Text**: Clean textarea with character counter (max 2000 chars).
+  - On submission:
+    - Writes new document to `comments` with `status: 'visible'` and `admin_reply: null`.
+    - Atomically updates post aggregates (`comment_count`, `rating_count`, `rating_average`).
+    - Optimistically inserts the new comment at the top of the local review list.
+
+#### 7.3.5 Admin Blog CMS — "Interact" Sub-Section (`/admin/blogs/interact`)
+A unified command center for community engagement and moderation across all technical articles:
+- **Unified Cross-Post Feed**:
+  - Displays a consolidated table of comments from all blog posts simultaneously.
+  - Columns:
+    - `Article Title`: Denormalized badge linking directly to the post.
+    - `Author`: Reader name.
+    - `Rating`: Star rating pill (`★ 1-5`).
+    - `Snippet`: Excerpt of comment content.
+    - `Date`: Submission timestamp.
+    - `Status`: High-contrast status pill (`Visible` [Green] vs `Hidden` [Zinc/Red]).
+    - `Actions`: `[ Reply ]` and `[ Hide / Unhide ]`.
+- **Search & Filter Controls**:
+  - **Filter by Post**: Dropdown selector of all published blogs to isolate discussions on a specific article.
+  - **Filter by Status**: Quick tabs for `All`, `Visible`, and `Hidden`.
+  - **Filter by Rating**: Filter specifically for 5-star praise or <3-star feedback.
+- **Admin Inline Reply Mechanism**:
+  - Clicking `Reply` opens a brutalist drawer or modal.
+  - Admin authors an official response saved under `admin_reply: { content, replied_at, author }`.
+  - Displayed publicly nested under the visitor's comment with a distinctive `[ Verified Author ]` badge and accent border.
+- **Strict Soft-Delete Strategy**:
+  - In accordance with the non-destructive data policy, **hard deletes are disabled** (`allow delete: if false;`).
+  - Clicking `Hide` updates `status: 'hidden'` and recalculates the post's public `comment_count` and `rating_average`.
+  - Clicking `Unhide` restores the comment to public view and re-adds it to the aggregates.
+  - Ensures comments maintain immutable reference IDs, keeps reply threads intact, and preserves full moderation history.
 
 ---
 
@@ -461,6 +621,28 @@ service cloud.firestore {
       allow read: if resource.data.published == true || isAdmin();
       allow write: if isAdmin();
     }
+
+    // Comments: Decoupled collection for viral scale, ratings, and cross-post moderation
+    match /comments/{commentId} {
+      // Public can only read visible comments; Admin can read all (including hidden for moderation)
+      allow read: if resource.data.status == "visible" || isAdmin();
+
+      // Public submission with strict data integrity & rating bounds
+      allow create: if request.resource.data.status == "visible"
+                    && request.resource.data.rating >= 1 
+                    && request.resource.data.rating <= 5
+                    && request.resource.data.author_name.size() > 0 
+                    && request.resource.data.author_name.size() <= 50
+                    && request.resource.data.content.size() > 0 
+                    && request.resource.data.content.size() <= 2000
+                    && request.resource.data.admin_reply == null;
+
+      // Only authenticated admin can update comments (replying, toggling status for soft-hide)
+      allow update: if isAdmin();
+
+      // HARD DELETE PROHIBITED: Enforces soft-delete strategy at the database rule layer
+      allow delete: if false;
+    }
   }
 }
 ```
@@ -481,10 +663,10 @@ gantt
     Profile, Skills & Experience CMS + Seeding     :d3, 2026-10-16, 1d
     section Day 4: Projects & Cases
     Projects & Case Studies CRUD + Legacy Migration:d4, 2026-10-17, 1d
-    section Day 5: Blog CMS
-    Admin Markdown Editor, Preview & Media Ingestion:d5, 2026-10-18, 1d
+    section Day 5: Blog CMS & Interact
+    Blog Editor, Preview & Admin Interact Moderation:d5, 2026-10-18, 1d
     section Day 6: Reader & Showcase
-    Public Blog System & Interactive Case Studies  :d6, 2026-10-19, 1d
+    Blog Reader, 3-Tier Sidebar, Comments & Projects:d6, 2026-10-19, 1d
     section Day 7: Bento UI & Cutover
     Homepage Bento-Grid, Polish & Production Release:d7, 2026-10-20, 1d
 ```
@@ -510,17 +692,19 @@ gantt
    - Implement Projects CRUD (`/admin/projects`) with tags, live links, and Cloudinary banner uploads.
    - Develop Structured Case Study Builder (`motivation`, `tech_stack_breakdown`, `key_learnings`, `challenges` Q&A pairs).
    - Execute data migration script to ingest all projects from legacy `src/projects.js` into Firestore.
-5. **Day 5: Technical Blog System — Admin CMS (Vertical Slice: Markdown Authoring & Media Ingestion)**
+5. **Day 5: Technical Blog System & Admin Interact CMS (Vertical Slice: Markdown Authoring & Comment Moderation)**
    - Develop split-screen Markdown editor (`/admin/blogs/new`, `/admin/blogs/edit/:id`) with live synchronized preview.
    - Implement drag-and-drop Cloudinary image embedding directly into the markdown canvas.
    - Build post metadata controls (SEO slug generation, tags, excerpt, read-time calculation, draft/publish toggle).
    - Build Admin Blog List manager (`/admin/blogs`) with status badges and deletion confirmation.
-6. **Day 6: Public Blog Reader & Projects Showcase (Vertical Slice: Reader Experience & Deep Case Studies)**
-   - Construct Public Blog Index (`/blogs`) featuring Bento article cards, real-time query search, and tag filtering.
-   - Implement Public Article Reader (`/blogs/:slug`) with GitHub Flavored Markdown, Prism/Highlight code syntax coloring, copy-to-clipboard buttons, and reading progress bar.
+   - Build Admin Interact CMS (`/admin/blogs/interact`) for unified cross-post comment moderation, filter by post/rating/status, author inline replies, and soft-delete visibility toggles.
+6. **Day 6: Public Blog Reader & Projects Showcase (Vertical Slice: Reader Experience, Ratings & Comments Dock)**
+   - Construct Public Blog Index (`/blogs`) featuring Bento article cards with star rating summaries (`★ 4.9`), comment counts (`💬 12`), real-time query search, and tag filtering.
+   - Implement Public Article Reader (`/blogs/:slug`) with GitHub Flavored Markdown, Prism/Highlight code syntax coloring, copy-to-clipboard buttons, reading progress bar, and metadata review/comment indicators.
+   - Assemble three-tier right sidebar housing Table of Contents (Div 1), Actions & Progress (Div 2), and the expandable Comment Box (Div 3) featuring initial 3-comment load, cursor-based pagination for next 10, star rating submission, and verified author reply pills.
    - Redesign Public Projects page (`/projects`) and interactive Case Study modal/drawer with expandable problem-solution accordions.
 7. **Day 7: Bento-Grid Homepage Redesign, Dual-Theme Polish & Final Cutover (Vertical Slice: New Homepage & Release)**
-   - Re-architect Homepage (`/`) into an information-dense Bento Grid: Terminal hero block (`$ whoami`), live status pill (`● Available for work`), tech stack marquee, featured projects carousel, latest article preview, and theme switcher integration.
+   - Re-architect Homepage (`/`) into an information-dense Bento Grid: Terminal hero block (`$ whoami`), live status pill (`● Available for work`), tech stack marquee, featured projects carousel, latest article preview with rating & comment counts, and theme switcher integration.
    - Conduct cross-theme visual verification: ensure full WCAG contrast and brutalist polish across both Dark mode and the subtle greenish Light mode.
    - Conduct cross-device responsive tuning (mobile, tablet, desktop) and tactile brutalist micro-interactions.
    - Execute Lighthouse performance optimization (WebP/AVIF delivery via Cloudinary, code-splitting).

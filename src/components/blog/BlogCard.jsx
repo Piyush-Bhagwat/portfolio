@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { Clock, Calendar, ArrowRight, BookOpen } from "lucide-react";
+import { Clock, Calendar, ArrowRight, BookOpen, Star, MessageSquare } from "lucide-react";
 import { TagBadge } from "../brutalist";
 import { getOptimizedImageUrl } from "../../services/cloudinary.js";
 import { calculateReadTime } from "../../utils/blogUtils.js";
@@ -45,6 +45,10 @@ export default function BlogCard({
   const displayDate = formatCardDate(
     post.published_at || post.updated_at || post.created_at
   );
+
+  const ratingAverage = Number(post.rating_average) || 0;
+  const ratingCount = Number(post.rating_count) || 0;
+  const commentCount = Number(post.comment_count) || 0;
 
   const tags = Array.isArray(post.tags) ? post.tags : [];
   const postUrl = `/blogs/${post.slug || post.id}`;
@@ -125,6 +129,37 @@ export default function BlogCard({
             </p>
           )}
 
+          {/* Engagement Badges: Rating & Comment Count */}
+          <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px] font-mono">
+            {/* Rating Pill */}
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#e9f0ea] dark:bg-[#18181b] border border-[#cbdad0] dark:border-zinc-800 text-amber-700 dark:text-amber-400 font-bold"
+              title={
+                ratingCount > 0
+                  ? `Average Rating: ${ratingAverage.toFixed(1)} / 5 from ${ratingCount} review${ratingCount === 1 ? "" : "s"}`
+                  : "No reviews yet"
+              }
+            >
+              <Star
+                className={`w-3 h-3 ${
+                  ratingCount > 0
+                    ? "fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400"
+                    : "text-[#4b5e53] dark:text-zinc-500"
+                }`}
+              />
+              <span>{ratingCount > 0 ? `${ratingAverage.toFixed(1)} (${ratingCount})` : "New"}</span>
+            </span>
+
+            {/* Comment Counter Pill */}
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#e9f0ea] dark:bg-[#18181b] border border-[#cbdad0] dark:border-zinc-800 text-emerald-800 dark:text-emerald-400 font-bold"
+              title={`${commentCount} comment${commentCount === 1 ? "" : "s"}`}
+            >
+              <MessageSquare className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
+              <span>{commentCount === 1 ? "1 comment" : `${commentCount} comments`}</span>
+            </span>
+          </div>
+
           {/* Category Tags */}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -178,6 +213,9 @@ BlogCard.propTypes = {
     tags: PropTypes.arrayOf(PropTypes.string),
     read_time_minutes: PropTypes.number,
     content_markdown: PropTypes.string,
+    rating_average: PropTypes.number,
+    rating_count: PropTypes.number,
+    comment_count: PropTypes.number,
     published_at: PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.instanceOf(Date)]),
     updated_at: PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.instanceOf(Date)]),
     created_at: PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.instanceOf(Date)]),

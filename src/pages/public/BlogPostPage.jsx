@@ -5,19 +5,23 @@ import { db } from "../../services/firebase.js";
 import { getOptimizedImageUrl } from "../../services/cloudinary.js";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useComments } from "../../hooks/useComments.js";
 import {
   ReadingProgressBar,
   CodeBlock,
   TableOfContents,
   toHeadingSlug,
   ImageLightboxModal,
+  ArticleActionsBar,
+  CommentBox,
+  XIcon,
+  LinkedInIcon,
 } from "../../components/blog";
 import { TagBadge, TerminalBox, BrutalButton } from "../../components/brutalist";
 import {
   Clock,
   Calendar,
   User,
-  Share2,
   Copy,
   Check,
   ArrowLeft,
@@ -26,25 +30,12 @@ import {
   AlertCircle,
   ExternalLink,
   Sparkles,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { SAMPLE_INITIAL_POST } from "../admin/BlogsCMS.jsx";
 import { formatCardDate } from "../../components/blog/BlogCard.jsx";
 
-function XIcon({ className = "w-3.5 h-3.5" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
-
-function LinkedInIcon({ className = "w-3.5 h-3.5" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.69 1.69 0 0 0 0-3.38 1.69 1.69 0 0 0 0 3.38m1.39 9.74v-8.37H5.07v8.37h2.78z" />
-    </svg>
-  );
-}
 
 /**
  * BlogPostPage - Public Long-Form Article Reader (/blogs/:slug)
@@ -65,6 +56,15 @@ export default function BlogPostPage() {
   const [notFound, setNotFound] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
+
+  // Progressive comments & cursor pagination hook (Slice 8.4)
+  const {
+    comments,
+    loading: loadingComments,
+    loadingMore: loadingMoreComments,
+    hasMore: hasMoreComments,
+    loadMore: loadMoreComments,
+  } = useComments(post?.id, { totalCount: post?.comment_count });
 
   useEffect(() => {
     let isMounted = true;
@@ -222,6 +222,10 @@ export default function BlogPostPage() {
   const formattedDate = formatCardDate(rawDate);
   const readTime = post.read_time_minutes || 3;
 
+  const ratingAverage = Number(post.rating_average) || 0;
+  const ratingCount = Number(post.rating_count) || 0;
+  const commentCount = Number(post.comment_count) || 0;
+
   return (
     <div className="min-h-screen bg-[#f4f7f4] dark:bg-black text-[#0f1a14] dark:text-zinc-100 font-mono py-8 px-4 sm:px-6 lg:px-8">
       {/* Sticky Top Reading Progress Bar */}
@@ -271,7 +275,7 @@ export default function BlogPostPage() {
           {/* Article Metadata Bar & Social Share */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 border-y-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 text-xs">
             {/* Left: Metadata */}
-            <div className="flex flex-wrap items-center gap-4 text-[#0f1a14] dark:text-zinc-300">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[#0f1a14] dark:text-zinc-300">
               <span className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-terminal-green">
                 <User className="w-3.5 h-3.5" />
                 <span>Piyush Bhagwat</span>
@@ -286,6 +290,51 @@ export default function BlogPostPage() {
                 <Clock className="w-3.5 h-3.5 text-teal-700 dark:text-terminal-cyan" />
                 <span>{`${readTime} min read`}</span>
               </span>
+              <span className="text-[#cbdad0] dark:text-zinc-700">|</span>
+
+              {/* Star Rating Review Summary Pill */}
+              <span
+                className="inline-flex items-center gap-1 font-mono text-amber-700 dark:text-amber-400 bg-[#e9f0ea] dark:bg-[#18181b] px-2 py-0.5 border border-[#cbdad0] dark:border-zinc-800"
+                title={
+                  ratingCount > 0
+                    ? `Average Rating: ${ratingAverage.toFixed(1)} / 5 from ${ratingCount} review${ratingCount === 1 ? "" : "s"}`
+                    : "No reviews yet"
+                }
+              >
+                <Star
+                  className={`w-3.5 h-3.5 ${
+                    ratingCount > 0
+                      ? "fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400"
+                      : "text-[#4b5e53] dark:text-zinc-500"
+                  }`}
+                />
+                <span className="font-bold">{ratingCount > 0 ? ratingAverage.toFixed(1) : "New"}</span>
+                {ratingCount > 0 && (
+                  <span className="text-[#4b5e53] dark:text-zinc-500 text-[10px]">
+                    ({ratingCount} {ratingCount === 1 ? "review" : "reviews"})
+                  </span>
+                )}
+              </span>
+
+              <span className="text-[#cbdad0] dark:text-zinc-700">|</span>
+
+              {/* Comment Count Badge (Clickable Smooth-Scroll Anchor) */}
+              <a
+                href="#comments-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const target = document.getElementById("comments-section") || document.getElementById("comment-box");
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    target.focus?.();
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 text-emerald-800 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-terminal-green hover:underline cursor-pointer transition-colors bg-[#e9f0ea] dark:bg-[#18181b] px-2 py-0.5 border border-[#cbdad0] dark:border-zinc-800 font-mono"
+                title="Jump to comments and discussion"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
+                <span>{commentCount === 1 ? "1 comment" : `${commentCount} comments`}</span>
+              </a>
             </div>
 
             {/* Right: Share Controls */}
@@ -556,49 +605,37 @@ export default function BlogPostPage() {
             </div>
           </main>
 
-          {/* Sticky Sidebar (Table of Contents + Metadata) */}
+          {/* Sticky Three-Tier Sidebar (Table of Contents + Actions & Progress + Expandable Comments) */}
           <aside className="lg:col-span-4 space-y-6">
             <div className="sticky top-20 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
-              {/* Table of Contents */}
+              {/* Tier 1: Table of Contents */}
               <TableOfContents content={post.content_markdown || ""} />
 
-              {/* Quick Metadata Box */}
-              <TerminalBox
-                title="article.metadata"
-                className="border-2 border-[#1b2e23] dark:border-zinc-800 shadow-brutal-forest dark:shadow-brutal-sm p-4 space-y-3 text-xs"
-              >
-                <div className="space-y-2 text-[#4b5e53] dark:text-zinc-400">
-                  <div className="flex items-center justify-between border-b border-[#cbdad0] dark:border-zinc-900 pb-1.5">
-                    <span>Reading Depth:</span>
-                    <span className="text-emerald-700 dark:text-terminal-green font-bold">{`${readTime} min`}</span>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-[#cbdad0] dark:border-zinc-900 pb-1.5">
-                    <span>Topic Tags:</span>
-                    <span className="text-teal-700 dark:text-terminal-cyan font-bold">{post.tags?.length || 0}</span>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-[#cbdad0] dark:border-zinc-900 pb-1.5">
-                    <span>Publication:</span>
-                    <span className="text-[#0f1a14] dark:text-zinc-300 font-bold">{formattedDate}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Status:</span>
-                    <span className="text-emerald-700 dark:text-terminal-green font-bold">● Published</span>
-                  </div>
-                </div>
+              {/* Tier 2: Reading Progress & Action Controls */}
+              <ArticleActionsBar
+                readTime={readTime}
+                formattedDate={formattedDate}
+                ratingAverage={ratingAverage}
+                ratingCount={ratingCount}
+                commentCount={commentCount}
+                copiedLink={copiedLink}
+                onCopyLink={handleCopyLink}
+                onShareTwitter={handleShareTwitter}
+                onShareLinkedIn={handleShareLinkedIn}
+              />
 
-                {/* Share Trigger */}
-                <div className="pt-2 border-t border-[#cbdad0] dark:border-zinc-900">
-                  <BrutalButton
-                    variant="outline"
-                    size="sm"
-                    fullWidth
-                    onClick={handleCopyLink}
-                    icon={copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-terminal-green" /> : <Share2 className="w-3.5 h-3.5" />}
-                  >
-                    {copiedLink ? "Link Copied!" : "Share Article"}
-                  </BrutalButton>
-                </div>
-              </TerminalBox>
+              {/* Tier 3: Expandable Comment & Review Dock */}
+              <CommentBox
+                post={post}
+                ratingAverage={ratingAverage}
+                ratingCount={ratingCount}
+                commentCount={commentCount}
+                comments={comments}
+                loading={loadingComments}
+                loadingMore={loadingMoreComments}
+                hasMore={hasMoreComments}
+                onLoadMore={loadMoreComments}
+              />
             </div>
           </aside>
         </div>

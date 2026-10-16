@@ -46,5 +46,34 @@ service cloud.firestore {
       allow read: if (resource != null && resource.data.published == true) || isAdmin();
       allow write: if isAdmin();
     }
+
+    // Blog Comments & Ratings:
+    // - Decoupled collection to handle unbounded scale without bloating blog documents
+    // - Public visitors can read visible comments; Admin can read all (including hidden)
+    // - Public visitors can submit comments with strict rating & length validation
+    // - Only admin can update comments (replies, visibility toggles)
+    // - Hard delete is strictly forbidden (allow delete: if false;) to enforce soft deletion
+    match /comments/{commentId} {
+      allow read: if (resource != null && resource.data.status == "visible") || isAdmin();
+
+      allow create: if request.resource.data.status == "visible" &&
+                      request.resource.data.rating is number &&
+                      request.resource.data.rating >= 1 &&
+                      request.resource.data.rating <= 5 &&
+                      request.resource.data.author_name is string &&
+                      request.resource.data.author_name.size() > 0 &&
+                      request.resource.data.author_name.size() <= 50 &&
+                      request.resource.data.content is string &&
+                      request.resource.data.content.size() > 0 &&
+                      request.resource.data.content.size() <= 2000 &&
+                      request.resource.data.post_id is string &&
+                      request.resource.data.post_id.size() > 0 &&
+                      request.resource.data.admin_reply == null;
+
+      allow update: if isAdmin();
+
+      // Enforce non-destructive soft-delete policy in database rules
+      allow delete: if false;
+    }
   }
 }

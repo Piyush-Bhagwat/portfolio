@@ -20,6 +20,7 @@ This document details the day-by-day, vertically-sliced execution plan for trans
 | Day 6 | Public Blog Reader & Case Study Showcase    | Blog Index, Code Syntax Reader, Case Study Drawers|
 | Day 7 | Bento-Grid Homepage, Polish & Cutover       | Bento Redesign, Micro-interactions, SEO, Launch   |
 | Day 8+| Blog Suite & Media Pipeline Hardening      | Split scroll sync, Lightbox, Sticky TOC, Top 15 Tags, Cloudinary-Only Media, In-Preview Actions, Locked Slug|
+| Day 9+| Comments, Ratings & Admin Interact Suite   | Decoupled comments, 3-to-10 cursor pagination, 3-tier sidebar, Card rating pills, Cross-post Interact CMS, Soft-delete & author replies|
 +-------+---------------------------------------------+---------------------------------------------------+
 ```
 
@@ -450,6 +451,133 @@ src/
 6. The sidebar TOC and metadata remain sticky alongside the article content while scrolling, clearing the public navbar cleanly.
 7. Tag suggestions display already-used tags first (ranked by usage frequency), followed by base suggestions, capped at 15, excluding selected tags.
 8. All 129 automated tests pass (`npm test`) and production build succeeds (`npm run build`).
+
+---
+
+## Post-Cutover: Comments & Ratings Engine — Public Engagement, Pagination & Admin Interact Moderation
+
+### Goal
+Implement a scalable, decoupled community interaction platform for blog posts capable of handling viral discussions without document bloat or read-quota exhaustion. Deliver a 3-tier right sidebar with an expandable comment dock (initial 3-comment load, cursor-based pagination for the next 10), interactive star ratings, public blog card rating metrics, and a dedicated Admin Blog "Interact" sub-section for cross-post moderation, verified author replies, and non-destructive soft-delete visibility controls.
+
+### Vertical Slices
+
+- **Slice 8.1: Decoupled Comments Collection, Post Aggregates & Firestore Security Rules [COMPLETED]**
+  - Decouple comments from `BlogPost` into an independent top-level `comments` collection (`comments/{commentId}`) to eliminate document bloat and respect Firestore's 1MB per-document limit.
+  - Add denormalized aggregate fields to `BlogPost` (`blogs/{blogId}`):
+    - `comment_count: number` (total visible comments)
+    - `rating_average: number` (calculated floating average, e.g. `4.88`)
+    - `rating_count: number` (total ratings submitted)
+  - Implement an atomic write pipeline (using Firestore transactions or batched writes) that automatically recalculates and updates `comment_count`, `rating_count`, and `rating_average` on the parent blog document whenever a comment is submitted or its visibility status toggles:
+    $$\text{new\_avg} = \frac{(\text{old\_avg} \times \text{old\_count}) + \text{new\_rating}}{\text{old\_count} + 1}$$
+  - Define strict Firestore security rules in `firestore.rules`:
+    - Public read restricted to `status == "visible"` (authenticated admin reads all).
+    - Public create enforced with strict validation: `status == "visible"`, `rating >= 1 && rating <= 5`, `author_name` (1-50 chars), `content` (1-2000 chars), `admin_reply == null`.
+    - Admin-only updates for replies and visibility toggles.
+    - **Hard Delete Prevention**: `allow delete: if false;` strictly enforces the soft-delete policy at the database rule layer.
+
+- **Slice 8.2: Public Blog Card Ratings & Article Header Metadata UI Updates [COMPLETED]**
+  - Update `src/components/blog/BlogCard.jsx`:
+    - Render brutalist rating pill (`★ 4.9 (18)`) and comment counter pill (`💬 12 comments`) alongside read time and category tags.
+    - Style badges with high-contrast borders and theme-aware surface fills (`#18181b` in dark mode, `#e9f0ea` in subtle sage light mode).
+    - Consume pre-aggregated `rating_average` and `comment_count` directly from `BlogPost`, resulting in **0 additional Firestore reads** during index browsing.
+  - Update `src/components/home/LatestBlogTile.jsx` on the Bento homepage grid with matching rating & comment pills.
+  - Update `src/pages/public/BlogPostPage.jsx` article header:
+    - Enrich metadata row below H1 with author name, publication date, reading time badge, star review summary pill (`★ 4.9 · 18 reviews`), and comment count badge (`💬 12 comments`).
+    - Configure comment badge as an accessible smooth-scroll anchor that scrolls to and focuses the 3rd Div Comment Box in the right sidebar.
+
+- **Slice 8.3: Reader Three-Tier Right Sidebar & 3rd Div Expandable Comment Box Layout [COMPLETED]**
+  - Refactor `<aside>` in `BlogPostPage.jsx` into a three-tier modular right sidebar with sticky positioning (`top-20`, clearing the fixed 64px navbar):
+    - **Tier / Div 1**: `TableOfContents.jsx` with scroll-spy active state tracking and constrained internal scroll (`max-h-[30vh] overflow-y-auto`).
+    - **Tier / Div 2**: Reading Progress & Actions bar (`ArticleActionsBar.jsx` with percentage tracker, share to X, copy link).
+    - **Tier / Div 3**: Dedicated Expandable Comment Box (`CommentBox.jsx` and `CommentItem.jsx`).
+  - Mobile & Tablet responsive breakdown: When viewport is `< lg`, the 3 sidebar containers wrap and stack naturally beneath the main article body.
+  - Neo-Brutalist container styling: crisp `border-zinc-800` (dark) / `#1b2e23` (light), hard offset drop shadow (`shadow-brutal`), and expandable drawer state.
+
+- **Slice 8.4: Progressive Loading & Cursor-Based Pagination Hook (`useComments.js`) [COMPLETED]**
+  - Create `src/hooks/useComments.js`:
+    - Expose `{ comments, loading, loadingMore, error, hasMore, loadMore, addComment, toggleCommentVisibility, reload }`.
+    - **Initial Load (Tier 1)**: Query `collection(db, "comments")` with constraints `where("post_id", "==", postId)`, `where("status", "==", "visible")`, `orderBy("created_at", "desc")`, `limit(3)`.
+    - Cache the last retrieved document snapshot as the pagination cursor (`lastDocRef`).
+    - **Expand & Load More (Tier 2)**: `loadMore()` triggers cursor pagination using `startAfter(lastDocRef).limit(10)`.
+    - Concatenate newly fetched comments onto existing list without re-fetching previous pages, with automatic ID deduplication.
+    - Evaluate `hasMore` by comparing loaded count against `post.comment_count`.
+    - Guarantees bounded bandwidth and client memory even on viral articles with thousands of comments.
+
+- **Slice 8.5: Interactive Star Rating Selector & Review Submission Form**
+  - Create `src/components/blog/RatingStars.jsx`:
+    - Dual-mode star component: Display-only mode (renders fractional ratings with star icons) and Interactive mode (1 to 5 stars with hover previews and tactile selection).
+    - Keyboard accessible with `aria-label` ratings.
+  - Create `src/components/blog/CommentForm.jsx`:
+    - Rating selector (1-5 stars, required).
+    - Author display name input (required, max 50 chars).
+    - Review text textarea (required, max 2000 chars) with dynamic character counter.
+    - Tactile Neo-Brutalist submit button (`active:translate-x-[2px] active:translate-y-[2px]`).
+    - Optimistic UI update: On successful submission, prepends the new review to the local comment list and increments counters immediately.
+    - Toast feedback on submission success or validation error.
+
+- **Slice 8.6: Admin Blog CMS "Interact" Sub-Section (`/admin/blogs/interact`)**
+  - Add protected sub-route `/admin/blogs/interact` in `src/App.jsx`.
+  - Add navigation tab `[ Interact ]` to the Admin Blog CMS navigation header in `AdminLayout.jsx` and `BlogsCMS.jsx`.
+  - Create `src/pages/admin/BlogInteractCMS.jsx`:
+    - Unified table listing comments across all blog articles in one central inbox.
+    - Columns: Post Title pill (linking directly to the live post), Author, Rating (`★ 1-5`), Snippet excerpt, Timestamp, Status pill (`Visible` [Green] vs `Hidden` [Zinc/Red]), and Actions (`Reply`, `Hide/Unhide`).
+    - Multi-filter toolbar:
+      - Filter by Blog Post (dropdown of all published posts).
+      - Filter by Status (`All`, `Visible`, `Hidden`).
+      - Filter by Rating (`All`, `5 Stars`, `< 3 Stars`).
+      - Search by author name or comment keyword.
+    - Summary metrics bar: Total platform comments, visible count, hidden count, and average rating.
+
+- **Slice 8.7: Inline Admin Author Replies & Soft-Delete Lifecycle Management**
+  - **Inline Admin Reply**:
+    - Clicking "Reply" on any comment row opens `AdminReplyModal.jsx`.
+    - Textarea for author response.
+    - Writes `admin_reply: { content, replied_at: serverTimestamp(), author: "Piyush Bhagwat" }` directly to the comment document.
+    - In `CommentItem.jsx` (public reader view), render the official reply nested beneath the user comment with a `[ Verified Author ]` badge, accent border, and timestamp.
+  - **Strict Soft-Delete Strategy**:
+    - Clicking "Hide" toggles `status: 'hidden'` via Firestore `updateDoc`.
+    - Atomically decrements `comment_count` and updates `rating_average` on the corresponding `blogs/{blogId}`.
+    - Clicking "Unhide" toggles `status: 'visible'` and re-adds to post aggregates.
+    - Hard deletion is permanently disabled (`allow delete: if false;` in Firestore rules).
+    - Preserves comment ID stability, audit logs, and prevents broken reply threads.
+
+### Target Files
+```
+src/
+├── components/
+│   ├── blog/
+│   │   ├── CommentBox.jsx        # Right-rail expandable comment container (3 initial + 10 cursor)
+│   │   ├── CommentItem.jsx       # Individual comment card with star rating & verified admin reply
+│   │   ├── CommentForm.jsx       # Review submission form (star picker, name, content)
+│   │   ├── RatingStars.jsx       # Reusable Neo-Brutalist star rating indicator & input
+│   │   └── BlogCard.jsx          # Updated card with rating pill and comment counter
+│   ├── home/
+│   │   └── LatestBlogTile.jsx    # Updated Bento tile with rating and comment indicators
+│   └── admin/
+│       └── AdminReplyModal.jsx   # Dedicated modal for drafting official author responses
+├── hooks/
+│   └── useComments.js            # Cursor-based pagination hook (3 -> +10), submit & soft-delete
+├── pages/
+│   ├── admin/
+│   │   └── BlogInteractCMS.jsx   # Cross-post moderation dashboard with filters & reply tools
+│   └── public/
+│       ├── BlogPostPage.jsx      # Updated 3-tier right sidebar (TOC, Actions, Comments)
+│       └── BlogsPage.jsx         # Public blog list with rating & comment counts
+├── layouts/
+│   └── AdminLayout.jsx           # Updated admin sidebar/tabs with "Interact" link
+├── App.jsx                       # Added /admin/blogs/interact protected route
+└── firestore.rules               # Decoupled comments collection rules with soft-delete enforcement
+```
+
+### Acceptance & Verification
+1. Comments collection is strictly decoupled from `BlogPost`; adding comments does not increase post document size or risk hitting the 1MB Firestore limit.
+2. Initial blog post page load executes a constrained query fetching strictly 3 visible comments; expanding or clicking "Load More" cursor-fetches the next 10 items via `startAfter(lastDocRef)`.
+3. Public blog cards on `/blogs` and homepage Bento tile display live average ratings (`★ 4.9`) and comment counts (`💬 12`) with zero additional queries to the `comments` collection.
+4. Article reader metadata row displays review rating and comment counts with a smooth-scroll anchor focusing the 3rd Div Comment Box in the right sidebar.
+5. The right sidebar on `/blogs/:slug` cleanly isolates 3 distinct vertical containers: Table of Contents (Div 1), Actions & Progress (Div 2), and the Expandable Comment Box (Div 3).
+6. Admin Blog CMS features the "Interact" sub-section (`/admin/blogs/interact`), aggregating comments across all posts with multi-filtering (by post, status, rating).
+7. Admins can author inline replies to comments, which render publicly with `[ Verified Author ]` badges and accent styling.
+8. Soft delete functions properly: clicking "Hide" marks `status: 'hidden'` and recalculates post aggregates atomically, while Firestore security rules reject hard delete requests (`allow delete: if false;`).
 
 ---
 

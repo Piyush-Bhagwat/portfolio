@@ -10,7 +10,7 @@ This document serves as the persistent memory, architectural reference, and oper
 - **Repository**: `portfolio` (React 18 + Vite SPA)
 - **Production Architecture**:
   - **Frontend**: React 18, React Router v6, Tailwind CSS v3, Framer Motion, Lucide React, React Markdown + Remark GFM.
-  - **Backend & Auth**: Firebase Authentication (restricted to admin email), Cloud Firestore (`site_config/profile`, `skills`, `experiences`, `projects`, `blogs`).
+  - **Backend & Auth**: Firebase Authentication (restricted to admin email), Cloud Firestore (`site_config/profile`, `skills`, `experiences`, `projects`, `blogs`, `comments`).
   - **Media Pipeline**: Cloudinary CDN (unsigned uploads via `portfolio_unsigned` preset, dynamic WebP/AVIF transformation).
   - **Design System**: Neo-Brutalist Bento-Grid developer aesthetic with a **First-Class Dual-Theme Architecture**:
     - **Dark Theme**: Terminal hacker palette (`#09090b` canvas, `#121215` card surface, `#27272a` borders, `#10b981` emerald & `#06b6d4` cyan accents, `#fafafa` text, `4px 4px 0px #000000` tactile brutalist shadows).
@@ -34,6 +34,11 @@ This document serves as the persistent memory, architectural reference, and oper
 | **Scope Addition** | **Dual-Theme Engine (Subtle Greenish Light & Dark)** | **COMPLETED** | Color theory calibration, ThemeContext, ThemeToggle button, CSS semantic tokens, cross-view light theme adaptation |
 | **Blog Suite V2** | **Editor Scrolling, Lightbox & Tag Intelligence** | **COMPLETED** | Split-editor scroll sync, direct/base64 dropper, fullscreen image lightbox with multi-level zoom, sticky TOC sidebar, dynamic top 15 tag suggestions |
 | **Blog Media & Slug** | **Cloudinary-Only Pipeline & In-Preview Media Controls** | **COMPLETED** | Direct `blog/{slug}` upload, base64 elimination, in-preview Delete/Replace over images, locked immutable slug |
+| **Slice 8.1 (Comments Engine)** | **Decoupled Storage, Aggregates & Security Rules** | **COMPLETED** | Top-level `comments` collection, `firestore.rules` soft-delete enforcement, `commentsService.js` atomic transactions, post aggregates |
+| **Slice 8.2 (Comments Engine)** | **Public Blog Card Ratings & Header Metadata UI** | **COMPLETED** | Rating pills, comment counters, smooth-scroll jump anchor, sidebar metadata in BlogCard, LatestBlogTile & BlogPostPage |
+| **Slice 8.3 (Comments Engine)** | **Three-Tier Right Sidebar & Expandable Comment Box** | **COMPLETED** | Constrained TOC, ArticleActionsBar with scroll depth gauge, CommentBox & CommentItem with Verified Author badge |
+| **Slice 8.4 (Comments Engine)** | **Progressive Loading & Cursor Pagination Hook** | **COMPLETED** | `useComments.js` hook, 3 initial + 10 cursor pagination, bounded bandwidth, deduplication |
+| **Slice 8.5 - 8.7** | **Submission & Interact CMS** | **IN PROGRESS** | Rating selector & review form, Admin Interact CMS |
 
 ---
 
@@ -411,13 +416,45 @@ This document serves as the persistent memory, architectural reference, and oper
 - **Fixes Applied**:
   - Moved `abortControllerRef` and object URL cleanup strictly to component unmount (`useEffect(..., [])`).
   - Stored blob object URLs in `blobUrlRef` and manually revoked previous blob URLs in `handleFileSelected` and `handleModalClose`.
-  - Upload now executes to completion without premature cancellation, populating `uploadedUrl` and enabling the insert button as expected.
+### 21. Comments & Ratings Module Specification (Decoupled Scale, 3-to-10 Pagination, 3-Tier Sidebar & Admin Interact CMS)
+- **Problem & Architectural Constraints**:
+  - Community discussions can scale into hundreds or thousands of comments.
+  - Storing comments directly inside the `BlogPost` document (`blogs/{blogId}`) would rapidly exceed Firestore's 1MB per-document limit and severely inflate read payload sizes whenever articles are listed or viewed.
+  - Hard deletions corrupt discussion threads, destroy moderation audit logs, and desynchronize rating score averages.
+- **Architectural Solutions & Feature Architecture**:
+  1. **Decoupled Data Storage (`comments/{commentId}`) & Aggregate Denormalization**:
+     - Comments are decoupled into an independent top-level `comments` collection with foreign key `post_id`.
+     - Aggregate metrics (`comment_count`, `rating_average`, `rating_count`) are denormalized onto `BlogPost` and maintained atomically via batched writes/transactions upon comment submission or visibility toggling:
+       $$\text{new\_avg} = \frac{(\text{old\_avg} \times \text{old\_count}) + \text{new\_rating}}{\text{old\_count} + 1}$$
+     - Public blog index cards consume these counters directly with **0 additional queries** to the `comments` collection.
+  2. **Public Reader UX & 3-Tier Right Sidebar Layout (`/blogs/:slug`)**:
+     - Bento `BlogCard.jsx` and homepage `LatestBlogTile.jsx` display tactile rating pills (`★ 4.9 (18)`) and comment counter pills (`💬 12 comments`).
+     - Reader header metadata row beneath the H1 displays reading time, publication date, review summary pill, and a comment jump badge that smoothly scrolls and focuses the sidebar comment box.
+     - The desktop right sidebar (`<aside>`) is structured into 3 distinct modular containers:
+       - **1st Div**: `TableOfContents.jsx` (active heading spy with internal scroll).
+       - **2nd Div**: Reading Progress & Actions bar (percentage tracker, share, copy URL).
+       - **3rd Div**: Dedicated Expandable Comment Box (`CommentBox.jsx`).
+     - On mobile/tablet (`< lg`), these tiers stack cleanly below the article body.
+  3. **Progressive Loading & Cursor-Based Pagination (`useComments.js`)**:
+     - **Tier 1 (Initial Load)**: On page mount, fetches strictly the **3 newest visible comments** (`limit(3)`).
+     - **Tier 2 (Expand / Load More)**: Clicking "Expand / Load More" queries the next **10 comments** via cursor pagination (`startAfter(lastDocRef).limit(10)`).
+     - Ensures predictable latency and minimal read quota consumption even on viral posts with thousands of comments.
+  4. **Interactive Star Rating Selector & Review Submission Form**:
+     - `RatingStars.jsx`: Reusable Neo-Brutalist component supporting display mode and interactive 1–5 star selection with tactile hover states.
+     - `CommentForm.jsx`: Captures star rating (1–5), visitor name (max 50 chars), and comment text (max 2000 chars) with live counter.
+     - Submissions optimistically prepend to the local comment list and increment counters immediately.
+  5. **Admin Blog CMS "Interact" Sub-Section (`/admin/blogs/interact`)**:
+     - Dedicated moderation command center under the Admin Blog suite.
+     - Unified cross-post feed displaying comments across all articles in a single table with article link badge, author, rating (`★ 1-5`), comment excerpt, timestamp, status pill (`Visible` vs `Hidden`), and actions.
+     - Multi-filter controls: Filter by article, filter by status (`All`, `Visible`, `Hidden`), filter by rating, and text search.
+     - **Inline Admin Reply**: `AdminReplyModal.jsx` allows admin to author verified responses (`admin_reply: { content, replied_at, author }`), rendered publicly with a `[ Verified Author ]` badge.
+     - **Strict Soft-Delete Strategy**: Comments are never hard-deleted. Clicking "Hide" sets `status: 'hidden'` and recalculates post aggregates atomically. Enforced at the database layer via Firestore rule `allow delete: if false;`.
 
 ---
 
 ## 5. Verification & Test Suite Status
 
-- **Automated Test Suite**: **129 tests passing** (0 failures, 0 skipped) across all vertical slices + theme engine + blog suite:
+- **Automated Test Suite**: **158 tests passing** (0 failures, 0 skipped) across all vertical slices + theme engine + blog suite + comments engine:
   - `slice-1.1` to `slice-1.3`: Brutalist primitives & Cloudinary service.
   - `slice-2.1` to `slice-2.3`: AuthContext, ProtectedRoute, AdminLayout.
   - `slice-3.1` to `slice-3.4`: ProfileCMS, SkillsCMS, ExperienceCMS, Seeder.
@@ -425,6 +462,10 @@ This document serves as the persistent memory, architectural reference, and oper
   - `slice-5.1` to `slice-5.4`: BlogEditor, CloudinaryDropper, BlogsCMS, Tag Suggestions algorithm, in-preview image Replace/Delete, and slug lock.
   - `slice-6.1` to `slice-6.3`: BlogsPage, BlogPostPage reader, ImageLightboxModal, ProjectsPage catalog.
   - `slice-7.1` to `slice-7.4`: Bento Homepage, HeroTile, Image optimization, Smoke tests.
+  - `slice-8.1`: Decoupled comments security rules, soft-delete enforcement, atomic aggregate transactions, and rating math.
+  - `slice-8.2`: BlogCard & LatestBlogTile rating & comment pills, defensive fallbacks, and BlogPostPage header & sidebar metadata navigation.
+  - `slice-8.3`: Reader Three-Tier sidebar layout (TOC constrained scroll, ArticleActionsBar progress gauge & social triggers, CommentBox drawer state & CommentItem Verified Author reply).
+  - `slice-8.4`: Progressive loading & cursor-based pagination hook (`useComments.js`), cursor query building, deduplication, and hasMore evaluation.
   - `slice-theme`: Theme Engine, Anti-FOUC, and ThemeToggle SSR.
 - **Linter**: `0` errors, `0` warnings (`npm run lint`).
 - **Production Compilation**: Clean Vite build (`npm run build`) in ~8.4s with optimized manual code-splitting chunks.
@@ -471,18 +512,21 @@ portfolio/
     │   ├── common/                            # ImageUploader, ProtectedRoute
     │   ├── home/                              # 6 Bento Tiles (HeroTile, StatusTile, etc.)
     │   ├── project/                           # ProjectCard, CaseStudyModal, CaseStudyDrawer
-    │   └── blog/                              # BlogCard, BlogImageDropperModal, MarkdownEditorToolbar, MarkdownPreview, ImageLightboxModal
+    │   ├── admin/                             # AdminReplyModal (Verified author response composer)
+    │   └── blog/                              # BlogCard, CommentBox, CommentItem, CommentForm, RatingStars,
+    │                                          # BlogImageDropperModal, MarkdownEditorToolbar, MarkdownPreview, ImageLightboxModal
     ├── context/
     │   ├── AuthContext.jsx                    # Firebase authentication state provider
     │   └── ThemeContext.jsx                   # Dark/Light theme state and persistence provider
     ├── hooks/
     │   ├── useAuth.js                         # Firebase authentication hook
-    │   └── useTheme.js                        # Theme consumption hook
+    │   ├── useTheme.js                        # Theme consumption hook
+    │   └── useComments.js                     # Cursor-based pagination hook (3 initial + 10 cursor), review submission
     ├── layouts/
     │   └── AdminLayout.jsx                    # Administrative CMS sidebar & navigation
     ├── pages/
     │   ├── admin/                             # Overview, ProfileCMS, SkillsCMS, ExperienceCMS,
-    │   │                                      # ProjectsCMS, BlogsCMS, BlogEditor, Login
+    │   │                                      # ProjectsCMS, BlogsCMS, BlogEditor, BlogInteractCMS, Login
     │   └── public/                            # HomePage (Bento), ProjectsPage, BlogsPage, BlogPostPage
     ├── services/
     │   ├── cloudinary.js                      # Media upload & transformation service

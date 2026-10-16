@@ -14,4 +14,6 @@ export {
   toHeadingSlug,
 } from "./TableOfContents.jsx";
 export { default as ImageLightboxModal } from "./ImageLightboxModal.jsx";
-
+export { default as ArticleActionsBar, XIcon, LinkedInIcon } from "./ArticleActionsBar.jsx";
+export { default as CommentBox, formatCommentDate } from "./CommentBox.jsx";
+export { default as CommentItem } from "./CommentItem.jsx";

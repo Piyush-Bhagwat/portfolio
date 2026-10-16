@@ -123,7 +123,7 @@ export default function TableOfContents({
         </span>
       </div>
 
-      <ul className="space-y-1.5 max-h-[60vh] overflow-y-auto pr-1">
+      <ul className="space-y-1.5 max-h-[30vh] overflow-y-auto pr-1">
         {headings.map(({ level, title, slug }) => {
           const isActive = activeSlug === slug;
           return (

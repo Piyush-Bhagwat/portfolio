@@ -629,6 +629,9 @@ export default function BlogEditor() {
 
       if (!id) {
         payload.created_at = serverTimestamp();
+        payload.comment_count = 0;
+        payload.rating_average = 0;
+        payload.rating_count = 0;
       }
 
       // If changing to published for the first time, record published_at
