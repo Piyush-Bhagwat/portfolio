@@ -19,6 +19,7 @@ This document details the day-by-day, vertically-sliced execution plan for trans
 | Day 5 | Blog Engine: Admin Editor & Media Pipeline  | Split Markdown Editor, Cloudinary Drop, CMS Table |
 | Day 6 | Public Blog Reader & Case Study Showcase    | Blog Index, Code Syntax Reader, Case Study Drawers|
 | Day 7 | Bento-Grid Homepage, Polish & Cutover       | Bento Redesign, Micro-interactions, SEO, Launch   |
+| Day 8+| Blog Suite & Media Pipeline Hardening      | Split scroll sync, Lightbox, Sticky TOC, Top 15 Tags, Cloudinary-Only Media, In-Preview Actions, Locked Slug|
 +-------+---------------------------------------------+---------------------------------------------------+
 ```
 
@@ -208,7 +209,7 @@ src/
 ## Day 5: Technical Blog System — Admin CMS & Media Pipeline
 
 ### Goal
-Build the complete authoring and management environment for technical articles, featuring a split-screen Markdown editor with live preview and integrated Cloudinary image ingestion.
+Build the complete authoring and management environment for articles, featuring a split-screen Markdown editor with live preview and integrated Cloudinary image ingestion.
 
 ### Vertical Slices
 - **Slice 5.1: Split-Screen Markdown Editor (`/admin/blogs/new` & `.../edit/:id`)**
@@ -349,6 +350,106 @@ src/
 1. Homepage displays the high-contrast Bento-Grid layout populated entirely from dynamic Firestore data.
 2. Responsive navigation works seamlessly from mobile (hamburger menu) to widescreen displays.
 3. `npm run build` succeeds with zero errors and no bundle size warnings.
+
+---
+
+## Post-Cutover: Blog Suite Hardening, Cloudinary Pipeline & Viewer Capabilities
+
+### Goal
+Resolve authoring usability friction in the split-screen Markdown studio, provide a responsive fullscreen media viewer for public readers, ensure seamless table of contents tracking during deep reading, enhance categorization workflows with intelligent frequency-ranked tag suggestions, purge embedded Base64 strings in favor of an optimized Cloudinary-exclusive pipeline under `blog/{slug}`, implement in-preview image deletion and in-place replacement, and enforce permanent slug immutability.
+
+### Vertical Slices
+
+- **Slice 5.5: Markdown Editor Studio Flex-Containment & Synchronized Scrolling**
+  - Fix Flexbox scroll clipping in `BlogEditor.jsx` by establishing strict viewport bounds (`h-[620px] max-h-[calc(100vh-200px)]`) and `min-h-0` flex containment.
+  - Enable `bodyClassName` on `TerminalBox.jsx` to eliminate hardcoded card padding when hosting zero-margin full-bleed split panes.
+  - Implement bidirectional scroll event handlers with a 50ms cooldown lock (`isScrollingRef`) to prevent infinite scroll loops and jitter when `syncScroll` is active.
+  - Synchronize line numbers gutter scroll position with textarea `scrollTop` (`lineNumbersRef`).
+  - Strip conflicting inner `overflow-y-auto` from `MarkdownPreview.jsx`.
+
+- **Slice 5.6: Blog Image Dropper Direct Upload & Embedded Base64 Fallback Pipeline**
+  - In `BlogImageDropperModal.jsx`, implement immediate in-memory Data URL generation via `FileReader` on file selection, unblocking the "Insert Image" button instantaneously.
+  - Add error recovery buttons ("Retry Cloudinary Upload" & "Use as Embedded Base64 Image") for offline or unconfigured environments.
+  - Clear modal state on reopen and add `onClick={(e) => { e.target.value = null; }}` on the file input to support repeated selections of identical filenames.
+
+- **Slice 5.7: Dynamic Frequency-Prioritized Tag Suggestions Engine**
+  - Implement `getTopSuggestedTags(usedSources, activeTags, baseSuggestions, maxCount)` in `src/utils/blogUtils.js`.
+  - Fetch existing blog posts from Firestore `collection(db, "blogs")` on `BlogEditor` mount.
+  - Calculate tag usage frequencies, sort already-used tags in descending order, append unused base suggestions (`SUGGESTED_TAGS`), deduplicate case-insensitively, filter out currently active tags, and slice to the top 15 suggestions.
+  - Dynamically update the suggestion pool when a post is saved.
+
+- **Slice 5.8: Cloudinary-Exclusive Asset Ingestion (`blog/{slug}`) & Base64 Purge**
+  - Eliminate all embedded Base64 Data URL injection into Markdown files, preventing document bloat, latency spikes, and Firestore document size limit violations (1MB).
+  - Scope all image uploads (file picker, drag-and-drop, and replacement) strictly to folder `blog/${slug || slugifyTitle(title) || 'draft'}`.
+  - Require a successful Cloudinary CDN URL (`https://res.cloudinary.com/...`) before enabling the "Insert Image" button in `BlogImageDropperModal.jsx`.
+  - Remove the "Use as Embedded Base64 Image" fallback option, keeping "Retry Cloudinary Upload" for transient network failures.
+  - Retain upload metadata `{ url, alt, caption, public_id, delete_token }` on insertion to enable zero-credential client-side lifecycle operations.
+
+- **Slice 5.9: In-Preview Image Replace & Delete Operations with Cloudinary Synchronization**
+  - Implement `removeImageFromMarkdown(content, imageSrc)` and `replaceImageInMarkdown(content, oldSrc, newSrc, newAlt)` in `src/utils/blogUtils.js` with regex escaping to cleanly strip or swap image tags without affecting surrounding text or captions.
+  - Implement `extractCloudinaryPublicId(url)` and `deleteFromCloudinary(publicIdOrUrl, options)` in `src/services/cloudinary.js`, supporting unsigned `delete_token` execution via `delete_by_token` API and graceful fallback.
+  - Add `editable={true}`, `onDeleteImage`, and `onReplaceImage` props to `MarkdownPreview.jsx`, rendering an interactive Brutalist card over every article image in editor mode:
+    - Image `alt` text / caption label with a `CLOUDINARY` status badge.
+    - Prominent **Replace** button (`RefreshCw`) and **Delete** button (`Trash2`).
+  - Connect lifecycle handlers in `BlogEditor.jsx`:
+    - Track `{ publicId, deleteToken }` in `imageTokensRef`.
+    - Delete flow: Confirmation prompt &rarr; calls `deleteFromCloudinary` &rarr; strips Markdown syntax via `removeImageFromMarkdown`.
+    - Replace flow: Triggers hidden file input &rarr; uploads new file to `blog/${slug}` &rarr; deletes old asset from Cloudinary &rarr; swaps Markdown URL in-place via `replaceImageInMarkdown`.
+
+- **Slice 5.10: Slug Locking & Path Guarantee**
+  - Lock the slug input field in `BlogEditor.jsx` (`readOnly={true}`, `disabled={true}`, `cursor-not-allowed`, and `LOCKED` badge) to permanently preserve public URL routing (`/blogs/:slug`) and Cloudinary storage paths (`blog/:slug`).
+  - For new articles (`!id`), auto-generate the slug from title until initial save, after which the slug remains strictly immutable.
+  - Render a live Cloudinary destination path preview below the slug field (`Destination: blog/{slug || '...'}`).
+
+- **Slice 6.4: Fullscreen Multi-Level Zoom Lightbox Modal**
+  - Create `src/components/blog/ImageLightboxModal.jsx` with Neo-Brutalist aesthetics:
+    - Multi-level zoom controls: Zoom In (`+`), Zoom Out (`-`), Reset (`100%`).
+    - Mouse-wheel zooming and double-click 1x/2x zoom toggling.
+    - Drag-to-pan when image is zoomed beyond 100%.
+    - Keyboard (`Escape`) and backdrop click dismissal.
+    - Caption display and "Open original in new tab" action.
+  - Integrate modal into `BlogPostPage.jsx` for both the cover banner thumbnail and ReactMarkdown `img` component overrides.
+
+- **Slice 6.5: Sticky Table of Contents & Metadata Sidebar with Navbar Clearance**
+  - Remove `items-start` from the 2-column grid in `BlogPostPage.jsx` so the `<aside>` element stretches to the full height of the `<main>` article column.
+  - Offset sticky sidebar from `top-6` to `top-20` (80px), positioning it 16px below the 64px fixed public navbar.
+  - Add `max-h-[calc(100vh-6rem)] overflow-y-auto pr-1` to allow internal scrolling of lengthy Tables of Contents without obstructing window scrolling.
+
+### Target Files
+```
+src/
+├── components/
+│   ├── blog/
+│   │   ├── BlogImageDropperModal.jsx
+│   │   ├── MarkdownPreview.jsx
+│   │   ├── ImageLightboxModal.jsx
+│   │   └── index.js
+│   └── brutalist/
+│       └── TerminalBox.jsx
+├── pages/
+│   ├── admin/
+│   │   └── BlogEditor.jsx
+│   └── public/
+│       └── BlogPostPage.jsx
+├── services/
+│   └── cloudinary.js
+├── utils/
+│   └── blogUtils.js
+└── test/
+    ├── slice-5.1.test.js
+    ├── slice-5.2.test.js
+    └── slice-6.2.test.js
+```
+
+### Acceptance & Verification
+1. Raw Markdown textarea and preview pane scroll independently and synchronize proportionally when `syncScroll` is enabled.
+2. Selecting an image file in `BlogImageDropperModal` uploads directly to Cloudinary under folder `blog/{slug}` and inserts the CDN URL; no Base64 Data URLs are ever inserted into Markdown.
+3. Images in editor live preview render interactive Replace and Delete action buttons. Deleting removes the Markdown syntax and triggers Cloudinary deletion. Replacing prompts for a new file, uploads to `blog/{slug}`, deletes the old asset, and swaps the URL in-place.
+4. The article slug is strictly read-only and immutable, safeguarding Cloudinary folder structure and SEO routing.
+5. Clicking article images or the cover banner opens the full-featured lightbox with zoom (50%-400%), pan, and keyboard dismiss.
+6. The sidebar TOC and metadata remain sticky alongside the article content while scrolling, clearing the public navbar cleanly.
+7. Tag suggestions display already-used tags first (ranked by usage frequency), followed by base suggestions, capped at 15, excluding selected tags.
+8. All 129 automated tests pass (`npm test`) and production build succeeds (`npm run build`).
 
 ---
 

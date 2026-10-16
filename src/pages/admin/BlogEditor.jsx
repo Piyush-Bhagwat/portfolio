@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   doc,
   getDoc,
   setDoc,
   serverTimestamp,
+  collection,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../../services/firebase.js";
 import {
@@ -29,10 +31,12 @@ import {
   ChevronDown,
   ChevronUp,
   Image as ImageIcon,
+  Lock,
 } from "lucide-react";
 import {
   uploadToCloudinary,
   validateImageFile,
+  deleteFromCloudinary,
 } from "../../services/cloudinary.js";
 import BlogImageDropperModal, {
   filenameToAltText,
@@ -44,6 +48,9 @@ import {
   calculateReadTime,
   slugifyTitle,
   checkSlugCollision,
+  getTopSuggestedTags,
+  removeImageFromMarkdown,
+  replaceImageInMarkdown,
 } from "../../utils/blogUtils.js";
 
 // Re-export utilities for external consumers and test suites
@@ -53,6 +60,9 @@ export {
   calculateReadTime,
   slugifyTitle,
   checkSlugCollision,
+  getTopSuggestedTags,
+  removeImageFromMarkdown,
+  replaceImageInMarkdown,
 };
 
 /**
@@ -76,6 +86,7 @@ export default function BlogEditor() {
   const [publishedAt, setPublishedAt] = useState(null);
   const [tags, setTags] = useState(["React", "UI Engineering", "Design Systems"]);
   const [tagInput, setTagInput] = useState("");
+  const [availableUsedTags, setAvailableUsedTags] = useState([]);
 
   // Process states
   const [saving, setSaving] = useState(false);
@@ -97,8 +108,12 @@ export default function BlogEditor() {
 
   const textareaRef = useRef(null);
   const previewContainerRef = useRef(null);
+  const lineNumbersRef = useRef(null);
   const isScrollingRef = useRef(false);
   const cursorPosRef = useRef({ start: 0, end: 0 });
+  const replaceFileInputRef = useRef(null);
+  const imageTokensRef = useRef(new Map()); // url -> delete_token
+  const [replacingTarget, setReplacingTarget] = useState(null); // { oldSrc, oldAlt }
 
   // Warn before closing tab with unsaved edits
   useEffect(() => {
@@ -111,6 +126,38 @@ export default function BlogEditor() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
+
+  // Fetch existing tags across all blogs in Firestore for smart suggestions
+  useEffect(() => {
+    let isMounted = true;
+    const fetchExistingTags = async () => {
+      try {
+        const snap = await getDocs(collection(db, "blogs"));
+        if (!isMounted) return;
+        const collected = [];
+        snap.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (Array.isArray(data?.tags)) {
+            collected.push(...data.tags);
+          }
+        });
+        setAvailableUsedTags(collected);
+      } catch (err) {
+        console.warn("Could not fetch existing blog tags for suggestions:", err);
+      }
+    };
+
+    fetchExistingTags();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Compute prioritized unique tag suggestions (already used first by frequency, up to 15, excluding active tags)
+  const tagSuggestions = useMemo(
+    () => getTopSuggestedTags(availableUsedTags, tags, SUGGESTED_TAGS, 15),
+    [availableUsedTags, tags]
+  );
 
   // Fetch article if editing existing ID
   useEffect(() => {
@@ -153,18 +200,49 @@ export default function BlogEditor() {
     fetchPost();
   }, [id]);
 
-  // Synchronized scrolling handler
+  // Synchronized scrolling handler (Editor -> Preview & Line numbers)
   const handleEditorScroll = (e) => {
+    const editor = e.target;
+    if (lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = editor.scrollTop;
+    }
+
     if (!syncScroll || !previewContainerRef.current || isScrollingRef.current) return;
 
     isScrollingRef.current = true;
-    const editor = e.target;
     const preview = previewContainerRef.current;
 
-    const scrollPercentage =
-      editor.scrollTop / (editor.scrollHeight - editor.clientHeight || 1);
-    preview.scrollTop =
-      scrollPercentage * (preview.scrollHeight - preview.clientHeight);
+    const editorScrollable = editor.scrollHeight - editor.clientHeight;
+    const previewScrollable = preview.scrollHeight - preview.clientHeight;
+
+    if (editorScrollable > 0 && previewScrollable > 0) {
+      const scrollPercentage = editor.scrollTop / editorScrollable;
+      preview.scrollTop = scrollPercentage * previewScrollable;
+    }
+
+    setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 50);
+  };
+
+  // Synchronized scrolling handler (Preview -> Editor & Line numbers)
+  const handlePreviewScroll = (e) => {
+    if (!syncScroll || !textareaRef.current || isScrollingRef.current) return;
+
+    isScrollingRef.current = true;
+    const preview = e.target;
+    const editor = textareaRef.current;
+
+    const editorScrollable = editor.scrollHeight - editor.clientHeight;
+    const previewScrollable = preview.scrollHeight - preview.clientHeight;
+
+    if (editorScrollable > 0 && previewScrollable > 0) {
+      const scrollPercentage = preview.scrollTop / previewScrollable;
+      editor.scrollTop = scrollPercentage * editorScrollable;
+      if (lineNumbersRef.current) {
+        lineNumbersRef.current.scrollTop = editor.scrollTop;
+      }
+    }
 
     setTimeout(() => {
       isScrollingRef.current = false;
@@ -244,7 +322,10 @@ export default function BlogEditor() {
   };
 
   // Callback when user confirms image insertion from modal
-  const handleInsertImageFromModal = ({ url, altText, caption }) => {
+  const handleInsertImageFromModal = ({ url, altText, caption, delete_token }) => {
+    if (delete_token) {
+      imageTokensRef.current.set(url, delete_token);
+    }
     const snippet = formatMarkdownImage(altText, url, caption);
     insertSnippetAtCursor(snippet);
     setFeedback({
@@ -260,6 +341,9 @@ export default function BlogEditor() {
       setFeedback({ type: "error", message: validation.error });
       return;
     }
+
+    const targetSlug = slug || slugifyTitle(title) || "draft";
+    const blogFolder = `blog/${targetSlug}`;
 
     const placeholder = `\n\n![Uploading ${file.name}...]()\n\n`;
     const safeIndex = typeof insertIndex === "number" ? insertIndex : content.length;
@@ -278,13 +362,17 @@ export default function BlogEditor() {
     try {
       const result = await uploadToCloudinary(
         file,
-        "portfolio/blogs",
+        blogFolder,
         (pct) => {
           setDirectUploadStatus((prev) =>
             prev ? { ...prev, progress: pct } : null
           );
         }
       );
+
+      if (result.delete_token) {
+        imageTokensRef.current.set(result.secure_url, result.delete_token);
+      }
 
       const alt = filenameToAltText(file.name);
       const markdownImage = `\n\n${formatMarkdownImage(alt, result.secure_url)}\n\n`;
@@ -295,7 +383,7 @@ export default function BlogEditor() {
 
       setFeedback({
         type: "success",
-        message: `Image "${file.name}" uploaded to Cloudinary (portfolio/blogs) and inserted!`,
+        message: `Image "${file.name}" uploaded to Cloudinary (${blogFolder}) and inserted!`,
       });
     } catch (err) {
       console.error("Direct image upload failed:", err);
@@ -311,6 +399,106 @@ export default function BlogEditor() {
       });
     } finally {
       setDirectUploadStatus(null);
+    }
+  };
+
+  // Delete image from Cloudinary and remove from Markdown
+  const handleDeleteImage = async (imageSrc, altText) => {
+    const displayName = altText || "Image";
+    if (!window.confirm(`Delete image "${displayName}" from Cloudinary and remove it from the article?`)) {
+      return;
+    }
+
+    setFeedback({
+      type: "success",
+      message: `Deleting "${displayName}" from Cloudinary and article...`,
+    });
+
+    try {
+      const deleteToken = imageTokensRef.current.get(imageSrc);
+      await deleteFromCloudinary(imageSrc, { deleteToken });
+      imageTokensRef.current.delete(imageSrc);
+
+      setContent((prevContent) => removeImageFromMarkdown(prevContent, imageSrc));
+      setIsDirty(true);
+
+      setFeedback({
+        type: "success",
+        message: `Image "${displayName}" successfully deleted from Cloudinary and removed from Markdown.`,
+      });
+    } catch (err) {
+      console.error("Delete image error:", err);
+      setContent((prevContent) => removeImageFromMarkdown(prevContent, imageSrc));
+      setIsDirty(true);
+      setFeedback({
+        type: "error",
+        message: `Image removed from Markdown. Cloudinary reported: ${err.message}`,
+      });
+    }
+  };
+
+  // Trigger replacement file picker for an image
+  const handleReplaceImage = (imageSrc, altText) => {
+    setReplacingTarget({ oldSrc: imageSrc, oldAlt: altText });
+    if (replaceFileInputRef.current) {
+      replaceFileInputRef.current.value = "";
+      replaceFileInputRef.current.click();
+    }
+  };
+
+  // Handle file selected for image replacement
+  const handleReplaceFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !replacingTarget) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setFeedback({ type: "error", message: validation.error });
+      setReplacingTarget(null);
+      return;
+    }
+
+    const { oldSrc, oldAlt } = replacingTarget;
+    const targetSlug = slug || slugifyTitle(title) || "draft";
+    const targetFolder = `blog/${targetSlug}`;
+
+    setFeedback({
+      type: "success",
+      message: `Uploading replacement "${file.name}" to Cloudinary (${targetFolder})...`,
+    });
+
+    try {
+      const result = await uploadToCloudinary(file, targetFolder);
+      const newUrl = result.secure_url || result.url;
+      const newAlt = filenameToAltText(file.name) || oldAlt || "Image";
+
+      if (result.delete_token) {
+        imageTokensRef.current.set(newUrl, result.delete_token);
+      }
+
+      // Delete old image from Cloudinary
+      const oldDeleteToken = imageTokensRef.current.get(oldSrc);
+      await deleteFromCloudinary(oldSrc, { deleteToken: oldDeleteToken });
+      imageTokensRef.current.delete(oldSrc);
+
+      // Replace image in markdown at the exact same location
+      setContent((prevContent) =>
+        replaceImageInMarkdown(prevContent, oldSrc, newUrl, newAlt)
+      );
+      setIsDirty(true);
+
+      setFeedback({
+        type: "success",
+        message: `Image replaced! New asset uploaded to Cloudinary (${targetFolder}) in place of the previous image.`,
+      });
+    } catch (err) {
+      console.error("Replace image error:", err);
+      setFeedback({
+        type: "error",
+        message: `Failed to replace image: ${err.message}`,
+      });
+    } finally {
+      setReplacingTarget(null);
     }
   };
 
@@ -452,6 +640,7 @@ export default function BlogEditor() {
 
       setIsDirty(false);
       setPublished(Boolean(publishStatus));
+      setAvailableUsedTags((prev) => [...prev, ...tags]);
       setFeedback({
         type: "success",
         message: `Article "${title}" saved successfully as ${
@@ -503,7 +692,7 @@ export default function BlogEditor() {
           </div>
           <h1 className="text-2xl font-mono font-bold text-[#0f1a14] dark:text-zinc-100 tracking-tight flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-emerald-600 dark:text-terminal-green" />
-            {id ? "Edit Technical Article" : "Markdown Authoring Studio"}
+            {id ? "Edit Article" : "Markdown Authoring Studio"}
           </h1>
         </div>
 
@@ -596,34 +785,36 @@ export default function BlogEditor() {
 
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label htmlFor="blog-slug" className="block text-[#0f1a14] dark:text-zinc-300 font-bold">
-                URL Slug *
+              <label htmlFor="blog-slug" className="block text-[#0f1a14] dark:text-zinc-300 font-bold flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-[#4b5e53] dark:text-zinc-400" />
+                <span>URL Slug *</span>
               </label>
-              {slugStatus && (
-                <span
-                  className={`text-[10px] font-bold ${
-                    slugStatus.state === "available"
-                      ? "text-emerald-700 dark:text-terminal-green"
-                      : "text-amber-600 dark:text-amber-400"
-                  }`}
-                >
-                  [{slugStatus.state.toUpperCase()}]
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-[#e9f0ea] dark:bg-zinc-800 text-[#4b5e53] dark:text-zinc-400 border border-[#cbdad0] dark:border-zinc-700">
+                  LOCKED
                 </span>
-              )}
+                {slugStatus && (
+                  <span
+                    className={`text-[10px] font-bold ${
+                      slugStatus.state === "available"
+                        ? "text-emerald-700 dark:text-terminal-green"
+                        : "text-amber-600 dark:text-amber-400"
+                    }`}
+                  >
+                    [{slugStatus.state.toUpperCase()}]
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1.5">
               <input
                 id="blog-slug"
                 type="text"
-                required
+                readOnly
+                disabled
                 value={slug}
-                onChange={(e) => {
-                  setSlug(slugifyTitle(e.target.value));
-                  setIsDirty(true);
-                  setSlugStatus(null);
-                }}
-                placeholder="e.g. zero-cost-cms"
-                className="w-full bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-700 focus:border-emerald-600 dark:focus:border-terminal-green px-3 py-2 text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-500 font-mono text-sm focus:outline-none"
+                placeholder="Auto-generated from title"
+                className="w-full bg-[#e9f0ea]/70 dark:bg-zinc-900/50 border border-[#cbdad0] dark:border-zinc-800 text-[#4b5e53] dark:text-zinc-400 font-mono text-sm px-3 py-2 cursor-not-allowed select-none focus:outline-none"
               />
               <button
                 type="button"
@@ -634,6 +825,10 @@ export default function BlogEditor() {
               >
                 {slugChecking ? "Checking..." : "Verify"}
               </button>
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-[#6e8276] dark:text-zinc-500 font-mono mt-0.5">
+              <span>Cloudinary folder: blog/{slug || "slug"}</span>
+              <span>(Immutable)</span>
             </div>
             {slugStatus?.message && (
               <p
@@ -828,22 +1023,26 @@ export default function BlogEditor() {
               )}
             </div>
 
-            {/* Quick Suggestions */}
+            {/* Quick Suggestions (Top 15: already used tags prioritized by frequency, followed by base suggestions) */}
             <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-[#cbdad0] dark:border-zinc-800/60">
               <span className="text-[10px] text-[#6e8276] dark:text-zinc-500 mr-1">Suggestions:</span>
-              {SUGGESTED_TAGS.filter((t) => !tags.includes(t)).map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => {
-                    setTags([...tags, suggestion]);
-                    setIsDirty(true);
-                  }}
-                  className="px-1.5 py-0.5 bg-[#f4f7f4] hover:bg-[#e9f0ea] dark:bg-zinc-900 dark:hover:bg-zinc-800 text-[#4b5e53] hover:text-[#0f1a14] dark:text-zinc-400 dark:hover:text-zinc-200 border border-[#cbdad0] dark:border-zinc-800 text-[10px] transition-colors"
-                >
-                  {`+ ${suggestion}`}
-                </button>
-              ))}
+              {tagSuggestions.length > 0 ? (
+                tagSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => {
+                      setTags([...tags, suggestion]);
+                      setIsDirty(true);
+                    }}
+                    className="px-1.5 py-0.5 bg-[#f4f7f4] hover:bg-[#e9f0ea] dark:bg-zinc-900 dark:hover:bg-zinc-800 text-[#4b5e53] hover:text-[#0f1a14] dark:text-zinc-400 dark:hover:text-zinc-200 border border-[#cbdad0] dark:border-zinc-800 text-[10px] transition-colors"
+                  >
+                    {`+ ${suggestion}`}
+                  </button>
+                ))
+              ) : (
+                <span className="text-[10px] text-[#6e8276] dark:text-zinc-500 italic">No further suggestions</span>
+              )}
             </div>
           </div>
         </div>
@@ -853,6 +1052,7 @@ export default function BlogEditor() {
       <TerminalBox
         title="split_markdown_editor.sh"
         className="border-2 border-[#1b2e23] dark:border-zinc-800 shadow-brutal-forest dark:shadow-brutal flex flex-col min-h-[650px] overflow-hidden"
+        bodyClassName="p-0 flex flex-col flex-1 min-h-0 overflow-hidden"
       >
         {/* Toolbar */}
         <MarkdownEditorToolbar
@@ -865,7 +1065,7 @@ export default function BlogEditor() {
         />
 
         {/* Split Screen Workspace */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#cbdad0] dark:divide-zinc-800 h-[600px] overflow-hidden">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#cbdad0] dark:divide-zinc-800 h-[620px] max-h-[calc(100vh-200px)] overflow-hidden">
           {/* Left Pane: Editor */}
           {(viewMode === "split" || viewMode === "edit") && (
             <div
@@ -873,7 +1073,7 @@ export default function BlogEditor() {
               onDragOver={handleEditorDragOver}
               onDragLeave={handleEditorDragLeave}
               onDrop={handleEditorDrop}
-              className={`relative flex flex-col h-full bg-[#f4f7f4] dark:bg-zinc-950 ${
+              className={`relative flex flex-col h-full min-h-0 bg-[#f4f7f4] dark:bg-zinc-950 ${
                 viewMode === "edit" ? "lg:col-span-2" : ""
               }`}
             >
@@ -891,7 +1091,7 @@ export default function BlogEditor() {
               )}
 
               {/* Editor Pane Sub-header */}
-              <div className="bg-[#e9f0ea] dark:bg-zinc-900/60 px-3 py-1.5 border-b border-[#cbdad0] dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono text-[#4b5e53] dark:text-zinc-400">
+              <div className="shrink-0 bg-[#e9f0ea] dark:bg-zinc-900/60 px-3 py-1.5 border-b border-[#cbdad0] dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono text-[#4b5e53] dark:text-zinc-400">
                 <span className="font-bold flex items-center gap-1.5 text-[#0f1a14] dark:text-zinc-100">
                   <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-terminal-cyan" />
                   EDITOR (MARKDOWN SOURCE)
@@ -913,9 +1113,12 @@ export default function BlogEditor() {
                 </div>
               </div>
 
-              <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 min-h-0 flex overflow-hidden relative">
                 {/* Line numbers gutter */}
-                <div className="w-10 bg-[#e9f0ea]/50 dark:bg-zinc-900/40 border-r border-[#cbdad0] dark:border-zinc-800/80 py-4 select-none font-mono text-[11px] text-[#6e8276] dark:text-zinc-600 text-right pr-2 leading-6 overflow-hidden">
+                <div
+                  ref={lineNumbersRef}
+                  className="w-10 shrink-0 h-full overflow-hidden bg-[#e9f0ea]/50 dark:bg-zinc-900/40 border-r border-[#cbdad0] dark:border-zinc-800/80 py-4 select-none font-mono text-[11px] text-[#6e8276] dark:text-zinc-600 text-right pr-2 leading-6"
+                >
                   {Array.from({ length: Math.min(lineCount, 500) }, (_, i) => (
                     <div key={i + 1}>{i + 1}</div>
                   ))}
@@ -933,7 +1136,7 @@ export default function BlogEditor() {
                   onPaste={handleTextareaPaste}
                   placeholder="# Write your technical post in Markdown here..."
                   aria-label="Markdown content input"
-                  className="flex-1 p-4 bg-transparent text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs sm:text-sm focus:outline-none resize-none leading-6 overflow-y-auto selection:bg-emerald-200 dark:selection:bg-terminal-green selection:text-[#0f1a14] dark:selection:text-black"
+                  className="flex-1 h-full min-h-0 p-4 bg-transparent text-[#0f1a14] dark:text-zinc-100 placeholder-[#6e8276] dark:placeholder-zinc-600 font-mono text-xs sm:text-sm focus:outline-none resize-none leading-6 overflow-y-auto selection:bg-emerald-200 dark:selection:bg-terminal-green selection:text-[#0f1a14] dark:selection:text-black"
                   spellCheck="false"
                 />
               </div>
@@ -942,8 +1145,8 @@ export default function BlogEditor() {
 
           {/* Right Pane: Real-Time Preview */}
           {(viewMode === "split" || viewMode === "preview") && (
-            <div className={`flex flex-col h-full bg-white dark:bg-zinc-950 ${viewMode === "preview" ? "lg:col-span-2" : ""}`}>
-              <div className="bg-[#e9f0ea] dark:bg-zinc-900/60 px-3 py-1.5 border-b border-[#cbdad0] dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono text-[#4b5e53] dark:text-zinc-400">
+            <div className={`flex flex-col h-full min-h-0 bg-white dark:bg-zinc-950 ${viewMode === "preview" ? "lg:col-span-2" : ""}`}>
+              <div className="shrink-0 bg-[#e9f0ea] dark:bg-zinc-900/60 px-3 py-1.5 border-b border-[#cbdad0] dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono text-[#4b5e53] dark:text-zinc-400">
                 <span className="font-bold flex items-center gap-1.5 text-emerald-700 dark:text-terminal-green">
                   <Sparkles className="w-3.5 h-3.5" />
                   LIVE PREVIEW (GFM RENDERED)
@@ -953,11 +1156,17 @@ export default function BlogEditor() {
                 </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto bg-white dark:bg-zinc-950">
+              <div
+                ref={previewContainerRef}
+                onScroll={handlePreviewScroll}
+                className="flex-1 min-h-0 overflow-y-auto bg-white dark:bg-zinc-950"
+              >
                 <MarkdownPreview
-                  ref={previewContainerRef}
                   content={content}
-                  className="h-full"
+                  className="min-h-full"
+                  editable={true}
+                  onDeleteImage={handleDeleteImage}
+                  onReplaceImage={handleReplaceImage}
                 />
               </div>
             </div>
@@ -971,7 +1180,16 @@ export default function BlogEditor() {
         onClose={() => setIsImageModalOpen(false)}
         onInsertImage={handleInsertImageFromModal}
         initialAltText={modalInitialAlt}
-        folder="portfolio/blogs"
+        folder={`blog/${slug || slugifyTitle(title) || "draft"}`}
+      />
+
+      {/* Hidden file input for Replace Image functionality */}
+      <input
+        ref={replaceFileInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/svg+xml,image/avif,image/*"
+        className="hidden"
+        onChange={handleReplaceFileSelected}
       />
     </div>
   );

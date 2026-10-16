@@ -88,7 +88,7 @@ test("BlogsPage renders hero header, search input, and Bento article list", () =
   );
 
   // Hero section
-  assert.ok(html.includes("Engineering Logs &amp; Publications") || html.includes("Engineering Logs & Publications"), "Should render header title");
+  assert.ok(html.includes("Blogs &amp; Publications") || html.includes("Blogs & Publications"), "Should render header title");
   assert.ok(html.includes("sys.publication.engineering_logs"), "Should render terminal breadcrumb");
 
   // Search input
@@ -116,5 +116,5 @@ test("App public navigation includes Articles link and routes to BlogsPage", () 
 
   assert.ok(html.includes('href="/blogs"'), "Navigation should link to /blogs");
   assert.ok(html.includes("Articles"), "Navigation should display Articles link");
-  assert.ok(html.includes("Engineering Logs &amp; Publications") || html.includes("Engineering Logs & Publications"), "Route /blogs should render BlogsPage");
+  assert.ok(html.includes("Blogs &amp; Publications") || html.includes("Blogs & Publications"), "Route /blogs should render BlogsPage");
 });

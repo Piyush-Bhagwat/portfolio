@@ -2,7 +2,7 @@ import { forwardRef, useState } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Copy, Check, FileText } from "lucide-react";
+import { Copy, Check, FileText, Trash2, RefreshCw } from "lucide-react";
 
 /**
  * Custom CodeBlock renderer with syntax highlight styling, copy button,
@@ -74,7 +74,13 @@ CodeBlock.propTypes = {
  * Markdown (tables, task lists, code blocks, autolinks).
  */
 const MarkdownPreview = forwardRef(function MarkdownPreview(
-  { content = "", className = "" },
+  {
+    content = "",
+    className = "",
+    editable = false,
+    onDeleteImage = null,
+    onReplaceImage = null,
+  },
   ref
 ) {
   if (!content.trim()) {
@@ -94,7 +100,7 @@ const MarkdownPreview = forwardRef(function MarkdownPreview(
   return (
     <div
       ref={ref}
-      className={`prose dark:prose-invert prose-emerald max-w-none font-mono text-xs sm:text-sm p-6 overflow-y-auto leading-relaxed ${className}`}
+      className={`prose dark:prose-invert prose-emerald max-w-none font-mono text-xs sm:text-sm p-6 leading-relaxed ${className}`}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
@@ -158,13 +164,91 @@ const MarkdownPreview = forwardRef(function MarkdownPreview(
               {children}
             </td>
           ),
-          img: ({ src, alt }) => (
-            <img
-              src={src}
-              alt={alt || "Article illustration"}
-              className="border-2 border-[#1b2e23] dark:border-zinc-800 my-4 max-w-full h-auto shadow-brutal-forest dark:shadow-brutal"
-            />
-          ),
+          img: ({ src, alt, title }) => {
+            if (!editable || (!onDeleteImage && !onReplaceImage)) {
+              return (
+                <img
+                  src={src}
+                  alt={alt || "Article illustration"}
+                  title={title}
+                  className="border-2 border-[#1b2e23] dark:border-zinc-800 my-4 max-w-full h-auto shadow-brutal-forest dark:shadow-brutal"
+                />
+              );
+            }
+
+            const isCloudinary = Boolean(src && src.includes("res.cloudinary.com"));
+
+            return (
+              <div className="relative my-5 not-prose border-2 border-[#1b2e23] dark:border-zinc-800 bg-[#f4f7f4] dark:bg-zinc-950 shadow-brutal-forest dark:shadow-brutal overflow-hidden group">
+                {/* Image Control Header Bar */}
+                <div className="bg-[#e9f0ea] dark:bg-zinc-900 border-b-2 border-[#1b2e23] dark:border-zinc-800 px-3 py-1.5 flex items-center justify-between font-mono text-xs select-none">
+                  <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-terminal-green shrink-0" />
+                    <span
+                      className="truncate text-[#0f1a14] dark:text-zinc-200 font-bold text-[11px]"
+                      title={alt || src}
+                    >
+                      {alt || "Embedded Image"}
+                    </span>
+                    {isCloudinary && (
+                      <span className="text-[9px] px-1 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-terminal-green font-bold shrink-0">
+                        CLOUDINARY
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Actions: Replace & Delete Buttons */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {onReplaceImage && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onReplaceImage(src, alt);
+                        }}
+                        className="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-zinc-800 hover:bg-[#cbdad0] dark:hover:bg-zinc-700 text-[#0f1a14] dark:text-zinc-200 border border-[#1b2e23] dark:border-zinc-700 text-[11px] font-bold shadow-brutal-sm transition-all active:scale-95"
+                        title="Replace this image with a new upload at the same place"
+                      >
+                        <RefreshCw className="w-3 h-3 text-emerald-700 dark:text-terminal-green" />
+                        <span>Replace</span>
+                      </button>
+                    )}
+
+                    {onDeleteImage && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteImage(src, alt);
+                        }}
+                        className="flex items-center gap-1 px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 text-[11px] font-bold shadow-brutal-sm transition-all active:scale-95"
+                        title="Delete image from Cloudinary and remove from Markdown"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Delete</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Image Display */}
+                <div className="p-3 bg-zinc-100/50 dark:bg-zinc-900/30 flex items-center justify-center">
+                  <img
+                    src={src}
+                    alt={alt || "Article illustration"}
+                    title={title}
+                    className="max-w-full h-auto max-h-[500px] object-contain"
+                  />
+                </div>
+
+                {title && (
+                  <div className="px-3 py-1.5 border-t border-[#cbdad0] dark:border-zinc-800 text-[11px] text-center text-[#4b5e53] dark:text-zinc-400 font-mono italic">
+                    {title}
+                  </div>
+                )}
+              </div>
+            );
+          },
           ul: ({ children }) => (
             <ul className="list-disc list-inside space-y-1 my-3 text-[#2c3e34] dark:text-zinc-300">
               {children}
@@ -187,6 +271,9 @@ const MarkdownPreview = forwardRef(function MarkdownPreview(
 MarkdownPreview.propTypes = {
   content: PropTypes.string,
   className: PropTypes.string,
+  editable: PropTypes.bool,
+  onDeleteImage: PropTypes.func,
+  onReplaceImage: PropTypes.func,
 };
 
 export default MarkdownPreview;

@@ -102,7 +102,7 @@ test("BlogsCMS renders header, search, filter tabs, and action controls", () => 
 
   // Header & breadcrumbs
   assert.ok(html.includes("sys.cms.blogs"), "Should contain sys.cms.blogs breadcrumb");
-  assert.ok(html.includes("Technical Articles CMS"), "Should render main page title");
+  assert.ok(html.includes("Articles CMS"), "Should render main page title");
 
   // Metadata metrics
   assert.ok(html.includes("Total:"), "Should display total count metadata");
@@ -138,5 +138,5 @@ test("App routes /admin/blogs to BlogsCMS in protected layout", () => {
     )
   );
 
-  assert.ok(html.includes("Technical Articles CMS"), "Should render BlogsCMS when navigating to /admin/blogs");
+  assert.ok(html.includes("Articles CMS"), "Should render BlogsCMS when navigating to /admin/blogs");
 });

@@ -140,7 +140,7 @@ export default function Login() {
               Administrative Gateway
             </h1>
             <p className="text-xs text-[#4b5e53] dark:text-zinc-400 font-mono">
-              Restricted to authorized administrator (<code className="text-teal-700 dark:text-terminal-cyan">{adminEmail}</code>).
+              Dont enter in Piyush&apos;s Personal space
             </p>
           </div>
 

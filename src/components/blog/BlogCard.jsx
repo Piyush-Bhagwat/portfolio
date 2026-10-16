@@ -28,7 +28,7 @@ export function formatCardDate(timestamp) {
 }
 
 /**
- * BlogCard - Neo-Brutalist Technical Article Card for Bento Grid Index
+ * BlogCard - Neo-Brutalist Article Card for Bento Grid Index
  */
 export default function BlogCard({
   post,

@@ -31,7 +31,9 @@ This document serves as the persistent memory, architectural reference, and oper
 | **Day 6** | **Public Blog Reader & Projects Catalog** | **COMPLETED** | `/blogs` catalog, reader with TOC & syntax styling, `/projects` catalog |
 | **Day 7** | **Bento-Grid Homepage, Polish & Cutover**| **COMPLETED** | 6-tile Bento homepage, Framer Motion entrance, full cutover from V1 |
 | **Post-Launch**| **UX Polish, Cleanups & Media Pipeline Fix** | **COMPLETED** | Removed banners & sprint labels, fixed avatar upload lifecycle & enlarged hero photo |
-| **Scope Addition** | **Dual-Theme Engine (Subtle Greenish Light & Dark)** | **SPECIFIED IN ARCHITECTURE** | Color theory calibration, ThemeContext, ThemeToggle button, CSS semantic tokens, cross-view light theme adaptation |
+| **Scope Addition** | **Dual-Theme Engine (Subtle Greenish Light & Dark)** | **COMPLETED** | Color theory calibration, ThemeContext, ThemeToggle button, CSS semantic tokens, cross-view light theme adaptation |
+| **Blog Suite V2** | **Editor Scrolling, Lightbox & Tag Intelligence** | **COMPLETED** | Split-editor scroll sync, direct/base64 dropper, fullscreen image lightbox with multi-level zoom, sticky TOC sidebar, dynamic top 15 tag suggestions |
+| **Blog Media & Slug** | **Cloudinary-Only Pipeline & In-Preview Media Controls** | **COMPLETED** | Direct `blog/{slug}` upload, base64 elimination, in-preview Delete/Replace over images, locked immutable slug |
 
 ---
 
@@ -249,20 +251,183 @@ This document serves as the persistent memory, architectural reference, and oper
   5. **Live Status Feedback**:
      - Added `isReordering` state rendering a `REORDERING...` terminal status pill and feedback banners confirming the assigned sequence number.
 
+### 12. Markdown Editor Studio Scroll Synchronization & Viewport Flex Containment
+- **Problem & Symptoms**:
+  - In `src/pages/admin/BlogEditor.jsx`, neither the raw Markdown editor textarea nor the live rendered preview pane would scroll when content exceeded the viewport.
+  - The outer window attempted to scroll the entire page layout instead, breaking split-screen side-by-side editing.
+- **Root Cause Discovered**:
+  - In CSS Flexbox, flex items default to `min-height: auto`. When nested flex containers contain long content, they expand to their full content height rather than conforming to the parent container height, unless explicitly constrained with `min-h-0` and `overflow-hidden`.
+  - `TerminalBox.jsx` hardcoded padding (`p-4 md:p-5`) in its inner body container, preventing child full-bleed layouts and creating inflexible outer boxes.
+  - The line numbers gutter (`lineNumbersRef`) was an unlinked `div`, meaning even if the textarea were scrolled, line numbers remained stationary.
+  - `MarkdownPreview.jsx` had a redundant internal `overflow-y-auto` wrapper that conflicted with the scroll container in `BlogEditor.jsx`.
+- **Architectural Fixes Applied**:
+  1. **`TerminalBox` Body Overrides**:
+     - Added `bodyClassName` prop support in `src/components/brutalist/TerminalBox.jsx` allowing consumers to bypass default card padding and pass custom flex containment classes.
+  2. **Flex Containment Hierarchy in `BlogEditor.jsx`**:
+     - Updated `TerminalBox` container with `bodyClassName="p-0 flex flex-col flex-1 min-h-0 overflow-hidden"`.
+     - Specified fixed-bound responsive height on the split workspace: `h-[620px] max-h-[calc(100vh-200px)] overflow-hidden min-h-0`.
+     - Ensured both the left editor pane and right preview pane enforce `min-h-0 flex-1 overflow-hidden`.
+  3. **Synchronized Gutter & Bidirectional Scroll Handling**:
+     - Linked line numbers gutter to `lineNumbersRef.current.scrollTop = editor.scrollTop` on textarea scroll.
+     - Implemented `handleEditorScroll` and `handlePreviewScroll` calculating percentage-based scroll position:
+       $$\text{scrollPercentage} = \frac{\text{scrollTop}}{\text{scrollHeight} - \text{clientHeight}}$$
+     - Added an execution lock (`isScrollingRef`) with a 50ms cooldown timeout to prevent infinite scroll loops and jitter when `syncScroll` is enabled.
+  4. **Preview Cleanups**:
+     - Removed nested `overflow-y-auto` from `MarkdownPreview.jsx`, delegating scroll container responsibility cleanly to the parent container.
+
+### 13. Markdown Image Dropper Direct Upload & Embedded Base64 Fallback Pipeline
+- **Problem & Symptoms**:
+  - In `BlogImageDropperModal.jsx` (`sys.media.cloudinary_dropper.sh`), selecting an image file via the file picker left the "Insert Image" button disabled.
+  - If Cloudinary was unconfigured, rate-limited, or slow to respond, users were completely blocked from inserting images into their articles.
+- **Root Cause Discovered**:
+  - The "Insert Image" button was strictly bound to `Boolean(imageUrl)`.
+  - Selecting a file initiated `executeUpload`, but if the upload failed or remained in-flight, `imageUrl` was never populated.
+  - The file `<input>` retained its cached file path, so clicking and selecting the same image file did not trigger `onChange`.
+- **Architectural Fixes Applied**:
+  1. **Dual-Tier Asset Resolution**:
+     - As soon as a file is selected, `FileReader` reads the image into memory as a `data:image/...;base64,...` URL.
+     - Sets `imageUrl` immediately to the base64 preview as a robust zero-latency fallback while asynchronously dispatching `uploadToCloudinary`.
+  2. **Error Recovery & Fallback Actions**:
+     - When Cloudinary upload encounters network errors or credential misconfigurations, the UI displays explicit recovery buttons:
+       - **"Retry Cloudinary Upload"**: Re-attempts upload to the CDN.
+       - **"Use as Embedded Base64 Image"**: Accepts the inline data URL directly, unblocking article authoring immediately.
+  3. **Input Lifecycle & State Resets**:
+     - Added `onClick={(e) => { e.target.value = null; }}` on the file input to ensure reselection of identical filenames triggers change events.
+     - Cleared all upload states (`file`, `previewUrl`, `imageUrl`, `publicId`, `uploadProgress`, `error`) whenever `isOpen` transitions to true.
+
+### 14. Fullscreen Multi-Level Zoom Lightbox Modal for Blog Reader
+- **Problem & Scope**:
+  - In `BlogPostPage.jsx`, neither the cover banner thumbnail nor images inside the Markdown article could be viewed in high resolution or zoomed in.
+  - Technical architecture diagrams, code screenshots, and system blueprints in articles were difficult to read on smaller screens without fullscreen viewing.
+- **Implementation (`ImageLightboxModal.jsx`)**:
+  - Created a dedicated Neo-Brutalist fullscreen modal in `src/components/blog/ImageLightboxModal.jsx`:
+    - **Multi-Level Zoom**: Zoom in (`+25%` increments up to `400%`), Zoom out (`-25%` down to `50%`), and Reset (`100%`).
+    - **Gesture & Mouse Controls**: Double-click toggles 1x/2x zoom instantly. Mouse-wheel scrolls zoom in/out smoothly.
+    - **Panning**: When zoomed above `100%`, cursor switches to `grab`/`grabbing`, allowing click-and-drag panning across large diagrams without losing viewport context.
+    - **Keyboard & Touch Accessibility**: `Escape` key immediately closes the viewer. Backdrop click dismisses. Tab navigation with focus rings.
+    - **Header & Footer Controls**: High-contrast brutalist header displaying image caption/filename, zoom percentage indicator, "Open Original in New Tab" link, and close (`X`) button.
+- **BlogPostPage Integration**:
+  - Added interactive `lightboxImage` state to `BlogPostPage.jsx`.
+  - Wrapped cover image in a focusable, clickable card with `cursor-zoom-in` and hover microcopy.
+  - Overrode ReactMarkdown `components.img` to render images with `cursor-zoom-in`, hover borders, and click handlers opening the lightbox with original source and caption.
+
+### 15. Sticky Table of Contents & Metadata Sidebar in Blog Reader
+- **Problem & Symptoms**:
+  - On the public article reader page (`/blogs/:slug`), the sidebar containing the Table of Contents and article metadata scrolled out of view immediately, leaving readers with no navigation context while reading long articles.
+- **Root Cause Discovered**:
+  - In `BlogPostPage.jsx`, the parent 2-column container was declared as: `<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">`.
+  - In CSS Grid specifications, `items-start` aligns all grid columns to the start of the row, collapsing each column's height to its own content height. Consequently, `<aside>` was only ~400px tall, giving the inner `sticky` container zero scroll track to traverse alongside `<main>`.
+  - The sticky offset was `top-6` (24px), which placed the sidebar directly behind the fixed public navbar (`h-16`, 64px, `sticky top-0 z-40`).
+- **Fixes Applied**:
+  1. **Grid Stretch Alignment**:
+     - Removed `items-start` from the grid container, restoring default `align-self: stretch` on `<aside>` so it spans the entire vertical height of the article `<main>`.
+  2. **Navbar Clearance & Viewport Containment**:
+     - Updated sticky position from `sticky top-6` to `sticky top-20` (80px), providing 16px of comfortable breathing room below the 64px navbar.
+     - Added `max-h-[calc(100vh-6rem)] overflow-y-auto pr-1` so that long Tables of Contents scroll internally within the sidebar without being clipped or breaking page scroll.
+
+### 16. Dynamic Frequency-Prioritized Tag Suggestions Engine in Blog Editor
+- **Problem & Scope**:
+  - In `BlogEditor.jsx`, tag suggestions were hardcoded to a static predefined array (`SUGGESTED_TAGS`).
+  - As new articles were written with custom domain tags (e.g. `Kubernetes`, `Docker`, `Microservices`), these tags never appeared in suggestions.
+  - The user requested: keep existing suggestions, aggregate all already-used tags from Firestore blogs, display already-used tags first (sorted by frequency of use), deduplicate, and limit suggestions to the top 15.
+- **Implementation & Algorithm (`blogUtils.js`)**:
+  - Created `getTopSuggestedTags(usedSources, activeTags, baseSuggestions, maxCount)` in `src/utils/blogUtils.js`:
+    1. **Frequency Histogram**: Aggregates all tags across all Firestore blogs or strings into a lowercase frequency map:
+       $$\text{tagCount}(\text{tag}) = \sum_{p \in \text{blogs}} \mathbb{I}(\text{tag} \in p.\text{tags})$$
+    2. **Descending Frequency Sort**: Sorts already-used tags by usage count descending, with secondary alphabetical sorting.
+    3. **Prioritized Insertion**: Appends already-used tags first, skipping any tags currently selected in `activeTags`.
+    4. **Base Suggestions Fill**: Fills remaining available slots from `SUGGESTED_TAGS` that haven't been used or selected yet.
+    5. **Deduplication & Top 15 Cap**: Case-insensitive deduplication while preserving original casing, capping results at `maxCount = 15`.
+- **BlogEditor Integration**:
+  - Added `availableUsedTags` state in `BlogEditor.jsx`.
+  - Added an initial `useEffect` querying `collection(db, "blogs")` to collect all existing tags across the publication database.
+  - Memoized suggestions via `useMemo(() => getTopSuggestedTags(availableUsedTags, tags, SUGGESTED_TAGS, 15), [availableUsedTags, tags])`.
+  - Updated `handleSave` to immediately append current article tags into `availableUsedTags`, ensuring newly saved tags appear immediately in the suggestion pool without a page reload.
+
+### 17. Cloudinary-Exclusive Markdown Image Upload Pipeline & Base64 Elimination
+- **Problem & Root Cause**:
+  - In earlier iterations, selecting an image file in the dropper modal fell back to generating in-memory Base64 Data URLs (`data:image/...;base64,...`) when inserted directly.
+  - Inserting massive Base64 strings bloated Markdown files from a few kilobytes into several megabytes, degrading Firestore document write limits (1 MB limit per document), rendering speeds, and network transfer performance.
+  - Images lacked organization within Cloudinary, scattering assets across default folders rather than grouping them per blog post.
+- **Architectural Fixes Applied**:
+  1. **Base64 Purge & Cloudinary-Exclusive Requirement**:
+     - Completely removed inline Base64 data URL insertion from `BlogImageDropperModal.jsx`.
+     - The "Insert Image" button is disabled until Cloudinary returns a valid HTTPS CDN URL (`https://res.cloudinary.com/...`).
+     - Removed the "Use as Embedded Base64 Image" error button; only "Retry Cloudinary Upload" is offered on transient network failures.
+  2. **Scoped Folder Hierarchy (`blog/{blog-slug}`)**:
+     - All article media uploads (direct file picker in dropper modal, drag-and-drop onto the drop zone, and in-place replacements) are routed to a scoped Cloudinary folder: `blog/${slug || slugifyTitle(title) || 'draft'}`.
+     - Preserves asset organization in Cloudinary console, grouping all diagrams, screenshots, and assets belonging to a specific post in one location.
+  3. **Metadata & Token Ingestion**:
+     - The insertion callback in `BlogImageDropperModal.jsx` passes `{ url, alt, caption, public_id, delete_token }` to `onInsertImage`, recording upload tokens for downstream zero-credential client-side asset lifecycle management.
+
+### 18. In-Preview Image Replace & Delete Actions with Cloudinary Sync
+- **Problem & Scope**:
+  - Previously, removing or changing an image inserted into an article required manually hunting through raw Markdown text, deleting syntax brackets, and left orphaned images consuming storage quota on Cloudinary.
+  - Authors needed a direct, visual way to delete or replace images in the article preview while keeping Cloudinary storage synchronized.
+- **Implementation & Architecture**:
+  1. **Interactive Preview Image Overlays (`MarkdownPreview.jsx`)**:
+     - Added `editable={true}`, `onDeleteImage`, and `onReplaceImage` props to `MarkdownPreview.jsx`.
+     - In editable mode, custom `img` rendering wraps every Markdown image in a Neo-Brutalist card with:
+       - Header displaying image `alt` text or filename and a `CLOUDINARY` status badge.
+       - Quick action toolbar:
+         - **Replace Button** (with `RefreshCw` icon): Prompts for a replacement image file and swaps the asset in-place.
+         - **Delete Button** (with `Trash2` icon): Prompts for confirmation, deletes asset from Cloudinary, and strips the Markdown syntax from the article.
+  2. **Robust Markdown Manipulation Utilities (`blogUtils.js`)**:
+     - `removeImageFromMarkdown(content, imageSrc)`: Removes matching `![alt](url)` and `<img src="url" />` tags, cleaning up leftover blank lines and orphaned captions without affecting surrounding text.
+     - `replaceImageInMarkdown(content, oldSrc, newSrc, newAlt)`: Matches and swaps the image URL in-place at the exact cursor/document position, preserving user captions and surrounding paragraphs.
+     - Regex safety with `escapeRegExp` ensuring URLs containing special characters (query params, slashes, dashes) are handled without escaping errors.
+  3. **Cloudinary Asset Destruction & Public ID Extraction (`cloudinary.js`)**:
+     - `extractCloudinaryPublicId(url)`: Robustly parses Cloudinary CDN URLs to extract public IDs by identifying version tag boundaries (`v\d+/`), handling transforms, and supporting scoped subfolder paths (`blog/slug/image-name`).
+     - `deleteFromCloudinary(publicIdOrUrl, options)`: Supports client-side deletion using unsigned upload `delete_token` via `https://api.cloudinary.com/v1_1/${cloudName}/delete_by_token`, falling back to destroy endpoints. Operates non-destructively so UI updates succeed even if remote asset deletion is restricted by Cloudinary preset permissions.
+  4. **Integrated Lifecycle Management in `BlogEditor.jsx`**:
+     - Maintains `imageTokensRef` in-memory map tracking `{ publicId, deleteToken }` for all uploaded images.
+     - `handleDeleteImage`: Deletes from Cloudinary and calls `removeImageFromMarkdown`.
+     - `handleReplaceImage`: Activates a hidden file input (`replacementFileInputRef`), uploads the replacement file to `blog/${slug}`, invokes `deleteFromCloudinary` on the old asset, calls `replaceImageInMarkdown`, and updates token mapping.
+
+### 19. Blog Slug Immutability & Asset Hierarchy Protection
+- **Problem & Architectural Risk**:
+  - The blog slug directly determines:
+    1. Public routing URLs (`/blogs/:slug`).
+    2. Cloudinary folder paths (`blog/:slug`).
+    3. Asset deletion and replacement boundaries.
+  - Allowing authors to edit the slug after initial creation would break incoming bookmarked links, cause 404s, and orphan Cloudinary folders/assets uploaded under previous slugs.
+- **Implementation**:
+  - In `BlogEditor.jsx`, the slug input field is made permanently **immutable**:
+    - `readOnly={true}` and `disabled={true}` with `cursor-not-allowed` styling.
+    - Prominent `LOCKED` badge rendered adjacent to the slug label.
+    - Helpful explanatory microcopy: `Slug is permanently locked to preserve SEO, public URL routing, and the Cloudinary storage path (blog/{slug}).`
+    - Live Cloudinary destination preview displayed below the field (`Destination: blog/{slug || '...'}`).
+  - On new article creation (`!id`), the slug is automatically derived from the title as the author types until the article is initially saved, after which it remains strictly immutable.
+
+### 20. Blog Image Dropper Modal Abort Lifecycle & Button Enablement Fix
+- **Problem & Symptoms**:
+  - In `BlogImageDropperModal.jsx`, when an image was selected via file picker or drag-and-drop, the "Insert Image Markdown" button stayed permanently disabled.
+  - However, typing any character into the "External Image URL" tab immediately enabled the button.
+- **Root Cause Discovered**:
+  - `BlogImageDropperModal.jsx` had a `useEffect` with dependency `[previewUrl]` whose cleanup callback called `abortControllerRef.current.abort()`.
+  - When the user selected a file, `handleFileSelected` set `previewUrl` to `URL.createObjectURL(file)` while simultaneously invoking `executeUpload(file)`.
+  - The state update triggered React to re-render, executing the previous effect's cleanup and immediately aborting the in-flight Cloudinary upload with `AbortError`.
+  - Because `executeUpload` silently caught `AbortError`, `uploadedUrl` was never populated, leaving the insert button disabled.
+- **Fixes Applied**:
+  - Moved `abortControllerRef` and object URL cleanup strictly to component unmount (`useEffect(..., [])`).
+  - Stored blob object URLs in `blobUrlRef` and manually revoked previous blob URLs in `handleFileSelected` and `handleModalClose`.
+  - Upload now executes to completion without premature cancellation, populating `uploadedUrl` and enabling the insert button as expected.
+
 ---
 
 ## 5. Verification & Test Suite Status
 
-- **Automated Test Suite**: **117 tests passing** (0 failures, 0 skipped) across all vertical slices + theme engine:
+- **Automated Test Suite**: **129 tests passing** (0 failures, 0 skipped) across all vertical slices + theme engine + blog suite:
   - `slice-1.1` to `slice-1.3`: Brutalist primitives & Cloudinary service.
   - `slice-2.1` to `slice-2.3`: AuthContext, ProtectedRoute, AdminLayout.
   - `slice-3.1` to `slice-3.4`: ProfileCMS, SkillsCMS, ExperienceCMS, Seeder.
   - `slice-4.1` to `slice-4.4`: ProjectsCMS, ProjectEditor, CaseStudyDrawer.
-  - `slice-5.1` to `slice-5.4`: BlogEditor, CloudinaryDropper, BlogsCMS.
-  - `slice-6.1` to `slice-6.3`: BlogsPage, BlogPostPage reader, ProjectsPage catalog.
+  - `slice-5.1` to `slice-5.4`: BlogEditor, CloudinaryDropper, BlogsCMS, Tag Suggestions algorithm, in-preview image Replace/Delete, and slug lock.
+  - `slice-6.1` to `slice-6.3`: BlogsPage, BlogPostPage reader, ImageLightboxModal, ProjectsPage catalog.
   - `slice-7.1` to `slice-7.4`: Bento Homepage, HeroTile, Image optimization, Smoke tests.
+  - `slice-theme`: Theme Engine, Anti-FOUC, and ThemeToggle SSR.
 - **Linter**: `0` errors, `0` warnings (`npm run lint`).
-- **Production Compilation**: Clean Vite build (`npm run build`) in ~8.8s with optimized manual code-splitting chunks.
+- **Production Compilation**: Clean Vite build (`npm run build`) in ~8.4s with optimized manual code-splitting chunks.
 
 ---
 
@@ -294,19 +459,19 @@ portfolio/
 ├── .env                                       # Local environment secrets
 ├── tailwind.config.js                         # Neo-Brutalist & Bento styling tokens
 ├── vite.config.js                             # Chunk code-splitting & build pipeline
-├── test/                                      # 110 automated vertical slice tests
+├── test/                                      # 129 automated vertical slice tests
 ├── V2/
 │   ├── architecture.md                        # Component hierarchy & data contracts
 │   ├── context.md                             # [This File] Persistent project memory
 │   ├── edge-case.md                           # Edge-case & failure mode mitigations
-│   └── implimentation.md                      # 7-Day implementation plan
+│   └── implimentation.md                      # Sliced implementation plan & post-launch slices
 └── src/
     ├── components/
     │   ├── brutalist/                         # BentoCard, BrutalButton, TagBadge, ThemeToggle, etc.
     │   ├── common/                            # ImageUploader, ProtectedRoute
     │   ├── home/                              # 6 Bento Tiles (HeroTile, StatusTile, etc.)
     │   ├── project/                           # ProjectCard, CaseStudyModal, CaseStudyDrawer
-    │   └── blog/                              # BlogCard, CloudinaryDropperModal
+    │   └── blog/                              # BlogCard, BlogImageDropperModal, MarkdownEditorToolbar, MarkdownPreview, ImageLightboxModal
     ├── context/
     │   ├── AuthContext.jsx                    # Firebase authentication state provider
     │   └── ThemeContext.jsx                   # Dark/Light theme state and persistence provider
@@ -325,3 +490,4 @@ portfolio/
     └── scripts/
         └── seedData.js                        # Canonical Firestore data seeder
 ```
+

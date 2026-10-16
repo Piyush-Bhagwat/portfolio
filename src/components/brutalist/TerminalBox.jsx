@@ -86,9 +86,9 @@ export default function TerminalBox({
       {/* Terminal Body */}
       <div
         className={`
-          p-4 md:p-5 font-mono text-sm text-[#0f1a14] dark:text-zinc-200 overflow-x-auto
+          ${bodyClassName ? bodyClassName : "p-4 md:p-5 overflow-x-auto"}
+          font-mono text-sm text-[#0f1a14] dark:text-zinc-200
           break-words [overflow-wrap:anywhere] leading-relaxed
-          ${bodyClassName}
         `.trim()}
       >
         {children}

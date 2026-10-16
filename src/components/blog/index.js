@@ -13,4 +13,5 @@ export {
   extractHeadings,
   toHeadingSlug,
 } from "./TableOfContents.jsx";
+export { default as ImageLightboxModal } from "./ImageLightboxModal.jsx";
 

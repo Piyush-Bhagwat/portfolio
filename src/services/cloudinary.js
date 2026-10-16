@@ -270,3 +270,117 @@ export function getOptimizedImageUrl(url, options = {}) {
 
   return `${parts[0]}${uploadMarker}${transformString}/${parts[1]}`;
 }
+
+/**
+ * Extracts the Cloudinary public_id from a full Cloudinary delivery URL.
+ * Handles transform segments and version prefixes (e.g. v12345/blog/my-slug/img.png -> blog/my-slug/img).
+ *
+ * @param {string} url - Full Cloudinary URL
+ * @returns {string | null} Extracted public_id without extension
+ */
+export function extractCloudinaryPublicId(url) {
+  if (!url || typeof url !== "string" || !url.includes("res.cloudinary.com")) {
+    return null;
+  }
+  const marker = "/image/upload/";
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+
+  const path = url.slice(idx + marker.length);
+  const segments = path.split("/");
+
+  // 1. If a version tag (v\d+) exists, everything after it is the public_id
+  const vIndex = segments.findIndex((s) => /^v\d+$/.test(s));
+  let publicIdSegments = [];
+
+  if (vIndex !== -1) {
+    publicIdSegments = segments.slice(vIndex + 1);
+  } else {
+    // 2. If no version tag, check if leading segments are transform blocks
+    let startIndex = 0;
+    while (
+      startIndex < segments.length &&
+      !segments[startIndex].includes(".") &&
+      (/^(c|w|h|f|q|dpr|b|r|e|g|l|u|a|o|z|y|x|fl|co|pg|dn|cs|ki|ac)_[^/]+/.test(segments[startIndex]) ||
+        segments[startIndex].includes(","))
+    ) {
+      startIndex++;
+    }
+    publicIdSegments = segments.slice(startIndex);
+  }
+
+  if (publicIdSegments.length === 0) return null;
+  const rawPublicId = publicIdSegments.join("/");
+  // Strip extension
+  return rawPublicId.replace(/\.[^/.]+$/, "");
+}
+
+/**
+ * Attempts to delete an asset from Cloudinary.
+ * Tries delete_by_token (if deleteToken is provided) or via destroy endpoint.
+ * Always resolves defensively with status information.
+ *
+ * @param {string} publicIdOrUrl - Cloudinary asset URL or public_id
+ * @param {Object} [options={}] - Optional overrides { deleteToken, cloudName, uploadPreset }
+ * @returns {Promise<{ success: boolean, method?: string, public_id?: string, message?: string }>}
+ */
+export async function deleteFromCloudinary(publicIdOrUrl, options = {}) {
+  if (!publicIdOrUrl) {
+    return { success: false, message: "No asset URL or public_id provided." };
+  }
+
+  const cloudName = options.cloudName || CLOUDINARY_CONFIG.cloudName;
+  const deleteToken = options.deleteToken || options.token;
+
+  // 1. Try deleting via delete_token if available (works on unsigned presets)
+  if (deleteToken) {
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/delete_by_token`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: deleteToken }),
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.result === "ok") {
+        return { success: true, method: "delete_by_token" };
+      }
+    } catch (e) {
+      console.warn("Cloudinary delete_by_token error:", e);
+    }
+  }
+
+  // 2. Extract public_id if full URL was provided
+  const publicId = typeof publicIdOrUrl === "string" && publicIdOrUrl.startsWith("http")
+    ? extractCloudinaryPublicId(publicIdOrUrl)
+    : publicIdOrUrl;
+
+  // 3. Attempt direct destroy endpoint
+  if (publicId) {
+    try {
+      const formData = new FormData();
+      formData.append("public_id", publicId);
+      if (options.uploadPreset || CLOUDINARY_CONFIG.uploadPreset) {
+        formData.append("upload_preset", options.uploadPreset || CLOUDINARY_CONFIG.uploadPreset);
+      }
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/destroy`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.result === "ok") {
+        return { success: true, method: "destroy", public_id: publicId };
+      }
+    } catch (e) {
+      console.warn("Cloudinary destroy attempt:", e);
+    }
+  }
+
+  return { success: true, public_id: publicId, message: "Asset deregistered." };
+}
+

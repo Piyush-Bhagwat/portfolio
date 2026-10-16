@@ -10,6 +10,7 @@ import {
   CodeBlock,
   TableOfContents,
   toHeadingSlug,
+  ImageLightboxModal,
 } from "../../components/blog";
 import { TagBadge, TerminalBox, BrutalButton } from "../../components/brutalist";
 import {
@@ -46,7 +47,7 @@ function LinkedInIcon({ className = "w-3.5 h-3.5" }) {
 }
 
 /**
- * BlogPostPage - Public Long-Form Technical Article Reader (/blogs/:slug)
+ * BlogPostPage - Public Long-Form Article Reader (/blogs/:slug)
  */
 export default function BlogPostPage() {
   const { slug } = useParams();
@@ -63,6 +64,7 @@ export default function BlogPostPage() {
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -333,12 +335,38 @@ export default function BlogPostPage() {
 
           {/* Cover Banner */}
           {post.cover_image_url ? (
-            <div className="border-2 border-[#1b2e23] dark:border-zinc-800 shadow-brutal-forest dark:shadow-brutal overflow-hidden bg-white dark:bg-zinc-950">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                setLightboxImage({
+                  src: post.cover_image_url,
+                  alt: post.title,
+                  caption: `Cover Banner: ${post.title}`,
+                })
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setLightboxImage({
+                    src: post.cover_image_url,
+                    alt: post.title,
+                    caption: `Cover Banner: ${post.title}`,
+                  });
+                }
+              }}
+              className="border-2 border-[#1b2e23] dark:border-zinc-800 shadow-brutal-forest dark:shadow-brutal overflow-hidden bg-white dark:bg-zinc-950 cursor-zoom-in group relative"
+              title="Click thumbnail to view in full screen mode"
+              aria-label="View cover banner in fullscreen mode"
+            >
               <img
                 src={getOptimizedImageUrl(post.cover_image_url, { width: 1200 })}
                 alt={post.title}
-                className="w-full max-h-[460px] object-cover"
+                className="w-full max-h-[460px] object-cover group-hover:scale-[1.01] transition-transform duration-200"
               />
+              <div className="absolute bottom-2 right-2 px-2.5 py-1 bg-black/85 border border-zinc-700 text-white font-mono text-[10px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-1 shadow-brutal-sm">
+                <span>Click thumbnail to expand full screen</span>
+              </div>
             </div>
           ) : (
             <div className="border-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 sm:p-8 shadow-brutal-forest dark:shadow-brutal-sm relative overflow-hidden flex flex-col justify-between min-h-[160px]">
@@ -366,7 +394,7 @@ export default function BlogPostPage() {
         </header>
 
         {/* 2-Column Responsive Reading Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main Article Prose Column */}
           <main className="lg:col-span-8 min-w-0">
             <article className="border-2 border-[#1b2e23] dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 sm:p-10 shadow-brutal-forest dark:shadow-brutal prose dark:prose-invert prose-emerald max-w-none font-mono text-xs sm:text-sm leading-relaxed text-[#0f1a14] dark:text-zinc-300">
@@ -451,11 +479,19 @@ export default function BlogPostPage() {
                       {children}
                     </td>
                   ),
-                  img: ({ src, alt }) => (
+                  img: ({ src, alt, title }) => (
                     <img
                       src={src}
                       alt={alt || "Article illustration"}
-                      className="border-2 border-[#1b2e23] dark:border-zinc-800 my-6 max-w-full h-auto shadow-brutal-forest dark:shadow-brutal"
+                      title={title || alt || "Click to view full screen"}
+                      onClick={() =>
+                        setLightboxImage({
+                          src,
+                          alt: alt || "Article illustration",
+                          caption: title || alt || "",
+                        })
+                      }
+                      className="border-2 border-[#1b2e23] dark:border-zinc-800 my-6 max-w-full h-auto shadow-brutal-forest dark:shadow-brutal cursor-zoom-in hover:opacity-95 hover:border-emerald-600 dark:hover:border-terminal-green transition-all"
                     />
                   ),
                   ul: ({ children }) => (
@@ -522,7 +558,7 @@ export default function BlogPostPage() {
 
           {/* Sticky Sidebar (Table of Contents + Metadata) */}
           <aside className="lg:col-span-4 space-y-6">
-            <div className="sticky top-6 space-y-6">
+            <div className="sticky top-20 space-y-6 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
               {/* Table of Contents */}
               <TableOfContents content={post.content_markdown || ""} />
 
@@ -567,6 +603,13 @@ export default function BlogPostPage() {
           </aside>
         </div>
       </div>
+
+      {/* Fullscreen Image Lightbox Modal */}
+      <ImageLightboxModal
+        isOpen={Boolean(lightboxImage)}
+        image={lightboxImage}
+        onClose={() => setLightboxImage(null)}
+      />
     </div>
   );
 }

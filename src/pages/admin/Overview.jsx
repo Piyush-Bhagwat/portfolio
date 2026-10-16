@@ -128,7 +128,7 @@ export default function Overview() {
 
         {/* Module 4: Blogs */}
         <BentoCard
-          title="Technical Articles"
+          title="Articles"
           subtitle="Split markdown & media"
           dotPattern
           className="flex flex-col justify-between"

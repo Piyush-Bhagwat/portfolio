@@ -9,9 +9,11 @@ import {
   TableOfContents,
   extractHeadings,
   toHeadingSlug,
+  ImageLightboxModal,
 } from "../src/components/blog";
 import BlogPostPage from "../src/pages/public/BlogPostPage.jsx";
 import { MainContent } from "../src/App.jsx";
+import { SAMPLE_INITIAL_POST } from "../src/pages/admin/BlogsCMS.jsx";
 
 const sampleMarkdown = `# Architecture Deep Dive
 
@@ -180,3 +182,74 @@ test("App routing mounts BlogPostPage at /blogs/:slug", () => {
   assert.ok(html.includes("Building Resilient Web Interfaces with Neo-Brutalism"), "App should render BlogPostPage at /blogs/:slug");
   assert.ok(html.includes("About the Author"), "Should render author bio inside App layout");
 });
+
+test("ImageLightboxModal renders zoom controls, close button, alt caption, and image canvas when open", () => {
+  const html = renderToString(
+    React.createElement(ImageLightboxModal, {
+      isOpen: true,
+      image: {
+        src: "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+        alt: "System Architecture Diagram",
+        caption: "Figure 1: High level architecture",
+      },
+      onClose: () => {},
+    })
+  );
+
+  assert.ok(html.includes("sys.media.fullscreen_viewer"), "Should render terminal title");
+  assert.ok(html.includes("Figure 1: High level architecture"), "Should render caption/alt in header and footer");
+  assert.ok(html.includes("Zoom in"), "Should render zoom in control");
+  assert.ok(html.includes("Zoom out"), "Should render zoom out control");
+  assert.ok(html.includes("100%"), "Should display 100% initial zoom level");
+  assert.ok(html.includes("Close Lightbox (Esc)"), "Should render close button");
+  assert.ok(html.includes("https://res.cloudinary.com/demo/image/upload/sample.jpg"), "Should render target image src");
+  assert.ok(html.includes("[Scroll / + -] Zoom"), "Should display keyboard/mouse guide");
+});
+
+test("ImageLightboxModal returns null when closed or missing image", () => {
+  const closedHtml = renderToString(
+    React.createElement(ImageLightboxModal, {
+      isOpen: false,
+      image: { src: "https://example.com/test.png" },
+      onClose: () => {},
+    })
+  );
+  assert.equal(closedHtml, "", "Should render nothing when isOpen is false");
+
+  const noImageHtml = renderToString(
+    React.createElement(ImageLightboxModal, {
+      isOpen: true,
+      image: null,
+      onClose: () => {},
+    })
+  );
+  assert.equal(noImageHtml, "", "Should render nothing when image is null");
+});
+
+test("BlogPostPage renders thumbnail banner with click-to-fullscreen trigger and zoomable styling", () => {
+  const originalCover = SAMPLE_INITIAL_POST.cover_image_url;
+  SAMPLE_INITIAL_POST.cover_image_url = "https://res.cloudinary.com/demo/image/upload/sample.jpg";
+
+  try {
+    const html = renderToString(
+      React.createElement(
+        MemoryRouter,
+        { initialEntries: ["/blogs/building-resilient-web-interfaces"] },
+        React.createElement(
+          Routes,
+          null,
+          React.createElement(Route, {
+            path: "/blogs/:slug",
+            element: React.createElement(BlogPostPage),
+          })
+        )
+      )
+    );
+
+    assert.ok(html.includes("cursor-zoom-in"), "Images should have cursor-zoom-in styling for full screen interaction");
+    assert.ok(html.includes("Click thumbnail to view in full screen mode"), "Banner should indicate full screen click trigger");
+  } finally {
+    SAMPLE_INITIAL_POST.cover_image_url = originalCover;
+  }
+});
+

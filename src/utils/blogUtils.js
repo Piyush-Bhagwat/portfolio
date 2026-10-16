@@ -99,3 +99,155 @@ export async function checkSlugCollision(database, slug, currentPostId) {
     return { isDuplicate: false, suggestedSlug: slug };
   }
 }
+
+/**
+ * Computes a unique, prioritized list of tag suggestions (up to maxCount, default 15).
+ * - Prioritizes already used tags first (sorted by descending usage frequency).
+ * - Follows with existing base suggestions (SUGGESTED_TAGS) that haven't been used yet.
+ * - Deduplicates case-insensitively while preserving original casing.
+ * - Excludes currently selected active tags.
+ *
+ * @param {Array<string | { tags?: string[] }>} [usedSources=[]] - Array of used tag strings or post objects
+ * @param {string[]} [activeTags=[]] - Currently selected tags to exclude
+ * @param {string[]} [baseSuggestions=SUGGESTED_TAGS] - Existing predefined suggestions
+ * @param {number} [maxCount=15] - Maximum number of suggestions to return
+ * @returns {string[]} Top prioritized unique suggestion tags
+ */
+export function getTopSuggestedTags(
+  usedSources = [],
+  activeTags = [],
+  baseSuggestions = SUGGESTED_TAGS,
+  maxCount = 15
+) {
+  const activeSet = new Set((activeTags || []).map((t) => String(t || "").trim().toLowerCase()));
+  const frequencyMap = new Map(); // lowercase -> { count, original }
+
+  // 1. Count frequencies from used sources (accepts list of tag strings or post objects)
+  (usedSources || []).forEach((item) => {
+    if (!item) return;
+    const tagList = Array.isArray(item)
+      ? item
+      : Array.isArray(item.tags)
+      ? item.tags
+      : typeof item === "string"
+      ? [item]
+      : [];
+
+    tagList.forEach((raw) => {
+      const trimmed = String(raw || "").trim();
+      if (!trimmed) return;
+      const lower = trimmed.toLowerCase();
+      if (!frequencyMap.has(lower)) {
+        frequencyMap.set(lower, { count: 0, original: trimmed });
+      }
+      frequencyMap.get(lower).count += 1;
+    });
+  });
+
+  // 2. Sort already used tags by descending frequency, then alphabetically
+  const sortedUsed = Array.from(frequencyMap.entries())
+    .sort((a, b) => {
+      const countDiff = b[1].count - a[1].count;
+      if (countDiff !== 0) return countDiff;
+      return a[1].original.localeCompare(b[1].original);
+    })
+    .map((entry) => entry[1].original);
+
+  const result = [];
+  const seenLower = new Set();
+
+  // 3. Add already used tags first (if not in active tags)
+  for (const tag of sortedUsed) {
+    const lower = tag.toLowerCase();
+    if (!activeSet.has(lower) && !seenLower.has(lower)) {
+      seenLower.add(lower);
+      result.push(tag);
+      if (result.length >= maxCount) return result;
+    }
+  }
+
+  // 4. Follow with existing base suggestions not yet in the list
+  for (const tag of baseSuggestions || []) {
+    const trimmed = String(tag || "").trim();
+    if (!trimmed) continue;
+    const lower = trimmed.toLowerCase();
+    if (!activeSet.has(lower) && !seenLower.has(lower)) {
+      seenLower.add(lower);
+      result.push(trimmed);
+      if (result.length >= maxCount) return result;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Escapes special regex characters in a string.
+ */
+export function escapeRegExp(string) {
+  return String(string || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Removes an image matching the given URL from markdown text.
+ * Matches both standard Markdown `![alt](url "caption")` and HTML `<img src="url" .../>`.
+ *
+ * @param {string} content - Markdown content
+ * @param {string} imageSrc - URL of image to remove
+ * @returns {string} Updated markdown with image removed
+ */
+export function removeImageFromMarkdown(content = "", imageSrc = "") {
+  if (!content || !imageSrc) return content;
+  const escaped = escapeRegExp(imageSrc.trim());
+
+  // 1. Markdown syntax: ![alt](url "optional caption")
+  const mdRegex = new RegExp(
+    `(?:\r?\n)?\\s*!\\[[^\\]]*\\]\\(\\s*${escaped}(?:\\s+["'][^"']*["'])?\\s*\\)\\s*(?:\r?\n)?`,
+    "g"
+  );
+  // 2. HTML syntax: <img ... src="url" ... />
+  const htmlRegex = new RegExp(
+    `(?:\r?\n)?\\s*<img\\s+[^>]*src=["']${escaped}["'][^>]*\\/?>\\s*(?:\r?\n)?`,
+    "gi"
+  );
+
+  let updated = content.replace(mdRegex, "\n\n").replace(htmlRegex, "\n\n");
+  // Clean up any excessive newlines created
+  updated = updated.replace(/\n{3,}/g, "\n\n").trim();
+  return updated;
+}
+
+/**
+ * Replaces an existing image matching oldSrc with newSrc in markdown text in the exact same location.
+ * Preserves captions and existing alt text unless a new alt is provided.
+ *
+ * @param {string} content - Markdown content
+ * @param {string} oldSrc - Existing image URL to find
+ * @param {string} newSrc - New image URL to insert
+ * @param {string} [newAlt=""] - Optional new alt text
+ * @returns {string} Updated markdown content
+ */
+export function replaceImageInMarkdown(content = "", oldSrc = "", newSrc = "", newAlt = "") {
+  if (!content || !oldSrc || !newSrc) return content;
+  const escapedOld = escapeRegExp(oldSrc.trim());
+
+  // 1. Match Markdown syntax: ![alt](oldSrc "optional caption")
+  const mdRegex = new RegExp(
+    `!\\[([^\\]]*)\\]\\(\\s*${escapedOld}(?:\\s+["']([^"']*)["'])?\\s*\\)`,
+    "g"
+  );
+  let replaced = content.replace(mdRegex, (match, capturedAlt, capturedCaption) => {
+    const finalAlt = (newAlt || capturedAlt || "Image").trim();
+    if (capturedCaption) {
+      return `![${finalAlt}](${newSrc.trim()} "${capturedCaption}")`;
+    }
+    return `![${finalAlt}](${newSrc.trim()})`;
+  });
+
+  // 2. Match HTML syntax: <img ... src="oldSrc" ... />
+  const htmlRegex = new RegExp(`(<img\\s+[^>]*src=["'])${escapedOld}(["'][^>]*\\/?>)`, "gi");
+  replaced = replaced.replace(htmlRegex, `$1${newSrc.trim()}$2`);
+
+  return replaced;
+}
+

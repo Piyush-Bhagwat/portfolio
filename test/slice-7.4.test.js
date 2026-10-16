@@ -134,7 +134,7 @@ test("Slice 7.4 Smoke Test: Public Articles page (/blogs) renders articles index
   );
 
   assert.ok(
-    html.includes("Engineering Logs &amp; Publications") || html.includes("Engineering Logs & Publications"),
+    html.includes("Blogs &amp; Publications") || html.includes("Blogs & Publications"),
     "Blogs index must display title"
   );
   assert.ok(

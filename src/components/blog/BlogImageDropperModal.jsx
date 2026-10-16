@@ -68,25 +68,43 @@ export default function BlogImageDropperModal({
 
   const fileInputRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const blobUrlRef = useRef(null);
 
-  // Sync initial alt text if changed
+  // Reset state whenever modal opens or closes
   useEffect(() => {
-    if (initialAltText) {
-      setAltText(initialAltText);
+    if (isOpen) {
+      setActiveTab("upload");
+      setSelectedFile(null);
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+      setPreviewUrl("");
+      setUploadedUrl("");
+      setUploadMetadata(null);
+      setProgress(0);
+      setIsUploading(false);
+      setErrorMessage("");
+      setCaption("");
+      setExternalUrl("");
+      setAltText(initialAltText || "");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
-  }, [initialAltText]);
+  }, [isOpen, initialAltText]);
 
-  // Clean up object URLs and abort controllers on unmount or close
+  // Clean up object URLs and abort controllers strictly on unmount
   useEffect(() => {
     return () => {
-      if (previewUrl && previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
       }
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, [previewUrl]);
+  }, []);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -107,6 +125,10 @@ export default function BlogImageDropperModal({
   const handleModalClose = () => {
     if (isUploading && abortControllerRef.current) {
       abortControllerRef.current.abort();
+    }
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
     }
     setErrorMessage("");
     setProgress(0);
@@ -147,8 +169,14 @@ export default function BlogImageDropperModal({
       return;
     }
 
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+
     setSelectedFile(file);
     const objectUrl = URL.createObjectURL(file);
+    blobUrlRef.current = objectUrl;
     setPreviewUrl(objectUrl);
     setUploadedUrl("");
     setUploadMetadata(null);
@@ -165,6 +193,10 @@ export default function BlogImageDropperModal({
     const file = fileToUpload || selectedFile;
     if (!file) return;
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
     setIsUploading(true);
     setProgress(0);
     setErrorMessage("");
@@ -180,14 +212,18 @@ export default function BlogImageDropperModal({
         { signal: controller.signal }
       );
 
+      abortControllerRef.current = null;
       setUploadedUrl(result.secure_url || result.url);
       setUploadMetadata(result);
       setIsUploading(false);
       setProgress(100);
     } catch (err) {
+      abortControllerRef.current = null;
       setIsUploading(false);
       if (err.name !== "AbortError") {
-        setErrorMessage(err.message || "Failed to upload image to Cloudinary.");
+        setErrorMessage(
+          err.message || "Cloudinary upload failed. Please verify your internet connection and retry."
+        );
       }
     }
   };
@@ -197,20 +233,24 @@ export default function BlogImageDropperModal({
     const finalUrl = activeTab === "upload" ? uploadedUrl : externalUrl.trim();
 
     if (!finalUrl) {
-      setErrorMessage("Please upload an image or provide a valid image URL.");
+      setErrorMessage("Please wait for the image to finish uploading to Cloudinary.");
       return;
     }
 
+    const fallbackAlt = selectedFile?.name ? filenameToAltText(selectedFile.name) : "Image";
+
     onInsertImage({
       url: finalUrl,
-      altText: altText.trim() || "Image",
+      altText: altText.trim() || fallbackAlt,
       caption: caption.trim(),
+      public_id: uploadMetadata?.public_id,
+      delete_token: uploadMetadata?.delete_token,
     });
 
     handleModalClose();
   };
 
-  const targetUrl = activeTab === "upload" ? uploadedUrl : externalUrl;
+  const targetUrl = activeTab === "upload" ? uploadedUrl : externalUrl.trim();
   const canInsert = Boolean(targetUrl && !isUploading);
 
   return (
@@ -289,9 +329,12 @@ export default function BlogImageDropperModal({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/svg+xml,image/avif,image/*"
                   className="hidden"
                   onChange={handleFileChange}
+                  onClick={(e) => {
+                    e.target.value = null;
+                  }}
                 />
 
                 {previewUrl ? (
@@ -323,7 +366,7 @@ export default function BlogImageDropperModal({
                       </div>
                     )}
 
-                    {/* Succeeded */}
+                    {/* Succeeded via Cloudinary */}
                     {uploadedUrl && !isUploading && (
                       <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 flex items-center justify-between text-[11px]">
                         <span className="flex items-center gap-1.5 font-bold">
@@ -344,6 +387,7 @@ export default function BlogImageDropperModal({
                         </div>
                       </div>
                     )}
+
 
                     {!isUploading && (
                       <button
@@ -441,11 +485,24 @@ export default function BlogImageDropperModal({
             </div>
           </div>
 
-          {/* Error Message */}
+          {/* Error Message with Recovery Actions */}
           {errorMessage && (
-            <div className="p-2.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 flex items-center gap-2 text-[11px]">
-              <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
-              <span>{errorMessage}</span>
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 space-y-2 text-[11px]">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+              {selectedFile && !isUploading && (
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-rose-200 dark:border-rose-900/60">
+                  <button
+                    type="button"
+                    onClick={() => executeUpload(selectedFile)}
+                    className="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white font-mono text-[10px] font-bold flex items-center gap-1 active:scale-95 transition-all"
+                  >
+                    <RefreshCw className="w-3 h-3" /> Retry Cloudinary Upload
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

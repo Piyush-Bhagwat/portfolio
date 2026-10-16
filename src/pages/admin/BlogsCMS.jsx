@@ -73,7 +73,7 @@ export function formatBlogDate(timestamp) {
 }
 
 /**
- * BlogsCMS - Technical Articles Management Table
+ * BlogsCMS - Articles Management Table
  */
 export default function BlogsCMS() {
   const navigate = useNavigate();
@@ -224,7 +224,7 @@ export default function BlogsCMS() {
 
       setFeedback({
         type: "success",
-        message: "Sample Neo-Brutalist technical article seeded into Firestore!",
+        message: "Sample Neo-Brutalist article seeded into Firestore!",
       });
       await fetchBlogs();
     } catch (err) {
@@ -283,7 +283,7 @@ export default function BlogsCMS() {
           </div>
           <h1 className="text-2xl font-bold text-[#0f1a14] dark:text-zinc-100 tracking-tight flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-emerald-600 dark:text-terminal-green" />
-            Technical Articles CMS
+            Articles CMS
           </h1>
           <p className="text-xs text-[#4b5e53] dark:text-zinc-400 mt-1">
             Manage, author, and publish developer articles and system design deep dives.

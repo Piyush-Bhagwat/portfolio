@@ -6,7 +6,12 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { AuthContext } from "../src/context/AuthContext.jsx";
 import MarkdownEditorToolbar from "../src/components/blog/MarkdownEditorToolbar.jsx";
 import MarkdownPreview from "../src/components/blog/MarkdownPreview.jsx";
-import BlogEditor, { calculateReadTime, slugifyTitle } from "../src/pages/admin/BlogEditor.jsx";
+import BlogEditor, {
+  calculateReadTime,
+  slugifyTitle,
+  getTopSuggestedTags,
+  SUGGESTED_TAGS,
+} from "../src/pages/admin/BlogEditor.jsx";
 import { MainContent } from "../src/App.jsx";
 import { context } from "../src/context/context.jsx";
 
@@ -156,3 +161,47 @@ test("Public Home Page has clean layout without temporary refactoring banner", (
     "Temporary refactoring banner should be cleanly removed for production"
   );
 });
+
+test("getTopSuggestedTags prioritizes used tags by frequency, preserves base tags, deduplicates, and caps to top 15", () => {
+  const mockUsedSources = [
+    { tags: ["Docker", "Kubernetes", "Docker", "Architecture"] },
+    { tags: ["Kubernetes", "DevOps", "Docker"] },
+    "Architecture",
+    "Microservices",
+  ];
+
+  const activeTags = ["Architecture"]; // Should be excluded
+
+  const suggestions = getTopSuggestedTags(
+    mockUsedSources,
+    activeTags,
+    SUGGESTED_TAGS,
+    15
+  );
+
+  // 1. Used tags should be at the front, sorted by frequency
+  // Docker: 3 times
+  // Kubernetes: 2 times
+  // Architecture: 2 times (excluded by activeTags)
+  // DevOps: 1 time
+  // Microservices: 1 time
+  assert.equal(suggestions[0], "Docker", "Top used tag should be first");
+  assert.equal(suggestions[1], "Kubernetes", "Second most frequent tag should be second");
+  assert.ok(!suggestions.includes("Architecture"), "Active tag must be excluded from suggestions");
+  assert.ok(suggestions.includes("DevOps"), "DevOps should be included in used tags");
+  assert.ok(suggestions.includes("Microservices"), "Microservices should be included in used tags");
+
+  // 2. Base suggestions should follow
+  assert.ok(
+    suggestions.includes("React") || suggestions.includes("CSS / Tailwind"),
+    "Base suggestions should fill remaining slots"
+  );
+
+  // 3. Length should not exceed maxCount (15)
+  assert.ok(suggestions.length <= 15, `Expected <= 15 suggestions, got ${suggestions.length}`);
+
+  // 4. All suggestions should be unique (case-insensitive)
+  const lowerSet = new Set(suggestions.map((s) => s.toLowerCase()));
+  assert.equal(lowerSet.size, suggestions.length, "All suggestions must be unique");
+});
+

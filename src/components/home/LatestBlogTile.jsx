@@ -6,7 +6,7 @@ import { SAMPLE_INITIAL_POST } from "../../pages/admin/BlogsCMS.jsx";
 
 /**
  * LatestBlogTile - Bento Tile 5 (Latest Article Feature - 1x1)
- * Highlights the most recent published technical article with direct reader link.
+ * Highlights the most recent published article with direct reader link.
  */
 export default function LatestBlogTile({ post = SAMPLE_INITIAL_POST, className = "" }) {
   const currentPost = post || SAMPLE_INITIAL_POST;

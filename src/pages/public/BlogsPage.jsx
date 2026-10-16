@@ -16,7 +16,7 @@ import {
 import { SAMPLE_INITIAL_POST } from "../admin/BlogsCMS.jsx";
 
 /**
- * BlogsPage - Public Bento-Grid Technical Article Index
+ * BlogsPage - Public Bento-Grid Article Index
  */
 export default function BlogsPage() {
   const [posts, setPosts] = useState([SAMPLE_INITIAL_POST]);
@@ -131,7 +131,7 @@ export default function BlogsPage() {
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0f1a14] dark:text-zinc-100 tracking-tight flex items-center gap-3">
               <BookOpen className="w-8 h-8 text-emerald-700 dark:text-terminal-green shrink-0" />
-              <span>Engineering Logs &amp; Publications</span>
+              <span>Blogs &amp; Publications</span>
             </h1>
             <p className="text-xs sm:text-sm text-[#4b5e53] dark:text-zinc-400 font-sans max-w-2xl leading-relaxed">
               Technical deep dives into building resilient web interfaces, distributed systems,
