@@ -30,6 +30,7 @@ import {
   RefreshCw,
   Copy,
   Check,
+  MessageSquare,
 } from "lucide-react";
 import {
   DEFAULT_BLOG_MARKDOWN,
@@ -320,6 +321,24 @@ export default function BlogsCMS() {
             New Article
           </BrutalButton>
         </div>
+      </div>
+
+      {/* Blog Module Sub-Navigation: Articles vs Interact */}
+      <div className="flex items-center gap-2 border-b border-[#cbdad0] dark:border-zinc-800 pb-3">
+        <Link
+          to="/admin/blogs"
+          className="flex items-center gap-2 px-3.5 py-1.5 border border-[#1b2e23] dark:border-terminal-green bg-emerald-500 dark:bg-terminal-green text-black font-bold text-xs shadow-brutal-sm"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Articles</span>
+        </Link>
+        <Link
+          to="/admin/blogs/interact"
+          className="flex items-center gap-2 px-3.5 py-1.5 border border-[#cbdad0] dark:border-zinc-800 bg-[#e9f0ea] dark:bg-zinc-900 text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-100 text-xs transition-colors"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>Interact</span>
+        </Link>
       </div>
 
       {/* Feedback Alert Banner */}

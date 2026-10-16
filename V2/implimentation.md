@@ -515,7 +515,7 @@ Implement a scalable, decoupled community interaction platform for blog posts ca
     - Optimistic UI update: On successful submission, prepends the new review to the local comment list and increments counters immediately.
     - Toast feedback on submission success or validation error.
 
-- **Slice 8.6: Admin Blog CMS "Interact" Sub-Section (`/admin/blogs/interact`)**
+- **Slice 8.6: Admin Blog CMS "Interact" Sub-Section (`/admin/blogs/interact`) [COMPLETED]**
   - Add protected sub-route `/admin/blogs/interact` in `src/App.jsx`.
   - Add navigation tab `[ Interact ]` to the Admin Blog CMS navigation header in `AdminLayout.jsx` and `BlogsCMS.jsx`.
   - Create `src/pages/admin/BlogInteractCMS.jsx`:

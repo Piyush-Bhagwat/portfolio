@@ -16,6 +16,7 @@ import ExperienceCMS from "./pages/admin/ExperienceCMS";
 import ProjectsCMS from "./pages/admin/ProjectsCMS";
 import BlogsCMS from "./pages/admin/BlogsCMS";
 import BlogEditor from "./pages/admin/BlogEditor";
+import BlogInteractCMS from "./pages/admin/BlogInteractCMS";
 
 const MainContent = () => {
     const location = useLocation();
@@ -37,6 +38,7 @@ const MainContent = () => {
                         <Route path="skills" element={<SkillsCMS />} />
                         <Route path="experience" element={<ExperienceCMS />} />
                         <Route path="blogs" element={<BlogsCMS />} />
+                        <Route path="blogs/interact" element={<BlogInteractCMS />} />
                         <Route path="blogs/new" element={<BlogEditor />} />
                         <Route path="blogs/edit/:id" element={<BlogEditor />} />
                     </Route>

@@ -16,6 +16,7 @@ import {
   Terminal,
   ShieldCheck,
   ChevronRight,
+  MessageSquare,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -49,6 +50,11 @@ const NAV_ITEMS = [
     to: "/admin/blogs",
     icon: BookOpen,
   },
+  {
+    label: "Blog Interact",
+    to: "/admin/blogs/interact",
+    icon: MessageSquare,
+  },
 ];
 
 /**
@@ -75,8 +81,10 @@ export default function AdminLayout() {
     }
   };
 
-  // Derive current section label for breadcrumb
-  const currentNav = NAV_ITEMS.find((item) => location.pathname.startsWith(item.to)) || {
+  // Derive current section label for breadcrumb (longest path matches first)
+  const currentNav = NAV_ITEMS.slice()
+    .sort((a, b) => b.to.length - a.to.length)
+    .find((item) => location.pathname.startsWith(item.to)) || {
     label: "Control Panel",
   };
 
@@ -179,16 +187,20 @@ export default function AdminLayout() {
               </p>
               {NAV_ITEMS.map((item) => {
                 const IconComponent = item.icon;
+                const isCurrent = item.to === "/admin/blogs"
+                  ? (location.pathname === "/admin/blogs" || location.pathname.startsWith("/admin/blogs/new") || location.pathname.startsWith("/admin/blogs/edit"))
+                  : location.pathname.startsWith(item.to);
+
                 return (
                   <NavLink
                     key={item.to}
                     to={item.to}
                     onClick={() => setMobileOpen(false)}
-                    className={({ isActive }) => `
+                    className={`
                       flex items-center justify-between px-3 py-2.5 font-mono text-xs
                       border border-transparent transition-all
                       ${
-                        isActive
+                        isCurrent
                           ? "bg-[#e9f0ea] dark:bg-zinc-900 border-[#1b2e23] dark:border-zinc-700 text-emerald-700 dark:text-terminal-green font-bold shadow-brutal-sm border-r-2 border-r-emerald-600 dark:border-r-terminal-green"
                           : "text-[#4b5e53] dark:text-zinc-400 hover:text-[#0f1a14] dark:hover:text-zinc-100 hover:bg-[#e9f0ea]/50 dark:hover:bg-zinc-900/50"
                       }
