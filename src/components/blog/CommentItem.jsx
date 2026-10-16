@@ -46,9 +46,12 @@ export default function CommentItem({ comment, className = "" }) {
       {adminReply && (
         <div className="mt-2.5 pl-3 border-l-2 border-emerald-600 dark:border-terminal-green bg-emerald-50/70 dark:bg-emerald-950/20 py-2 pr-2.5 space-y-1">
           <div className="flex items-center justify-between text-[10px]">
-            <span className="inline-flex items-center gap-1 text-emerald-800 dark:text-terminal-green font-bold uppercase tracking-wider">
-              <ShieldCheck className="w-3 h-3" />
-              <span>{adminReply.author ? `Verified Author (${adminReply.author})` : "Verified Author"}</span>
+            <span
+              className="inline-flex items-center gap-1 text-emerald-800 dark:text-terminal-green font-bold font-mono text-[11px]"
+              title="Verified Author"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-terminal-green shrink-0" />
+              <span>{adminReply.author || "Piyush Bhagwat"}</span>
             </span>
             <span className="text-[#4b5e53] dark:text-zinc-500">
               {formatCommentDate(adminReply.replied_at)}

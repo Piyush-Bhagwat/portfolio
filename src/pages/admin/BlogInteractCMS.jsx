@@ -568,7 +568,7 @@ export default function BlogInteractCMS() {
                           <span className="truncate">{comment.post_title || comment.post_id}</span>
                           <ExternalLink className="w-3 h-3 shrink-0" />
                         </Link>
-                        <div className="text-[10px] text-[#6e8276] dark:text-zinc-500 font-mono truncate">
+                        <div className="text-[10px] text-[#6e8276] dark:text-zinc-500 max-w-[160px] font-mono truncate">
                           id: {comment.post_id}
                         </div>
                       </td>
@@ -596,35 +596,30 @@ export default function BlogInteractCMS() {
                       {/* 4. Review & Official Reply */}
                       <td className="p-3 align-top font-sans space-y-2">
                         <div className="text-xs text-[#0f1a14] dark:text-zinc-200 leading-relaxed font-sans">
-                          {isExpanded || !isLong
-                            ? comment.content
-                            : `${comment.content.slice(0, 130)}...`}
-                          {isLong && (
-                            <button
-                              type="button"
-                              onClick={() => toggleExpandComment(comment.id)}
-                              className="ml-1 text-[11px] text-emerald-700 dark:text-terminal-green hover:underline font-mono"
-                            >
-                              {isExpanded ? "[show less]" : "[read more]"}
-                            </button>
+                          {comment.content && comment.content.trim() ? (
+                            <>
+                              {isExpanded || !isLong
+                                ? comment.content
+                                : `${comment.content.slice(0, 130)}...`}
+                              {isLong && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleExpandComment(comment.id)}
+                                  className="ml-1 text-[11px] text-emerald-700 dark:text-terminal-green hover:underline font-mono"
+                                >
+                                  {isExpanded ? "[show less]" : "[read more]"}
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-[#6e8276] dark:text-zinc-500 italic text-[11px] font-mono">
+                              (Rating only — no written review)
+                            </span>
                           )}
                         </div>
 
                         {/* Admin Verified Reply Preview */}
-                        {comment.admin_reply && (
-                          <div className="p-2 bg-[#f4f7f4] dark:bg-zinc-900/70 border-l-2 border-emerald-600 dark:border-terminal-green space-y-1 text-xs">
-                            <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 dark:text-terminal-green font-mono font-bold">
-                              <ShieldCheck className="w-3 h-3" />
-                              <span>{comment.admin_reply.author || "Verified Author"}</span>
-                              <span className="text-[#6e8276] dark:text-zinc-500 font-normal">
-                                · {formatCommentDate(comment.admin_reply.replied_at)}
-                              </span>
-                            </div>
-                            <p className="text-[#4b5e53] dark:text-zinc-300 italic text-[11px] line-clamp-2">
-                              &ldquo;{comment.admin_reply.content}&rdquo;
-                            </p>
-                          </div>
-                        )}
+                        {comment.admin_reply && <div className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">replied</div>}
                       </td>
 
                       {/* 5. Timestamp */}

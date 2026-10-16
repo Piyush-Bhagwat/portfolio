@@ -150,7 +150,9 @@ export const createCommentWithAggregate = async (firestoreDb, commentInput) => {
       const currentRatingCount = Number(blogData.rating_count) || 0;
       const currentAvg = Number(blogData.rating_average) || 0;
 
-      const newCount = currentCount + 1;
+      // Only increment comment_count if the review includes written discussion content
+      const hasContent = Boolean(sanitized.content && sanitized.content.trim().length > 0);
+      const newCount = hasContent ? currentCount + 1 : currentCount;
       const newRatingCount = currentRatingCount + 1;
       const newRatingAvg = calculateNewRatingAverage(currentAvg, currentRatingCount, sanitized.rating);
 
@@ -256,13 +258,14 @@ export const toggleCommentVisibilityWithAggregate = async (firestoreDb, commentI
       let newCount = currentCount;
       let newRatingCount = currentRatingCount;
       let newAvg = currentAvg;
+      const hasContent = Boolean(commentData.content && commentData.content.trim().length > 0);
 
       if (targetStatus === "hidden") {
-        newCount = Math.max(0, currentCount - 1);
+        newCount = hasContent ? Math.max(0, currentCount - 1) : currentCount;
         newRatingCount = Math.max(0, currentRatingCount - 1);
         newAvg = calculateRemovedRatingAverage(currentAvg, currentRatingCount, commentData.rating);
       } else if (targetStatus === "visible") {
-        newCount = currentCount + 1;
+        newCount = hasContent ? currentCount + 1 : currentCount;
         newRatingCount = currentRatingCount + 1;
         newAvg = calculateNewRatingAverage(currentAvg, currentRatingCount, commentData.rating);
       }

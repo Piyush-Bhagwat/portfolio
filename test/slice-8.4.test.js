@@ -267,3 +267,49 @@ test("Slice 8.4: CommentBox renders sync link when post indicates comments exist
   assert.ok(html.includes("3"), "Must include comment count");
 });
 
+test("Slice 8.4: CommentBox only previews comments with content and excludes rating-only reviews", () => {
+  const mixedComments = [
+    { id: "1", author_name: "Dev 1", rating: 5, content: "Great technical guide!", created_at: new Date() },
+    { id: "2", author_name: "Dev 2", rating: 4, content: "", created_at: new Date() }, // rating only
+    { id: "3", author_name: "Dev 3", rating: 5, content: "   ", created_at: new Date() }, // whitespace only
+    { id: "4", author_name: "Dev 4", rating: 5, content: "Clear Neo-Brutalist architecture", created_at: new Date() },
+  ];
+
+  const html = renderToString(
+    React.createElement(CommentBox, {
+      post: { id: "test-post", title: "Test Post", comment_count: 2, rating_count: 4, rating_average: 4.75 },
+      comments: mixedComments,
+    })
+  );
+
+  // Comments with written content must appear
+  assert.ok(html.includes("Great technical guide!"), "Must preview comment 1 with content");
+  assert.ok(html.includes("Clear Neo-Brutalist architecture"), "Must preview comment 4 with content");
+
+  // Rating-only reviews must NOT appear in discussion list
+  assert.ok(!html.includes("Dev 2"), "Rating-only Dev 2 must be excluded from comments feed");
+  assert.ok(!html.includes("Dev 3"), "Whitespace-only Dev 3 must be excluded from comments feed");
+});
+
+test("Slice 8.4: CommentItem renders verified author reply with symbol and author name", () => {
+  const comment = {
+    id: "c-verified",
+    author_name: "Visitor",
+    rating: 5,
+    content: "Loved the system design!",
+    created_at: new Date(),
+    admin_reply: {
+      author: "Piyush Bhagwat",
+      content: "Thank you for reading!",
+      replied_at: new Date(),
+    },
+  };
+
+  const html = renderToString(React.createElement(CommentItem, { comment }));
+
+  assert.ok(html.includes("Piyush Bhagwat"), "Must render verified author name");
+  assert.ok(html.includes("lucide-shield-check"), "Must render shield-check symbol");
+  assert.ok(!html.includes("Verified Author (Piyush Bhagwat)"), "Must not render verbose text");
+});
+
+

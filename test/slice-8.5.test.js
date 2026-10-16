@@ -139,6 +139,38 @@ test("Slice 8.5: Optimistic parent post aggregate calculation updates correctly"
   assert.equal(updatedPost.rating_average, 4.67, "rating_average must recalculate accurately");
 });
 
+test("Slice 8.5: Rating-only comment updates rating_count and average without incrementing comment_count", () => {
+  const currentPost = {
+    id: "sample-post",
+    comment_count: 3,
+    rating_count: 5,
+    rating_average: 4.6,
+  };
+
+  const ratingOnlyComment = {
+    rating: 5,
+    author_name: "Visitor",
+    content: "", // no written review
+  };
+
+  const oldAvg = Number(currentPost.rating_average) || 0;
+  const oldCount = Number(currentPost.rating_count) || 0;
+  const newRatingCount = oldCount + 1;
+  const newAvg = calculateNewRatingAverage(oldAvg, oldCount, ratingOnlyComment.rating);
+  const hasContent = Boolean(ratingOnlyComment.content && ratingOnlyComment.content.trim().length > 0);
+
+  const updatedPost = {
+    ...currentPost,
+    comment_count: hasContent ? currentPost.comment_count + 1 : currentPost.comment_count,
+    rating_count: newRatingCount,
+    rating_average: newAvg,
+  };
+
+  assert.equal(updatedPost.comment_count, 3, "comment_count must remain unchanged when content is empty");
+  assert.equal(updatedPost.rating_count, 6, "rating_count must increment by 1");
+  assert.equal(updatedPost.rating_average, 4.67, "rating_average must recalculate accurately");
+});
+
 test("Slice 8.5: BlogPostPage integrates CommentBox with review submission trigger", () => {
   const html = renderToString(
     React.createElement(

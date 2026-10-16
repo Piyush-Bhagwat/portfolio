@@ -140,8 +140,14 @@ export function useComments(postId, options = {}) {
 
         const rawFallbackDocs = Array.from(docMap.values());
         if (rawFallbackDocs.length > 0) {
+          // Only show comments that have non-empty written review content
+          const contentDocs = rawFallbackDocs.filter((docSnap) => {
+            const data = docSnap.data ? docSnap.data() : docSnap;
+            return typeof data?.content === "string" && data.content.trim().length > 0;
+          });
+
           // Sort client-side descending by created_at timestamp
-          const itemsData = rawFallbackDocs.map((docSnap) => ({
+          const itemsData = contentDocs.map((docSnap) => ({
             id: docSnap.id,
             _docSnap: docSnap,
             ...docSnap.data(),
@@ -175,10 +181,13 @@ export function useComments(postId, options = {}) {
       const docs = loadedDocs;
       lastDocRef.current = docs[docs.length - 1] || null;
 
-      const items = docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }));
+      // Only show comments with non-empty written content
+      const items = docs
+        .map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }))
+        .filter((c) => typeof c.content === "string" && c.content.trim().length > 0);
 
       setComments(items);
       setHasMore(evaluateHasMore(items.length, docs.length, initialLimit));
@@ -243,10 +252,12 @@ export function useComments(postId, options = {}) {
         const docs = snap.docs || [];
         lastDocRef.current = docs[docs.length - 1] || null;
 
-        const newItems = docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }));
+        const newItems = docs
+          .map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data(),
+          }))
+          .filter((c) => typeof c.content === "string" && c.content.trim().length > 0);
 
         setComments((prev) => {
           // Deduplicate by ID in case an item was optimistically added
@@ -302,9 +313,12 @@ export function useComments(postId, options = {}) {
           payloadWithPost
         );
         if (isMountedRef.current) {
-          setComments((prev) => [created, ...prev]);
-          if (allFallbackDocsRef.current && allFallbackDocsRef.current.length > 0) {
-            allFallbackDocsRef.current = [created, ...allFallbackDocsRef.current];
+          const hasContent = typeof created.content === "string" && created.content.trim().length > 0;
+          if (hasContent) {
+            setComments((prev) => [created, ...prev]);
+            if (allFallbackDocsRef.current && allFallbackDocsRef.current.length > 0) {
+              allFallbackDocsRef.current = [created, ...allFallbackDocsRef.current];
+            }
           }
         }
         return created;

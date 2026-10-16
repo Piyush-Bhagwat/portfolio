@@ -79,10 +79,11 @@ export default function BlogPostPage() {
       const oldCount = Number(post.rating_count) || 0;
       const newRatingCount = oldCount + 1;
       const newAvg = calculateNewRatingAverage(oldAvg, oldCount, newComment.rating);
+      const hasContent = Boolean(newComment.content && newComment.content.trim().length > 0);
 
       setPost((prev) => ({
         ...prev,
-        comment_count: (Number(prev?.comment_count) || 0) + 1,
+        comment_count: hasContent ? (Number(prev?.comment_count) || 0) + 1 : (Number(prev?.comment_count) || 0),
         rating_count: newRatingCount,
         rating_average: newAvg,
       }));

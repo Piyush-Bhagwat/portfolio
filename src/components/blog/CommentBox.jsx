@@ -83,9 +83,12 @@ export default function CommentBox({
   const effectiveCommentCount =
     Number(commentCount || post?.comment_count) || 0;
 
+  // Only show comments with written review content
+  const contentComments = comments.filter((c) => Boolean(c.content && c.content.trim()));
+
   // Initial preview slice: up to 3 comments when collapsed
-  const displayedComments = isExpanded ? comments : comments.slice(0, 3);
-  const canExpand = comments.length > 3 || effectiveCommentCount > 3 || hasMore;
+  const displayedComments = isExpanded ? contentComments : contentComments.slice(0, 3);
+  const canExpand = contentComments.length > 3 || effectiveCommentCount > 3 || hasMore;
 
   return (
     <div id="comments-section" tabIndex={-1} className="focus:outline-none">
@@ -195,14 +198,16 @@ export default function CommentBox({
                 </div>
               )}
             </div>
-          ) : comments.length === 0 ? (
+          ) : contentComments.length === 0 ? (
             <div className="border border-dashed border-[#cbdad0] dark:border-zinc-800 p-4 text-center space-y-1.5 text-xs text-[#4b5e53] dark:text-zinc-500">
               <MessageSquare className="w-5 h-5 mx-auto text-[#cbdad0] dark:text-zinc-600" />
               <p className="font-bold text-[#0f1a14] dark:text-zinc-300">
                 No discussions yet
               </p>
               <p className="text-[11px]">
-                Be the first to leave a review or ask a technical question.
+                {effectiveRatingCount > 0
+                  ? `${effectiveRatingCount} rating${effectiveRatingCount === 1 ? "" : "s"} submitted. Be the first to leave a written discussion.`
+                  : "Be the first to leave a review or ask a technical question."}
               </p>
               {effectiveCommentCount > 0 && onReload && (
                 <div className="pt-1">
@@ -274,7 +279,7 @@ export default function CommentBox({
                 {isExpanded
                   ? "Collapse Comments"
                   : `Expand / View All (${
-                      effectiveCommentCount || comments.length
+                      effectiveCommentCount || contentComments.length
                     })`}
               </BrutalButton>
             </div>
