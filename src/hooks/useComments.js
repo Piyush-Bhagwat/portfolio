@@ -4,6 +4,8 @@ import { db } from "../services/firebase.js";
 import {
   buildInitialCommentsQuery,
   buildPaginatedCommentsQuery,
+  buildFallbackCommentsQuery,
+  sortCommentsByDate,
   createCommentWithAggregate,
   toggleCommentVisibilityWithAggregate,
 } from "../services/commentsService.js";
@@ -14,13 +16,15 @@ import {
  * Provides a scalable, decoupled community interaction pipeline for blog posts.
  * - Initial Tier 1 load: Strictly 3 visible comments.
  * - Cursor Pagination Tier 2: Fetches next 10 items on demand via startAfter(lastDocRef).
- * - Bounded memory & bandwidth: Guarantees minimal Firestore quota consumption even on viral posts.
+ * - Multi-tier Resilience: Automatic fallback to composite-index-free queries with in-memory sorting.
+ * - Dual-Key Support: Matches by both Firestore document ID and human-readable slug.
  *
  * @param {string} postId - Target blog post identifier
  * @param {Object} [options={}] - Optional configuration
  * @param {number} [options.initialLimit=3] - Number of comments to load initially
  * @param {number} [options.pageSize=10] - Number of comments per paginated batch
  * @param {number} [options.totalCount] - Pre-aggregated comment_count from parent blog document
+ * @param {string} [options.postSlug] - Optional human-readable post slug for dual-key matching
  * @param {import("firebase/firestore").Firestore} [options.firestoreDb] - Firestore instance override
  * @returns {{
  *   comments: Array<Object>,
@@ -39,6 +43,7 @@ export function useComments(postId, options = {}) {
     initialLimit = 3,
     pageSize = 10,
     totalCount,
+    postSlug,
     firestoreDb = db,
   } = options;
 
@@ -50,6 +55,8 @@ export function useComments(postId, options = {}) {
 
   // Pagination cursor: cached DocumentSnapshot of the last fetched comment
   const lastDocRef = useRef(null);
+  // Cache of all loaded comments when fallback query is used (avoids needing composite index for pagination)
+  const allFallbackDocsRef = useRef([]);
   // Keep track of active fetch execution to avoid race conditions
   const isMountedRef = useRef(true);
 
@@ -68,66 +75,149 @@ export function useComments(postId, options = {}) {
   );
 
   /**
-   * Tier 1: Initial Load (Strictly up to 3 comments)
+   * Tier 1: Initial Load (Strictly up to 3 comments) with multi-tier query fallbacks
    */
   const fetchInitialComments = useCallback(async () => {
-    if (!postId || !firestoreDb) {
+    const candidateIds = Array.from(new Set([postId, postSlug].filter(Boolean)));
+
+    if (candidateIds.length === 0 || !firestoreDb) {
       setComments([]);
       setLoading(false);
       setHasMore(false);
       lastDocRef.current = null;
+      allFallbackDocsRef.current = [];
       return;
     }
 
     setLoading(true);
     setError(null);
     lastDocRef.current = null;
+    allFallbackDocsRef.current = [];
 
+    let loadedDocs = [];
+    let usedFallback = false;
+
+    // Step 1: Attempt primary optimized query (ordered by created_at desc)
     try {
-      const q = buildInitialCommentsQuery(firestoreDb, postId, initialLimit);
+      const q = buildInitialCommentsQuery(firestoreDb, postId || candidateIds[0], initialLimit);
       const snap = await getDocs(q);
-
-      if (!isMountedRef.current) return;
-
-      if (!snap || snap.empty) {
-        setComments([]);
-        setHasMore(false);
-        lastDocRef.current = null;
-      } else {
-        const docs = snap.docs || [];
-        lastDocRef.current = docs[docs.length - 1] || null;
-
-        const items = docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }));
-
-        setComments(items);
-        setHasMore(evaluateHasMore(items.length, docs.length, initialLimit));
+      if (snap && !snap.empty) {
+        loadedDocs = snap.docs || [];
+      } else if (postSlug && postSlug !== postId) {
+        // Try slug with primary query if postId yielded no results
+        try {
+          const slugQ = buildInitialCommentsQuery(firestoreDb, postSlug, initialLimit);
+          const slugSnap = await getDocs(slugQ);
+          if (slugSnap && !slugSnap.empty) {
+            loadedDocs = slugSnap.docs || [];
+          }
+        } catch {
+          usedFallback = true;
+        }
       }
-    } catch (err) {
-      if (isMountedRef.current) {
-        console.error(`Error loading comments for post "${postId}":`, err);
-        setError(err.message || "Failed to load comments.");
-        setComments([]);
-        setHasMore(false);
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
+    } catch (primaryErr) {
+      console.warn(
+        `Primary ordered comments query failed for post "${postId || postSlug}" (likely missing composite index in Firestore). Attempting resilient index-free fallback:`,
+        primaryErr
+      );
+      usedFallback = true;
+    }
+
+    // Step 2: Resilient Fallback - query without orderBy to bypass missing composite index
+    if (usedFallback || (loadedDocs.length === 0 && (Number(totalCount) > 0 || candidateIds.length > 1))) {
+      try {
+        const docMap = new Map();
+
+        for (const candidateId of candidateIds) {
+          try {
+            const fallbackQ = buildFallbackCommentsQuery(firestoreDb, candidateId);
+            const fallbackSnap = await getDocs(fallbackQ);
+            (fallbackSnap.docs || []).forEach((d) => docMap.set(d.id, d));
+          } catch (candErr) {
+            console.warn(`Fallback query for candidate ID "${candidateId}" failed:`, candErr);
+          }
+        }
+
+        const rawFallbackDocs = Array.from(docMap.values());
+        if (rawFallbackDocs.length > 0) {
+          // Sort client-side descending by created_at timestamp
+          const itemsData = rawFallbackDocs.map((docSnap) => ({
+            id: docSnap.id,
+            _docSnap: docSnap,
+            ...docSnap.data(),
+          }));
+          const sorted = sortCommentsByDate(itemsData);
+
+          allFallbackDocsRef.current = sorted;
+          const initialSlice = sorted.slice(0, initialLimit);
+
+          if (!isMountedRef.current) return;
+
+          setComments(initialSlice);
+          setHasMore(sorted.length > initialLimit);
+          lastDocRef.current = initialSlice[initialSlice.length - 1]?._docSnap || null;
+          setError(null);
+          setLoading(false);
+          return;
+        }
+      } catch (fallbackErr) {
+        console.error("Resilient comments query fallback also failed:", fallbackErr);
       }
     }
-  }, [firestoreDb, postId, initialLimit, evaluateHasMore]);
+
+    if (!isMountedRef.current) return;
+
+    if (loadedDocs.length === 0) {
+      setComments([]);
+      setHasMore(false);
+      lastDocRef.current = null;
+    } else {
+      const docs = loadedDocs;
+      lastDocRef.current = docs[docs.length - 1] || null;
+
+      const items = docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      setComments(items);
+      setHasMore(evaluateHasMore(items.length, docs.length, initialLimit));
+    }
+
+    setLoading(false);
+  }, [firestoreDb, postId, postSlug, initialLimit, evaluateHasMore, totalCount]);
 
   /**
    * Tier 2: Cursor-Based Pagination (Fetches next batch of 10 items)
    */
   const loadMore = useCallback(async () => {
-    if (loadingMore || loading || !hasMore || !postId || !firestoreDb) {
+    if (loadingMore || loading || !hasMore || !firestoreDb) {
       return;
     }
 
-    // If no cursor snapshot is available, fallback to initial reload
+    // Case A: If cached fallback docs exist in memory, paginate smoothly without index requirements
+    if (allFallbackDocsRef.current && allFallbackDocsRef.current.length > 0) {
+      const currentCount = comments.length;
+      const nextSlice = allFallbackDocsRef.current.slice(
+        currentCount,
+        currentCount + pageSize
+      );
+
+      if (nextSlice.length > 0) {
+        setComments((prev) => {
+          const existingIds = new Set(prev.map((c) => c.id));
+          const uniqueItems = nextSlice.filter((c) => !existingIds.has(c.id));
+          const updated = [...prev, ...uniqueItems];
+          setHasMore(updated.length < allFallbackDocsRef.current.length);
+          return updated;
+        });
+      } else {
+        setHasMore(false);
+      }
+      return;
+    }
+
+    // Case B: Cursor-based pagination with DocumentSnapshot
     if (!lastDocRef.current) {
       setHasMore(false);
       return;
@@ -139,7 +229,7 @@ export function useComments(postId, options = {}) {
     try {
       const q = buildPaginatedCommentsQuery(
         firestoreDb,
-        postId,
+        postId || postSlug,
         lastDocRef.current,
         pageSize
       );
@@ -170,7 +260,7 @@ export function useComments(postId, options = {}) {
       }
     } catch (err) {
       if (isMountedRef.current) {
-        console.error(`Error paginating comments for post "${postId}":`, err);
+        console.error(`Error paginating comments for post "${postId || postSlug}":`, err);
         setError(err.message || "Failed to load more comments.");
       }
     } finally {
@@ -183,9 +273,11 @@ export function useComments(postId, options = {}) {
     loading,
     hasMore,
     postId,
+    postSlug,
     firestoreDb,
     pageSize,
     evaluateHasMore,
+    comments.length,
   ]);
 
   /**
@@ -193,14 +285,15 @@ export function useComments(postId, options = {}) {
    */
   const addComment = useCallback(
     async (commentPayload) => {
-      if (!firestoreDb || !postId) {
+      if (!firestoreDb || (!postId && !postSlug)) {
         throw new Error("Cannot submit comment without active post context.");
       }
 
       setError(null);
       const payloadWithPost = {
         ...commentPayload,
-        post_id: postId,
+        post_id: postId || postSlug,
+        post_slug: postSlug || "",
       };
 
       try {
@@ -210,6 +303,9 @@ export function useComments(postId, options = {}) {
         );
         if (isMountedRef.current) {
           setComments((prev) => [created, ...prev]);
+          if (allFallbackDocsRef.current && allFallbackDocsRef.current.length > 0) {
+            allFallbackDocsRef.current = [created, ...allFallbackDocsRef.current];
+          }
         }
         return created;
       } catch (err) {
@@ -219,7 +315,7 @@ export function useComments(postId, options = {}) {
         throw err;
       }
     },
-    [firestoreDb, postId]
+    [firestoreDb, postId, postSlug]
   );
 
   /**

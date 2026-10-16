@@ -61,11 +61,13 @@ export default function CommentBox({
   comments = [],
   loading = false,
   loadingMore = false,
+  error = null,
   hasMore = false,
   onLoadMore,
   onOpenForm,
   onAddComment,
   onCommentAdded,
+  onReload,
   formOpen,
   onToggleForm,
   className = "",
@@ -176,6 +178,23 @@ export default function CommentBox({
               <Loader2 className="w-4 h-4 animate-spin text-emerald-600 dark:text-terminal-green" />
               <span>Loading discussions...</span>
             </div>
+          ) : error && comments.length === 0 ? (
+            <div className="border border-dashed border-rose-300 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20 p-4 text-center space-y-2 text-xs text-rose-800 dark:text-rose-300 font-mono">
+              <p className="font-bold uppercase text-[11px]">[Notice: Unable to load discussions]</p>
+              <p className="text-[10px] text-[#4b5e53] dark:text-zinc-400 font-sans">{error}</p>
+              {onReload && (
+                <div className="pt-1">
+                  <BrutalButton
+                    variant="outline"
+                    size="sm"
+                    className="text-[11px] mx-auto"
+                    onClick={onReload}
+                  >
+                    Retry Loading
+                  </BrutalButton>
+                </div>
+              )}
+            </div>
           ) : comments.length === 0 ? (
             <div className="border border-dashed border-[#cbdad0] dark:border-zinc-800 p-4 text-center space-y-1.5 text-xs text-[#4b5e53] dark:text-zinc-500">
               <MessageSquare className="w-5 h-5 mx-auto text-[#cbdad0] dark:text-zinc-600" />
@@ -185,6 +204,17 @@ export default function CommentBox({
               <p className="text-[11px]">
                 Be the first to leave a review or ask a technical question.
               </p>
+              {effectiveCommentCount > 0 && onReload && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={onReload}
+                    className="text-[11px] text-emerald-700 dark:text-terminal-green hover:underline font-mono"
+                  >
+                    [Sync / Refresh Comments ({effectiveCommentCount})]
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div
@@ -270,11 +300,13 @@ CommentBox.propTypes = {
   comments: PropTypes.arrayOf(PropTypes.object),
   loading: PropTypes.bool,
   loadingMore: PropTypes.bool,
+  error: PropTypes.string,
   hasMore: PropTypes.bool,
   onLoadMore: PropTypes.func,
   onOpenForm: PropTypes.func,
   onAddComment: PropTypes.func,
   onCommentAdded: PropTypes.func,
+  onReload: PropTypes.func,
   formOpen: PropTypes.bool,
   onToggleForm: PropTypes.func,
   className: PropTypes.string,

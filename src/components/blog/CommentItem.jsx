@@ -36,9 +36,11 @@ export default function CommentItem({ comment, className = "" }) {
       </div>
 
       {/* Comment Body */}
-      <p className="text-xs text-[#0f1a14] dark:text-zinc-300 font-sans leading-relaxed whitespace-pre-wrap break-words">
-        {content}
-      </p>
+      {content && content.trim() ? (
+        <p className="text-xs text-[#0f1a14] dark:text-zinc-300 font-sans leading-relaxed whitespace-pre-wrap break-words">
+          {content}
+        </p>
+      ) : null}
 
       {/* Verified Author Reply */}
       {adminReply && (

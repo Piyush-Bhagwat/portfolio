@@ -63,10 +63,15 @@ export default function BlogPostPage() {
     comments,
     loading: loadingComments,
     loadingMore: loadingMoreComments,
+    error: commentsError,
     hasMore: hasMoreComments,
     loadMore: loadMoreComments,
     addComment,
-  } = useComments(post?.id, { totalCount: post?.comment_count });
+    reload: reloadComments,
+  } = useComments(post?.id, {
+    totalCount: post?.comment_count,
+    postSlug: post?.slug || slug,
+  });
 
   const handleCommentAdded = (newComment) => {
     if (newComment && post) {
@@ -593,8 +598,7 @@ export default function BlogPostPage() {
                     Piyush Bhagwat
                   </h4>
                   <p className="text-xs text-[#4b5e53] dark:text-zinc-400 font-sans leading-relaxed">
-                    Software engineer specializing in high-performance web applications,
-                    distributed backend architectures, and crisp Neo-Brutalist design systems.
+                    Software engineer | NodeJs Developer | Thinker
                   </p>
                 </div>
               </div>
@@ -651,10 +655,12 @@ export default function BlogPostPage() {
                 comments={comments}
                 loading={loadingComments}
                 loadingMore={loadingMoreComments}
+                error={commentsError}
                 hasMore={hasMoreComments}
                 onLoadMore={loadMoreComments}
                 onAddComment={addComment}
                 onCommentAdded={handleCommentAdded}
+                onReload={reloadComments}
               />
             </div>
           </aside>

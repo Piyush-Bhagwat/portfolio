@@ -358,6 +358,44 @@ export const buildPaginatedCommentsQuery = (firestoreDb, postId, lastDocSnapshot
   );
 };
 
+/**
+ * Constructs a composite-index-free Firestore query for comments.
+ * Uses only single-field equality filters (post_id and status) without orderBy,
+ * ensuring query execution succeeds even if composite indexes are missing or pending.
+ *
+ * @param {import("firebase/firestore").Firestore} firestoreDb
+ * @param {string} postId - Blog post ID
+ */
+export const buildFallbackCommentsQuery = (firestoreDb, postId) => {
+  return query(
+    collection(firestoreDb, "comments"),
+    where("post_id", "==", postId),
+    where("status", "==", "visible")
+  );
+};
+
+/**
+ * Defensive client-side descending timestamp comparator for comments.
+ * Accurately extracts milliseconds from Firestore Timestamp objects, seconds, Date instances, or ISO strings.
+ *
+ * @param {Array<Object>} items - Array of comment objects
+ * @returns {Array<Object>} Sorted array of comments descending
+ */
+export const sortCommentsByDate = (items = []) => {
+  return [...items].sort((a, b) => {
+    const getMillis = (item) => {
+      const ts = item?.created_at;
+      if (!ts) return 0;
+      if (typeof ts.toMillis === "function") return ts.toMillis();
+      if (typeof ts.seconds === "number") return ts.seconds * 1000;
+      if (ts instanceof Date) return ts.getTime();
+      const parsed = new Date(ts).getTime();
+      return isNaN(parsed) ? 0 : parsed;
+    };
+    return getMillis(b) - getMillis(a);
+  });
+};
+
 export default {
   calculateNewRatingAverage,
   calculateRemovedRatingAverage,
@@ -367,4 +405,6 @@ export default {
   addAdminReplyToComment,
   buildInitialCommentsQuery,
   buildPaginatedCommentsQuery,
+  buildFallbackCommentsQuery,
+  sortCommentsByDate,
 };

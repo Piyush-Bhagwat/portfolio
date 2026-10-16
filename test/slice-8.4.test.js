@@ -7,10 +7,14 @@ import useComments, { useComments as useCommentsNamed } from "../src/hooks/useCo
 import {
   buildInitialCommentsQuery,
   buildPaginatedCommentsQuery,
+  buildFallbackCommentsQuery,
+  sortCommentsByDate,
   validateCommentPayload,
 } from "../src/services/commentsService.js";
 import { db } from "../src/services/firebase.js";
 import BlogPostPage from "../src/pages/public/BlogPostPage.jsx";
+import CommentItem from "../src/components/blog/CommentItem.jsx";
+import CommentBox from "../src/components/blog/CommentBox.jsx";
 
 test("Slice 8.4: useComments exports hook as default and named export", () => {
   assert.equal(typeof useComments, "function", "useComments must be exported as default function");
@@ -190,3 +194,76 @@ test("Slice 8.4: BlogPostPage mounts with useComments hook integrated", () => {
   assert.ok(html.includes("id=\"comments-section\""), "Must contain comments-section anchor target");
   assert.ok(html.includes("Leave a Review / Comment"), "Must contain review call to action");
 });
+
+test("Slice 8.4: buildFallbackCommentsQuery creates index-free query matching status and post_id", () => {
+  const fallbackQ = buildFallbackCommentsQuery(db, "test-post-456");
+  assert.ok(fallbackQ, "Must return valid query instance");
+  assert.equal(typeof fallbackQ, "object");
+});
+
+test("Slice 8.4: sortCommentsByDate orders comments descending across various timestamp formats", () => {
+  const rawComments = [
+    { id: "1", created_at: { toMillis: () => 1000 } },
+    { id: "3", created_at: { seconds: 5 } }, // 5000 ms
+    { id: "2", created_at: new Date(3000) },
+    { id: "4", created_at: "2026-01-01T00:00:00Z" },
+    { id: "5", created_at: null },
+  ];
+
+  const sorted = sortCommentsByDate(rawComments);
+  // Expected order: 4 (2026 ~ 1.76e12 ms) -> 3 (5000) -> 2 (3000) -> 1 (1000) -> 5 (0)
+  assert.equal(sorted[0].id, "4");
+  assert.equal(sorted[1].id, "3");
+  assert.equal(sorted[2].id, "2");
+  assert.equal(sorted[3].id, "1");
+  assert.equal(sorted[4].id, "5");
+});
+
+test("Slice 8.4: CommentItem renders clean rating-only review without blank paragraph", () => {
+  const html = renderToString(
+    React.createElement(CommentItem, {
+      comment: {
+        id: "c-rating-only",
+        author_name: "Anita M",
+        rating: 5,
+        content: "",
+        created_at: new Date(),
+      },
+    })
+  );
+
+  assert.ok(html.includes("Anita M"), "Must render author name");
+  assert.ok(html.includes("5"), "Must render rating 5");
+  assert.ok(!html.includes("<p className=\"text-xs"), "Must not render blank review paragraph");
+});
+
+test("Slice 8.4: CommentBox renders error state with retry button when error occurs", () => {
+  let retryCalled = false;
+  const html = renderToString(
+    React.createElement(CommentBox, {
+      post: { id: "test-post", title: "Test Post", comment_count: 2 },
+      comments: [],
+      error: "The query requires an index.",
+      onReload: () => { retryCalled = true; },
+    })
+  );
+
+  assert.ok(html.includes("Unable to load discussions"), "Must render error banner title");
+  assert.ok(html.includes("The query requires an index."), "Must render error message details");
+  assert.ok(html.includes("Retry Loading"), "Must render retry button");
+});
+
+test("Slice 8.4: CommentBox renders sync link when post indicates comments exist but none loaded", () => {
+  const html = renderToString(
+    React.createElement(CommentBox, {
+      post: { id: "test-post", title: "Test Post", comment_count: 3 },
+      comments: [],
+      error: null,
+      onReload: () => {},
+    })
+  );
+
+  assert.ok(html.includes("Sync / Refresh Comments"), "Must render sync link");
+  assert.ok(html.includes("3"), "Must include comment count");
+});
+
