@@ -528,7 +528,7 @@ Implement a scalable, decoupled community interaction platform for blog posts ca
       - Search by author name or comment keyword.
     - Summary metrics bar: Total platform comments, visible count, hidden count, and average rating.
 
-- **Slice 8.7: Inline Admin Author Replies & Soft-Delete Lifecycle Management**
+- **Slice 8.7: Inline Admin Author Replies & Soft-Delete Lifecycle Management [COMPLETED]**
   - **Inline Admin Reply**:
     - Clicking "Reply" on any comment row opens `AdminReplyModal.jsx`.
     - Textarea for author response.

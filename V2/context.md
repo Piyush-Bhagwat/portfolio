@@ -454,7 +454,7 @@ This document serves as the persistent memory, architectural reference, and oper
 
 ## 5. Verification & Test Suite Status
 
-- **Automated Test Suite**: **170 tests passing** (0 failures, 0 skipped) across all vertical slices + theme engine + blog suite + comments engine:
+- **Automated Test Suite**: **175 tests passing** (0 failures, 0 skipped) across all vertical slices + theme engine + blog suite + comments engine:
   - `slice-1.1` to `slice-1.3`: Brutalist primitives & Cloudinary service.
   - `slice-2.1` to `slice-2.3`: AuthContext, ProtectedRoute, AdminLayout.
   - `slice-3.1` to `slice-3.4`: ProfileCMS, SkillsCMS, ExperienceCMS, Seeder.
@@ -468,6 +468,7 @@ This document serves as the persistent memory, architectural reference, and oper
   - `slice-8.4`: Progressive loading & cursor-based pagination hook (`useComments.js`), cursor query building, deduplication, and hasMore evaluation.
   - `slice-8.5`: Interactive star rating selector (`RatingStars.jsx`), review submission form (`CommentForm.jsx`), inline drawer integration in `CommentBox.jsx`, and optimistic aggregate recalculation.
   - `slice-8.6`: Admin Blog CMS "Interact" sub-section (`/admin/blogs/interact`), unified multi-filter moderation table, platform aggregate metrics, and author response composer (`AdminReplyModal.jsx`).
+  - `slice-8.7`: Inline author response lifecycle with verified signature badge, atomic post aggregate synchronization on visibility toggling, and database-level soft-delete enforcement (`allow delete: if false;`).
   - `slice-theme`: Theme Engine, Anti-FOUC, and ThemeToggle SSR.
 - **Linter**: `0` errors, `0` warnings (`npm run lint`).
 - **Production Compilation**: Clean Vite build (`npm run build`) in ~8.4s with optimized manual code-splitting chunks.

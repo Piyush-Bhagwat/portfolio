@@ -46,7 +46,7 @@ export default function CommentItem({ comment, className = "" }) {
           <div className="flex items-center justify-between text-[10px]">
             <span className="inline-flex items-center gap-1 text-emerald-800 dark:text-terminal-green font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3 h-3" />
-              <span>Verified Author</span>
+              <span>{adminReply.author ? `Verified Author (${adminReply.author})` : "Verified Author"}</span>
             </span>
             <span className="text-[#4b5e53] dark:text-zinc-500">
               {formatCommentDate(adminReply.replied_at)}
