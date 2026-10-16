@@ -469,9 +469,15 @@ This document serves as the persistent memory, architectural reference, and oper
   - `slice-8.5`: Interactive star rating selector (`RatingStars.jsx`), review submission form (`CommentForm.jsx`), inline drawer integration in `CommentBox.jsx`, and optimistic aggregate recalculation.
   - `slice-8.6`: Admin Blog CMS "Interact" sub-section (`/admin/blogs/interact`), unified multi-filter moderation table, platform aggregate metrics, and author response composer (`AdminReplyModal.jsx`).
   - `slice-8.7`: Inline author response lifecycle with verified signature badge, atomic post aggregate synchronization on visibility toggling, and database-level soft-delete enforcement (`allow delete: if false;`).
+  - `slice-8.8`: WhatsApp & Social Media Dynamic Open Graph Link Preview Pipeline:
+    - Netlify Edge Function (`netlify/edge-functions/og-meta.js`) intercepts crawler & public requests to `/blogs/*`, queries Cloud Firestore REST API, and injects dynamic Open Graph/Twitter meta tags.
+    - Cloudinary JPEG transformation (`w_1200,h_630,c_fill,f_jpg,q_80`) strictly enforces file size < 300KB and universal format required by WhatsApp scrapers.
+    - Client-side DOM synchronization (`src/utils/seo.js` & `BlogPostPage.jsx`) keeps tab title and meta tags reactive across SPA navigation.
+    - Prominent "Share on WhatsApp" action with official WhatsApp icon in `ArticleActionsBar.jsx` and header controls.
   - `slice-theme`: Theme Engine, Anti-FOUC, and ThemeToggle SSR.
+- **Automated Tests**: 189 passing tests across 33 test suites (`npm test`).
 - **Linter**: `0` errors, `0` warnings (`npm run lint`).
-- **Production Compilation**: Clean Vite build (`npm run build`) in ~8.4s with optimized manual code-splitting chunks.
+- **Production Compilation**: Clean Vite build (`npm run build`) in ~6.1s with optimized manual code-splitting chunks.
 
 ---
 
@@ -503,7 +509,11 @@ portfolio/
 ├── .env                                       # Local environment secrets
 ├── tailwind.config.js                         # Neo-Brutalist & Bento styling tokens
 ├── vite.config.js                             # Chunk code-splitting & build pipeline
-├── test/                                      # 129 automated vertical slice tests
+├── netlify.toml                               # Build config & /blogs/* edge function declaration
+├── netlify/
+│   └── edge-functions/
+│       └── og-meta.js                         # Dynamic Open Graph & WhatsApp link preview injector
+├── test/                                      # 189 automated vertical slice tests (33 suites)
 ├── V2/
 │   ├── architecture.md                        # Component hierarchy & data contracts
 │   ├── context.md                             # [This File] Persistent project memory
@@ -517,7 +527,8 @@ portfolio/
     │   ├── project/                           # ProjectCard, CaseStudyModal, CaseStudyDrawer
     │   ├── admin/                             # AdminReplyModal (Verified author response composer)
     │   └── blog/                              # BlogCard, CommentBox, CommentItem, CommentForm, RatingStars,
-    │                                          # BlogImageDropperModal, MarkdownEditorToolbar, MarkdownPreview, ImageLightboxModal
+    │                                          # BlogImageDropperModal, MarkdownEditorToolbar, MarkdownPreview, ImageLightboxModal,
+    │                                          # ArticleActionsBar (Share on WhatsApp, X, LinkedIn)
     ├── context/
     │   ├── AuthContext.jsx                    # Firebase authentication state provider
     │   └── ThemeContext.jsx                   # Dark/Light theme state and persistence provider
@@ -534,6 +545,9 @@ portfolio/
     ├── services/
     │   ├── cloudinary.js                      # Media upload & transformation service
     │   └── firebase.js                        # Firebase Auth & Cloud Firestore
+    ├── utils/
+    │   ├── blogUtils.js                       # Reading time, slugification, markdown utils
+    │   └── seo.js                             # Open Graph metadata injector & WhatsApp image optimization
     └── scripts/
         └── seedData.js                        # Canonical Firestore data seeder
 ```

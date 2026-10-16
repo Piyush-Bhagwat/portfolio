@@ -17,7 +17,9 @@ import {
   CommentBox,
   XIcon,
   LinkedInIcon,
+  WhatsAppIcon,
 } from "../../components/blog";
+import { updateDocumentMeta } from "../../utils/seo.js";
 import { TagBadge, TerminalBox, BrutalButton } from "../../components/brutalist";
 import {
   Clock,
@@ -173,6 +175,21 @@ export default function BlogPostPage() {
     }
   }, [contentCount, post?.id, post?.comment_count]);
 
+  // Auto-update browser document.title and Open Graph meta tags
+  useEffect(() => {
+    if (post && post.title) {
+      const cleanup = updateDocumentMeta({
+        title: post.title,
+        description: post.excerpt,
+        excerpt: post.excerpt,
+        image: post.cover_image_url,
+        url: typeof window !== "undefined" ? window.location.href : "",
+        type: "article",
+      });
+      return cleanup;
+    }
+  }, [post]);
+
   // Social Share Handlers
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
@@ -186,6 +203,13 @@ export default function BlogPostPage() {
     } catch {
       // Ignore clipboard write failure
     }
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!post) return;
+    const shareText = encodeURIComponent(`${post.title}\n\n${currentUrl}`);
+    const url = `https://api.whatsapp.com/send?text=${shareText}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleShareTwitter = () => {
@@ -283,7 +307,7 @@ export default function BlogPostPage() {
             className="flex items-center gap-1.5 text-[#4b5e53] dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-terminal-green transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Blogs</span>
+            <span>Back to all engineering logs</span>
           </Link>
           <div className="hidden sm:flex items-center gap-2 text-[#4b5e53] dark:text-zinc-500">
             <Terminal className="w-3.5 h-3.5 text-teal-700 dark:text-terminal-cyan" />
@@ -404,6 +428,15 @@ export default function BlogPostPage() {
                     <span>Copy Link</span>
                   </>
                 )}
+              </button>
+              <button
+                type="button"
+                onClick={handleShareWhatsApp}
+                className="p-1.5 bg-[#f4f7f4] dark:bg-zinc-900 border border-[#cbdad0] dark:border-zinc-800 hover:border-emerald-600 dark:hover:border-terminal-green text-[#4b5e53] dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-terminal-green transition-colors"
+                title="Share on WhatsApp"
+                aria-label="Share on WhatsApp"
+              >
+                <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-terminal-green" />
               </button>
               <button
                 type="button"
@@ -663,6 +696,7 @@ export default function BlogPostPage() {
                 commentCount={commentCount}
                 copiedLink={copiedLink}
                 onCopyLink={handleCopyLink}
+                onShareWhatsApp={handleShareWhatsApp}
                 onShareTwitter={handleShareTwitter}
                 onShareLinkedIn={handleShareLinkedIn}
               />

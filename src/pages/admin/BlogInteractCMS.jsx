@@ -28,7 +28,6 @@ import {
   EyeOff,
   ExternalLink,
   CornerDownRight,
-  ShieldCheck,
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";

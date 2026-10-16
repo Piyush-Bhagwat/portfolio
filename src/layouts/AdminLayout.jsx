@@ -16,7 +16,6 @@ import {
   Terminal,
   ShieldCheck,
   ChevronRight,
-  MessageSquare,
 } from "lucide-react";
 
 const NAV_ITEMS = [
