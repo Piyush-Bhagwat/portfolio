@@ -195,9 +195,6 @@ export default function BlogCard({
           <span>Read Article</span>
           <ArrowRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform" />
         </Link>
-        <span className="text-[10px] text-[#4b5e53] dark:text-zinc-600 font-mono">
-          /{post.slug || post.id}
-        </span>
       </div>
     </article>
   );
