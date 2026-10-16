@@ -5,6 +5,7 @@ import {
   getDocs,
   query,
   orderBy,
+  where,
 } from "firebase/firestore";
 import { db } from "../../services/firebase.js";
 import {
@@ -96,10 +97,18 @@ export default function BlogInteractCMS() {
         const snap = await getDocs(commentsQuery);
         loadedComments = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       } catch (queryErr) {
-        // Fallback in case orderBy index is building
-        console.warn("Retrying comments fetch without orderBy:", queryErr);
-        const snap = await getDocs(commentsRef);
-        loadedComments = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        console.warn("Retrying comments fetch with fallback:", queryErr);
+        try {
+          // Fallback A: Try without orderBy (in case index is still building)
+          const snap = await getDocs(commentsRef);
+          loadedComments = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        } catch (unfilteredErr) {
+          // Fallback B: If all-comments query was rejected due to permissions, query visible comments
+          console.warn("Retrying with visible-only query fallback:", unfilteredErr);
+          const visibleQuery = query(commentsRef, where("status", "==", "visible"));
+          const snap = await getDocs(visibleQuery);
+          loadedComments = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        }
       }
 
       // Sort client-side descending
@@ -131,9 +140,12 @@ export default function BlogInteractCMS() {
       setBlogs(loadedBlogs);
     } catch (err) {
       console.error("Error fetching comments and blogs:", err);
+      const isPerm = err.message?.includes("permission") || err.code === "permission-denied";
       setFeedback({
         type: "error",
-        message: `Failed to load comments inbox: ${err.message}`,
+        message: isPerm
+          ? "Failed to load comments inbox: Missing or insufficient permissions. Please deploy or paste the updated firestore.rules in Firebase Console (Firestore Database -> Rules tab) to grant permissions to the /comments collection."
+          : `Failed to load comments inbox: ${err.message}`,
       });
     } finally {
       setLoading(false);
@@ -142,7 +154,7 @@ export default function BlogInteractCMS() {
 
   useEffect(() => {
     fetchCommentsAndBlogs();
-  }, []);
+  }, [user]);
 
   // Compute Platform Metrics
   const metrics = useMemo(() => {

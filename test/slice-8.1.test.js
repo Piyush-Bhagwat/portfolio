@@ -45,7 +45,6 @@ test("Slice 8.1: firestore.rules decouples comments and enforces security polici
   assert.match(content, /request\.resource\.data\.author_name\.size\(\)\s*<=\s*50/, "Author name must be <= 50 chars");
 
   assert.match(content, /request\.resource\.data\.content\s+is\s+string/, "Content must be a string");
-  assert.match(content, /request\.resource\.data\.content\.size\(\)\s*>\s*0/, "Content must not be empty");
   assert.match(content, /request\.resource\.data\.content\.size\(\)\s*<=\s*2000/, "Content must be <= 2000 chars");
 
   assert.match(content, /request\.resource\.data\.post_id\s+is\s+string/, "post_id must be a string");
@@ -137,15 +136,15 @@ test("Slice 8.1: validateCommentPayload enforces data integrity and limits", () 
   assert.equal(validateCommentPayload({ author_name: "A", rating: "stars", content: "C", post_id: "P" }).isValid, false);
   assert.equal(validateCommentPayload({ author_name: "A", rating: null, content: "C", post_id: "P" }).isValid, false);
 
-  // Invalid content (empty)
+  // Valid content (empty / optional)
   const emptyContent = validateCommentPayload({
     author_name: "Alex",
     rating: 5,
     content: "   ",
     post_id: "test-post",
   });
-  assert.equal(emptyContent.isValid, false);
-  assert.match(emptyContent.errorMessage, /Comment content is required/);
+  assert.equal(emptyContent.isValid, true, "Empty review content must be accepted (optional)");
+  assert.equal(emptyContent.sanitized.content, "", "Sanitized content should be empty string");
 
   // Invalid content (> 2000 chars)
   const longContent = validateCommentPayload({

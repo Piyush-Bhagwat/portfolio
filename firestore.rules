@@ -42,15 +42,21 @@ service cloud.firestore {
     // Technical Blogs:
     // - Public visitors can read published posts
     // - Admin can read drafts, create new posts, update, and delete
+    // - Public visitors can update aggregate metrics (comment_count, rating_count, rating_average) when reviewing
     match /blogs/{blogId} {
       allow read: if (resource != null && resource.data.published == true) || isAdmin();
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        resource != null &&
+        resource.data.published == true &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comment_count', 'rating_count', 'rating_average', 'updated_at'])
+      );
     }
 
     // Blog Comments & Ratings:
     // - Decoupled collection to handle unbounded scale without bloating blog documents
     // - Public visitors can read visible comments; Admin can read all (including hidden)
-    // - Public visitors can submit comments with strict rating & length validation
+    // - Public visitors can submit comments with rating (1-5), author_name (1-50 chars), and optional review content (0-2000 chars)
     // - Only admin can update comments (replies, visibility toggles)
     // - Hard delete is strictly forbidden (allow delete: if false;) to enforce soft deletion
     match /comments/{commentId} {
@@ -64,7 +70,6 @@ service cloud.firestore {
                       request.resource.data.author_name.size() > 0 &&
                       request.resource.data.author_name.size() <= 50 &&
                       request.resource.data.content is string &&
-                      request.resource.data.content.size() > 0 &&
                       request.resource.data.content.size() <= 2000 &&
                       request.resource.data.post_id is string &&
                       request.resource.data.post_id.size() > 0 &&

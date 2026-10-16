@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  setDoc,
   runTransaction,
   updateDoc,
   serverTimestamp,
@@ -94,9 +95,9 @@ export const validateCommentPayload = (data = {}) => {
     errors.push("Rating must be an integer between 1 and 5.");
   }
 
-  if (!content || typeof content !== "string" || !content.trim()) {
-    errors.push("Comment content is required.");
-  } else if (content.trim().length > 2000) {
+  // Review content is optional (0-2000 characters)
+  const sanitizedContent = typeof content === "string" ? content.trim() : "";
+  if (sanitizedContent.length > 2000) {
     errors.push("Comment content cannot exceed 2000 characters.");
   }
 
@@ -114,7 +115,7 @@ export const validateCommentPayload = (data = {}) => {
       ? {
           author_name: author_name.trim(),
           rating: numericRating,
-          content: content.trim(),
+          content: sanitizedContent,
           post_id: post_id.trim(),
         }
       : null,
@@ -139,53 +140,81 @@ export const createCommentWithAggregate = async (firestoreDb, commentInput) => {
 
   const { sanitized } = validation;
 
-  return await runTransaction(firestoreDb, async (transaction) => {
-    const blogRef = doc(firestoreDb, "blogs", sanitized.post_id);
-    const blogSnap = await transaction.get(blogRef);
+  try {
+    return await runTransaction(firestoreDb, async (transaction) => {
+      const blogRef = doc(firestoreDb, "blogs", sanitized.post_id);
+      const blogSnap = await transaction.get(blogRef);
 
-    const blogData = blogSnap.exists() ? blogSnap.data() : {};
-    const currentCount = Number(blogData.comment_count) || 0;
-    const currentRatingCount = Number(blogData.rating_count) || 0;
-    const currentAvg = Number(blogData.rating_average) || 0;
+      const blogData = blogSnap.exists() ? blogSnap.data() : {};
+      const currentCount = Number(blogData.comment_count) || 0;
+      const currentRatingCount = Number(blogData.rating_count) || 0;
+      const currentAvg = Number(blogData.rating_average) || 0;
 
-    const newCount = currentCount + 1;
-    const newRatingCount = currentRatingCount + 1;
-    const newRatingAvg = calculateNewRatingAverage(currentAvg, currentRatingCount, sanitized.rating);
+      const newCount = currentCount + 1;
+      const newRatingCount = currentRatingCount + 1;
+      const newRatingAvg = calculateNewRatingAverage(currentAvg, currentRatingCount, sanitized.rating);
 
-    // 1. Update parent blog post aggregates
-    if (blogSnap.exists()) {
-      transaction.update(blogRef, {
-        comment_count: newCount,
-        rating_count: newRatingCount,
-        rating_average: newRatingAvg,
+      // 1. Update parent blog post aggregates
+      if (blogSnap.exists()) {
+        transaction.update(blogRef, {
+          comment_count: newCount,
+          rating_count: newRatingCount,
+          rating_average: newRatingAvg,
+          updated_at: serverTimestamp(),
+        });
+      }
+
+      // 2. Insert comment document into decoupled top-level collection
+      const commentCol = collection(firestoreDb, "comments");
+      const commentRef = doc(commentCol);
+
+      const commentPayload = {
+        post_id: sanitized.post_id,
+        post_slug: blogData.slug || commentInput.post_slug || "",
+        post_title: blogData.title || commentInput.post_title || "",
+        author_name: sanitized.author_name,
+        rating: sanitized.rating,
+        content: sanitized.content || "",
+        status: "visible",
+        admin_reply: null,
+        created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
-      });
-    }
+      };
 
-    // 2. Insert comment document into decoupled top-level collection
+      transaction.set(commentRef, commentPayload);
+
+      return {
+        id: commentRef.id,
+        ...commentPayload,
+      };
+    });
+  } catch (err) {
+    // If updating parent blog document aggregates fails (e.g. unauthenticated reader without blog write permissions),
+    // write directly to comments collection so the visitor review is safely preserved
+    console.warn("Aggregate transaction update failed; saving comment document directly:", err);
     const commentCol = collection(firestoreDb, "comments");
     const commentRef = doc(commentCol);
 
-    const commentPayload = {
+    const fallbackPayload = {
       post_id: sanitized.post_id,
-      post_slug: blogData.slug || commentInput.post_slug || "",
-      post_title: blogData.title || commentInput.post_title || "",
+      post_slug: commentInput.post_slug || "",
+      post_title: commentInput.post_title || "",
       author_name: sanitized.author_name,
       rating: sanitized.rating,
-      content: sanitized.content,
+      content: sanitized.content || "",
       status: "visible",
       admin_reply: null,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     };
 
-    transaction.set(commentRef, commentPayload);
+    await setDoc(commentRef, fallbackPayload);
 
     return {
       id: commentRef.id,
-      ...commentPayload,
+      ...fallbackPayload,
     };
-  });
+  }
 };
 
 /**

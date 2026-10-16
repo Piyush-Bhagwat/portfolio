@@ -153,14 +153,14 @@ export default function CommentForm({
         />
       </div>
 
-      {/* 3. Review Comment Textarea */}
+      {/* 3. Review Comment Textarea (Optional) */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <label
             htmlFor="comment-content"
             className="block text-[11px] font-bold text-[#0f1a14] dark:text-zinc-300 uppercase tracking-wide"
           >
-            Discussion / Review Content <span className="text-emerald-700 dark:text-terminal-green">*</span>
+            Discussion / Review Content <span className="text-[#6e8276] dark:text-zinc-500 font-normal lowercase">(optional)</span>
           </label>
           <span
             className={`text-[10px] ${
@@ -174,14 +174,13 @@ export default function CommentForm({
         </div>
         <textarea
           id="comment-content"
-          rows={4}
+          rows={3}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           maxLength={2000}
           disabled={isSubmitting}
-          placeholder="Share your architectural thoughts, questions, or critical evaluation of this publication..."
-          className="w-full p-2.5 bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 text-[#0f1a14] dark:text-zinc-100 placeholder-[#4b5e53]/60 dark:placeholder-zinc-600 focus:outline-none focus:border-emerald-600 dark:focus:border-terminal-green font-sans text-xs leading-relaxed shadow-[2px_2px_0px_0px_#1b2e23] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-colors resize-y min-h-[90px]"
-          required
+          placeholder="Share your thoughts, questions, or feedback on this article (optional)..."
+          className="w-full p-2.5 bg-white dark:bg-zinc-950 border border-[#cbdad0] dark:border-zinc-800 text-[#0f1a14] dark:text-zinc-100 placeholder-[#4b5e53]/60 dark:placeholder-zinc-600 focus:outline-none focus:border-emerald-600 dark:focus:border-terminal-green font-sans text-xs leading-relaxed shadow-[2px_2px_0px_0px_#1b2e23] dark:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-colors resize-y min-h-[80px]"
         />
       </div>
 
