@@ -503,7 +503,7 @@ Implement a scalable, decoupled community interaction platform for blog posts ca
     - Evaluate `hasMore` by comparing loaded count against `post.comment_count`.
     - Guarantees bounded bandwidth and client memory even on viral articles with thousands of comments.
 
-- **Slice 8.5: Interactive Star Rating Selector & Review Submission Form**
+- **Slice 8.5: Interactive Star Rating Selector & Review Submission Form [COMPLETED]**
   - Create `src/components/blog/RatingStars.jsx`:
     - Dual-mode star component: Display-only mode (renders fractional ratings with star icons) and Interactive mode (1 to 5 stars with hover previews and tactile selection).
     - Keyboard accessible with `aria-label` ratings.

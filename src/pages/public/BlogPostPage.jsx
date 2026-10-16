@@ -6,6 +6,7 @@ import { getOptimizedImageUrl } from "../../services/cloudinary.js";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useComments } from "../../hooks/useComments.js";
+import { calculateNewRatingAverage } from "../../services/commentsService.js";
 import {
   ReadingProgressBar,
   CodeBlock,
@@ -57,14 +58,31 @@ export default function BlogPostPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
 
-  // Progressive comments & cursor pagination hook (Slice 8.4)
+  // Progressive comments & cursor pagination hook (Slice 8.4 & 8.5)
   const {
     comments,
     loading: loadingComments,
     loadingMore: loadingMoreComments,
     hasMore: hasMoreComments,
     loadMore: loadMoreComments,
+    addComment,
   } = useComments(post?.id, { totalCount: post?.comment_count });
+
+  const handleCommentAdded = (newComment) => {
+    if (newComment && post) {
+      const oldAvg = Number(post.rating_average) || 0;
+      const oldCount = Number(post.rating_count) || 0;
+      const newRatingCount = oldCount + 1;
+      const newAvg = calculateNewRatingAverage(oldAvg, oldCount, newComment.rating);
+
+      setPost((prev) => ({
+        ...prev,
+        comment_count: (Number(prev?.comment_count) || 0) + 1,
+        rating_count: newRatingCount,
+        rating_average: newAvg,
+      }));
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -635,6 +653,8 @@ export default function BlogPostPage() {
                 loadingMore={loadingMoreComments}
                 hasMore={hasMoreComments}
                 onLoadMore={loadMoreComments}
+                onAddComment={addComment}
+                onCommentAdded={handleCommentAdded}
               />
             </div>
           </aside>

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { TerminalBox, BrutalButton } from "../brutalist";
 import CommentItem from "./CommentItem.jsx";
+import CommentForm from "./CommentForm.jsx";
 
 /**
  * Defensive relative/absolute date formatter for comments
@@ -63,9 +64,17 @@ export default function CommentBox({
   hasMore = false,
   onLoadMore,
   onOpenForm,
+  onAddComment,
+  onCommentAdded,
+  formOpen,
+  onToggleForm,
   className = "",
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [internalFormOpen, setInternalFormOpen] = useState(false);
+
+  const isFormOpen = formOpen !== undefined ? formOpen : internalFormOpen;
+  const setIsFormOpen = onToggleForm || setInternalFormOpen;
 
   const effectiveAverage = Number(ratingAverage || post?.rating_average) || 0;
   const effectiveRatingCount = Number(ratingCount || post?.rating_count) || 0;
@@ -129,17 +138,34 @@ export default function CommentBox({
             </span>
           </div>
 
-          {/* Action to trigger review submission */}
+          {/* Action to trigger review submission or display CommentForm */}
           <div className="pt-2">
-            <BrutalButton
-              variant="primary"
-              size="sm"
-              className="w-full text-xs"
-              onClick={onOpenForm}
-              icon={<PenLine className="w-3.5 h-3.5" />}
-            >
-              Leave a Review / Comment
-            </BrutalButton>
+            {isFormOpen ? (
+              <CommentForm
+                postId={post?.id || ""}
+                onSubmit={onAddComment}
+                onCancel={() => setIsFormOpen(false)}
+                onSuccess={(newComment) => {
+                  setIsFormOpen(false);
+                  if (onCommentAdded) {
+                    onCommentAdded(newComment);
+                  }
+                }}
+              />
+            ) : (
+              <BrutalButton
+                variant="primary"
+                size="sm"
+                className="w-full text-xs active:translate-x-[2px] active:translate-y-[2px]"
+                onClick={() => {
+                  setIsFormOpen(true);
+                  if (onOpenForm) onOpenForm();
+                }}
+                icon={<PenLine className="w-3.5 h-3.5" />}
+              >
+                Leave a Review / Comment
+              </BrutalButton>
+            )}
           </div>
         </div>
 
@@ -247,5 +273,9 @@ CommentBox.propTypes = {
   hasMore: PropTypes.bool,
   onLoadMore: PropTypes.func,
   onOpenForm: PropTypes.func,
+  onAddComment: PropTypes.func,
+  onCommentAdded: PropTypes.func,
+  formOpen: PropTypes.bool,
+  onToggleForm: PropTypes.func,
   className: PropTypes.string,
 };
