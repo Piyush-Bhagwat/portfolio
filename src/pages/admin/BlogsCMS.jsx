@@ -525,7 +525,7 @@ export default function BlogsCMS() {
                       <td className="py-3 px-4 text-[#4b5e53] dark:text-zinc-400 font-mono text-[11px] whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[#6e8276] dark:text-zinc-500">/blogs/</span>
-                          <span className="text-emerald-700 dark:text-terminal-cyan font-semibold">
+                          <span className="text-emerald-700 dark:text-terminal-cyan font-semibold max-w-[100px] truncate">
                             {post.slug || post.id}
                           </span>
                           <button

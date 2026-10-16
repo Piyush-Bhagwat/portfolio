@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase.js";
 import { getOptimizedImageUrl } from "../../services/cloudinary.js";
 import ReactMarkdown from "react-markdown";
@@ -61,6 +61,7 @@ export default function BlogPostPage() {
   // Progressive comments & cursor pagination hook (Slice 8.4 & 8.5)
   const {
     comments,
+    contentCount,
     loading: loadingComments,
     loadingMore: loadingMoreComments,
     error: commentsError,
@@ -156,6 +157,22 @@ export default function BlogPostPage() {
     };
   }, [slug]);
 
+  // Auto-reconcile parent blog comment_count with actual comments that have written content
+  useEffect(() => {
+    if (contentCount !== null && contentCount !== undefined && post?.id) {
+      if (Number(post.comment_count) !== contentCount) {
+        setPost((prev) => (prev ? { ...prev, comment_count: contentCount } : prev));
+        try {
+          updateDoc(doc(db, "blogs", post.id), {
+            comment_count: contentCount,
+          }).catch(() => {});
+        } catch {
+          // Ignore background sync error
+        }
+      }
+    }
+  }, [contentCount, post?.id, post?.comment_count]);
+
   // Social Share Handlers
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
@@ -248,7 +265,10 @@ export default function BlogPostPage() {
 
   const ratingAverage = Number(post.rating_average) || 0;
   const ratingCount = Number(post.rating_count) || 0;
-  const commentCount = Number(post.comment_count) || 0;
+  const commentCount =
+    contentCount !== null && contentCount !== undefined
+      ? contentCount
+      : (comments && comments.length > 0 ? comments.length : (Number(post.comment_count) || 0));
 
   return (
     <div className="min-h-screen bg-[#f4f7f4] dark:bg-black text-[#0f1a14] dark:text-zinc-100 font-mono py-8 px-4 sm:px-6 lg:px-8">

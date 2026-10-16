@@ -48,6 +48,7 @@ export function useComments(postId, options = {}) {
   } = options;
 
   const [comments, setComments] = useState([]);
+  const [contentCount, setContentCount] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
@@ -139,13 +140,15 @@ export function useComments(postId, options = {}) {
         }
 
         const rawFallbackDocs = Array.from(docMap.values());
-        if (rawFallbackDocs.length > 0) {
-          // Only show comments that have non-empty written review content
-          const contentDocs = rawFallbackDocs.filter((docSnap) => {
-            const data = docSnap.data ? docSnap.data() : docSnap;
-            return typeof data?.content === "string" && data.content.trim().length > 0;
-          });
+        // Only show comments that have non-empty written review content
+        const contentDocs = rawFallbackDocs.filter((docSnap) => {
+          const data = docSnap.data ? docSnap.data() : docSnap;
+          return typeof data?.content === "string" && data.content.trim().length > 0;
+        });
 
+        setContentCount(contentDocs.length);
+
+        if (rawFallbackDocs.length > 0) {
           // Sort client-side descending by created_at timestamp
           const itemsData = contentDocs.map((docSnap) => ({
             id: docSnap.id,
@@ -175,6 +178,7 @@ export function useComments(postId, options = {}) {
 
     if (loadedDocs.length === 0) {
       setComments([]);
+      setContentCount(0);
       setHasMore(false);
       lastDocRef.current = null;
     } else {
@@ -190,6 +194,7 @@ export function useComments(postId, options = {}) {
         .filter((c) => typeof c.content === "string" && c.content.trim().length > 0);
 
       setComments(items);
+      setContentCount(items.length);
       setHasMore(evaluateHasMore(items.length, docs.length, initialLimit));
     }
 
@@ -386,6 +391,7 @@ export function useComments(postId, options = {}) {
 
   return {
     comments,
+    contentCount,
     loading,
     loadingMore,
     error,

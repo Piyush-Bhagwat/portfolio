@@ -55,9 +55,9 @@ export function formatCommentDate(timestamp) {
  */
 export default function CommentBox({
   post,
-  ratingAverage = 0,
-  ratingCount = 0,
-  commentCount = 0,
+  ratingAverage,
+  ratingCount,
+  commentCount,
   comments = [],
   loading = false,
   loadingMore = false,
@@ -78,10 +78,9 @@ export default function CommentBox({
   const isFormOpen = formOpen !== undefined ? formOpen : internalFormOpen;
   const setIsFormOpen = onToggleForm || setInternalFormOpen;
 
-  const effectiveAverage = Number(ratingAverage || post?.rating_average) || 0;
-  const effectiveRatingCount = Number(ratingCount || post?.rating_count) || 0;
-  const effectiveCommentCount =
-    Number(commentCount || post?.comment_count) || 0;
+  const effectiveAverage = Number(ratingAverage ?? post?.rating_average ?? 0);
+  const effectiveRatingCount = Number(ratingCount ?? post?.rating_count ?? 0);
+  const effectiveCommentCount = Number(commentCount ?? post?.comment_count ?? 0);
 
   // Only show comments with written review content
   const contentComments = comments.filter((c) => Boolean(c.content && c.content.trim()));
